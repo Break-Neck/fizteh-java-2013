@@ -1,4 +1,8 @@
+import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -24,27 +28,34 @@ public class ReadingUtils {
         try {
             tempFile.seek(0);
         } catch (IOException e) {
-            throw new SomethingIsWrongException("Error aqcuired while seeking a file: " + e.getMessage());
+            throw new SomethingIsWrongException("Error aqcuired while seeking through file: " + e.getMessage());
         }
     }
     
     public String readKey() throws SomethingIsWrongException {
-            try {
-                if (tempFile.getFilePointer() >= valueShift) {
-                    return null;
-                }
-                ArrayList<Byte> bytes = new ArrayList<Byte>();
-                byte b = tempFile.readByte();
-                while(b != 0) {
-                    bytes.add(b);
-                    b = tempFile.readByte();
-                }
-                byte[] array = UtilMethods.bytesToArray(bytes);
-                return new String(array, UtilMethods.ENCODING);
-            } catch (IOException e) {
-                throw new SomethingIsWrongException("Error acquired: " + e.getMessage());
+        byte[] array;
+        try {
+            if (tempFile.getFilePointer() >= valueShift) {
+                return null;
             }
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte b = tempFile.readByte();
+            while(b != 0) {
+                bytes.write(b);
+                b = tempFile.readByte();
+            }
+            array = UtilMethods.bytesToArray(bytes);
+        } catch (IOException e) {
+            throw new SomethingIsWrongException("Error acquired: " + e.getMessage());
         }
+        String returnKey;
+        try {
+            returnKey = new String(array, UtilMethods.ENCODING);
+        } catch (UnsupportedEncodingException e) {
+            throw new SomethingIsWrongException("Error acquired: " + e.getMessage());
+        }
+        return returnKey;
+    }
     
         public String readValue() throws SomethingIsWrongException {
             int offset = readOffset();
@@ -72,6 +83,8 @@ public class ReadingUtils {
             boolean result = true;
             try {
                 result = (tempFile.getFilePointer() == valueShift);
+            } catch (EOFException ee) {
+                return result;
             } catch (IOException e) {
                 throw new SomethingIsWrongException("Error aqcuired while reading a file " + e.getMessage());
             }
@@ -80,9 +93,9 @@ public class ReadingUtils {
     
     
         private int readNextOffset() throws SomethingIsWrongException {
+            int nextOffset = 0;
             try {
-                long currentOffset = tempFile.getFilePointer();
-                int nextOffset;
+                int currentOffset = (int) tempFile.getFilePointer();
                 if (readKey() == null) {
                     nextOffset = (int)tempFile.length();
                 } else {
@@ -100,7 +113,7 @@ public class ReadingUtils {
             do {
                 try {
                     b = tempFile.readByte();
-                } catch (IOException e) {
+                }catch (IOException e) {
                     throw new SomethingIsWrongException("Error aqcuired while reading a file: " + e.getMessage());
                 }
             } while(b != 0);

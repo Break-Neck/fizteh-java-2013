@@ -1,3 +1,4 @@
+import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
 
 
@@ -8,7 +9,7 @@ public class RollbackCommand implements Commands {
     }
 
     public int getArgumentQuantity() {
-        return 1;
+        return 0;
     }
 
     public void implement(String[] args, Shell.ShellState state)

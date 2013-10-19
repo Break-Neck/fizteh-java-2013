@@ -1,4 +1,6 @@
+import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -42,20 +44,14 @@ public class WritingUtils {
     }
 
     public void writeValue(String value) throws SomethingIsWrongException {
-        byte[] bytes = null;
-        try
-        {
-            bytes = value.getBytes(UtilMethods.ENCODING);
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            throw new IllegalArgumentException("unrecognized charset");
-        }
         try {
+            byte[] bytes = value.getBytes(UtilMethods.ENCODING);
             dataFile.write(bytes);
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException("Unrecognized encoding");
         } catch (IOException e) {
             throw new SomethingIsWrongException("Error acquired while writing to file: " + e.getMessage());
-        }
+        } 
     }
     
 }

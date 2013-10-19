@@ -1,4 +1,8 @@
+import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,7 +15,7 @@ public abstract class SomeTable {
     private String name;
     private String parentDirectory;
     private static int size;
-    private static int unsavedChangesCounter;
+    protected static int unsavedChangesCounter;
     protected abstract void load() throws SomethingIsWrongException;
     protected abstract void save() throws SomethingIsWrongException;
     
@@ -37,11 +41,21 @@ public abstract class SomeTable {
         currentData = new HashMap<String, String>();
         deletedKeys = new HashSet<String>();
         unsavedChangesCounter = 0;
+        File temp = new File(dir, name);
+        if (!temp.exists()) {
+            try {
+                temp.createNewFile();
+            } catch (IOException e) {
+                System.err.println ("Unable to create a file. Message: " + e.getMessage());
+            }
+            
+        }
         try {
             load();
         } catch (SomethingIsWrongException e) {
-            System.err.println("Error aqcuired while creating a table. Message: " + e.getMessage());
+            System.err.println("Error aqcuired while opening a table. Message: " + e.getMessage());
         }
+        
     }
     
     public String get(String key) {
@@ -55,7 +69,7 @@ public abstract class SomeTable {
     
     public static String put(String key, String Value) {
         String value = oldValue(key);
-        currentData.put(key, value);
+        currentData.put(key, Value);
         if (value == null) {
             ++size;
         }
@@ -91,7 +105,7 @@ public abstract class SomeTable {
     private int keySize(Set<String> keys) {
         int keysSize = 0;
         for (String key : keys) {
-            keysSize += UtilMethods.countBytes(key, UtilMethods.ENCODING);
+            keysSize += UtilMethods.countBytes(key, UtilMethods.ENCODING) + 5;
         }
         return keysSize;
     }
@@ -105,13 +119,16 @@ public abstract class SomeTable {
             temp += UtilMethods.countBytes(unchangedOldData.get(key), UtilMethods.ENCODING);
         }
         for(String key : keys) {
-            write.writeValue(unchangedOldData.get(key));
+            String tempCheck = unchangedOldData.get(key);
+            if (tempCheck != null) {
+                write.writeValue(tempCheck);   
+            }
         }
         UtilMethods.closeCalm(write.dataFile);
     }
     
     protected void scanFromDisk(String file) throws SomethingIsWrongException {
-        if (UtilMethods.doesExist(file)) {
+        if (!UtilMethods.doesExist(file)) {
             throw new SomethingIsWrongException("Unable to scan from disc.");
         }
         ReadingUtils read = new ReadingUtils(file);
@@ -138,13 +155,16 @@ public abstract class SomeTable {
             unchangedOldData.remove(toDelete);
         }
         for (String toAdd : currentData.keySet()) {
-            unchangedOldData.put(toAdd, currentData.get(toAdd));
+            String tempCheck = currentData.get(toAdd);
+            if (tempCheck != null) {
+                unchangedOldData.put(toAdd, tempCheck);        
+            }
         }
-        deletedKeys.clear();
-        currentData.clear();
         size = unchangedOldData.size();
         save();
         unsavedChangesCounter = 0;
+        deletedKeys.clear();
+        currentData.clear();
         return commitCount;
     }
     
