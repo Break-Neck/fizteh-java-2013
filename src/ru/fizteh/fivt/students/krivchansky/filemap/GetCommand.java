@@ -1,7 +1,7 @@
-import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+import ru.fizteh.fivt.students.krivchansky.shell.*;
 
-public class GetCommand implements Commands {
+public class GetCommand implements Commands<FileMapShellState>{
 
     public String getCommandName() {
         return "get";
@@ -11,7 +11,7 @@ public class GetCommand implements Commands {
         return 1;
     }
 
-    public void implement(String[] args, Shell.ShellState state)
+    public void implement(String[] args, FileMapShellState state)
             throws SomethingIsWrongException {
         if(state.table == null) {
             throw new SomethingIsWrongException ("Table not found.");

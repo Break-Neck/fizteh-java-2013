@@ -1,8 +1,7 @@
-import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+import ru.fizteh.fivt.students.krivchansky.shell.*;
 
-
-public class RemoveKeyCommand implements Commands {
+public class RemoveKeyCommand implements Commands<FileMapShellState> {
 
     public String getCommandName() {
         return "remove";
@@ -12,7 +11,7 @@ public class RemoveKeyCommand implements Commands {
         return 1;
     }
 
-    public void implement(String[] args, Shell.ShellState state)
+    public void implement(String[] args, FileMapShellState state)
             throws SomethingIsWrongException {
         String a = state.table.remove(args[0]);
         if (a.isEmpty()) {

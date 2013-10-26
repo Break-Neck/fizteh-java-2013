@@ -1,8 +1,7 @@
-import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+import ru.fizteh.fivt.students.krivchansky.shell.*;
 
-
-public class PutCommand implements Commands {
+public class PutCommand implements Commands<FileMapShellState> {
 
     public String getCommandName() {
         return "put";
@@ -12,8 +11,11 @@ public class PutCommand implements Commands {
         return 2;
     }
 
-    public void implement(String[] args, Shell.ShellState state)
+    public void implement(String[] args, FileMapShellState state)
             throws SomethingIsWrongException {
+    	if (state.table == null) {
+    		throw new SomethingIsWrongException("No table chosen");
+    	}
         String temp = state.table.put(args[0], args[1]);
         if (temp != null) {
                 System.out.println("overwrite\n" + temp);

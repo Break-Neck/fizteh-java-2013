@@ -1,5 +1,5 @@
-import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+import ru.fizteh.fivt.students.krivchansky.shell.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 
 
 public class ReadingUtils {

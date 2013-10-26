@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 
-public class ChangeDirectoryCommand implements Commands{
+public class ChangeDirectoryCommand implements Commands<ShellState>{
     
     public String getCommandName() {
         return "cd";
@@ -14,7 +14,7 @@ public class ChangeDirectoryCommand implements Commands{
         return 1;
     }
     
-    public void implement(String[] args, Shell.ShellState state) throws SomethingIsWrongException {
+    public void implement(String[] args, ShellState state) throws SomethingIsWrongException {
         String newLocation = args[0]; //path
         File newDisposition = UtilMethods.getAbsoluteName(newLocation, state);//Directory
         if (!newDisposition.isDirectory()) {

@@ -1,5 +1,5 @@
-import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+import ru.fizteh.fivt.students.krivchansky.shell.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,14 +8,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public abstract class SomeTable {
+public abstract class SomeTable implements Table {
     protected static HashMap<String, String> unchangedOldData;
     protected static HashMap<String, String> currentData;
     protected static HashSet<String> deletedKeys;
     private String name;
     private String parentDirectory;
     private static int size;
-    protected static int unsavedChangesCounter;
+    public static int unsavedChangesCounter;
     protected abstract void load() throws SomethingIsWrongException;
     protected abstract void save() throws SomethingIsWrongException;
     
@@ -26,7 +26,7 @@ public abstract class SomeTable {
     public String getName() {
         return name;
     }
-    public int getSize() {
+    public int size() {
         return size;
     }
     
@@ -41,15 +41,6 @@ public abstract class SomeTable {
         currentData = new HashMap<String, String>();
         deletedKeys = new HashSet<String>();
         unsavedChangesCounter = 0;
-        File temp = new File(dir, name);
-        if (!temp.exists()) {
-            try {
-                temp.createNewFile();
-            } catch (IOException e) {
-                System.err.println ("Unable to create a file. Message: " + e.getMessage());
-            }
-            
-        }
         try {
             load();
         } catch (SomethingIsWrongException e) {
@@ -67,7 +58,7 @@ public abstract class SomeTable {
         return unchangedOldData.get(key);
     }
     
-    public static String put(String key, String Value) {
+    public String put(String key, String Value) {
         String value = oldValue(key);
         currentData.put(key, Value);
         if (value == null) {
@@ -77,7 +68,7 @@ public abstract class SomeTable {
         return value;
     }
     
-    public static String remove(String key) {
+    public String remove(String key) {
         String value = oldValue(key);
         if (currentData.containsKey(key)) {
             currentData.remove(key);
@@ -110,7 +101,7 @@ public abstract class SomeTable {
         return keysSize;
     }
     
-    protected void writeOnDisk(Set<String> keys, String file) throws SomethingIsWrongException {
+    public void writeOnDisk(Set<String> keys, String file) throws SomethingIsWrongException {
         WritingUtils write = new WritingUtils(file);
         int temp = keySize(keys);
         for(String key : keys) {
@@ -127,7 +118,7 @@ public abstract class SomeTable {
         UtilMethods.closeCalm(write.dataFile);
     }
     
-    protected void scanFromDisk(String file) throws SomethingIsWrongException {
+    public void scanFromDisk(String file) throws SomethingIsWrongException {
         if (!UtilMethods.doesExist(file)) {
             throw new SomethingIsWrongException("Unable to scan from disc.");
         }
@@ -149,19 +140,20 @@ public abstract class SomeTable {
         return deletedOrAdded;
     }
     
-    public int commit() throws SomethingIsWrongException {
+    public int commit() {
         int commitCount = Math.abs(unchangedOldData.size() - size);
-        for (String toDelete : deletedKeys) {
+        for (final String toDelete : deletedKeys) {
             unchangedOldData.remove(toDelete);
         }
         for (String toAdd : currentData.keySet()) {
-            String tempCheck = currentData.get(toAdd);
-            if (tempCheck != null) {
-                unchangedOldData.put(toAdd, tempCheck);        
-            }
+            unchangedOldData.put(toAdd, currentData.get(toAdd));
         }
         size = unchangedOldData.size();
-        save();
+        try {
+			save();
+		} catch (SomethingIsWrongException e) {
+			System.out.println("Error aqcuired while commiting changes. Message: " + e.getMessage());
+		}
         unsavedChangesCounter = 0;
         deletedKeys.clear();
         currentData.clear();

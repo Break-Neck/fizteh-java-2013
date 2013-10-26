@@ -3,7 +3,7 @@ package ru.fizteh.fivt.students.krivchansky.shell;
 import java.io.File;
 
 
-public class RemoveCommand implements Commands {
+public class RemoveCommand implements Commands<ShellState> {
     
     public String getCommandName() {
         return "rm";
@@ -13,7 +13,7 @@ public class RemoveCommand implements Commands {
         return 1;
     }
     
-    public void implement(String[] args, Shell.ShellState state) throws SomethingIsWrongException {
+    public void implement(String[] args, ShellState state) throws SomethingIsWrongException {
         String whoToDelete = args[0];
         File deleteIt = UtilMethods.getAbsoluteName(whoToDelete, state);
         try {

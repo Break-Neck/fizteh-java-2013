@@ -3,27 +3,35 @@ package ru.fizteh.fivt.students.krivchansky.shell;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 
-public class Shell {
+public class Shell<State> {
     private final Map<String, Commands> availableCommands;
     private static final String greeting = "$ ";
+    State state;
     
-    public Shell (Commands[] commands) {
+    
+    public Shell (Set<Commands> commands) {
         Map <String, Commands> tempCommands = new HashMap<String, Commands>();
-        for (Commands temp : commands) {
+        for (Commands<State> temp : commands) {
             tempCommands.put(temp.getCommandName(), temp);
         }
         availableCommands = Collections.unmodifiableMap(tempCommands);
     }
     
-    private void runCommand(String[] data, Shell.ShellState state) throws SomethingIsWrongException {
+    public void setShellState(State state) {
+        this.state = state;
+    }
+    
+    private void runCommand(String[] data, State state) throws SomethingIsWrongException {
         if (data[0].length() == 0) {
             throw new SomethingIsWrongException ("Empty string.");
         }
-        Commands usedOne = availableCommands.get(data[0]);
+        Commands<State> usedOne = availableCommands.get(data[0]);
         if (usedOne == null) {
             throw new SomethingIsWrongException ("Unknown command.");
         } else if (data.length - 1 != usedOne.getArgumentQuantity() ) {
@@ -39,7 +47,7 @@ public class Shell {
         String[] toReturn = str.split("\\s*;\\s*", -2);
         return toReturn;
     }
-    private void runLine(String line, Shell.ShellState state) throws SomethingIsWrongException {
+    private void runLine(String line, State state) throws SomethingIsWrongException {
         String[] splitted = splitLine(line);
         int count = splitted.length - 1;
         for (String temp : splitted) {
@@ -54,23 +62,10 @@ public class Shell {
         }                                                  //if there is a command after last ";".
     }
     
-    public class ShellState {
-        private  String currentDirectory;
-        public ShellState(String currentDirectory) {
-            this.currentDirectory = currentDirectory;
-        }
-        public String getCurDir() {
-            return currentDirectory;
-        }      
-        void changeCurDir(String newCurDir) {
-            currentDirectory = newCurDir;
-        }
-    }
-    
-    private void consoleWay(Shell.ShellState state) {
+    public void consoleWay(State state) {
         Scanner forInput = new Scanner(System.in);
         while (!Thread.currentThread().isInterrupted()) {
-            System.out.print(state.getCurDir() + greeting);
+            System.out.print(greeting);
             try {
                 runLine(forInput.nextLine(), state);                  
             } catch (SomethingIsWrongException exc) {
@@ -86,9 +81,11 @@ public class Shell {
     }
     
     public static void main(String[] args) {
-        Commands[] commands = { new WhereAreWeCommand(), new RemoveCommand(), new ChangeDirectoryCommand(), new MakeDirectoryCommand(), new MoveCommand(), new CopyCommand(), new DirectoryInfoCommand(), new ExitCommand() };
-        Shell shell = new Shell(commands);
-        Shell.ShellState state = shell.new ShellState(System.getProperty("user.dir"));
+    	ShellState state = new ShellState(System.getProperty("user.dir"));
+        Set<Commands> commands =  new HashSet<Commands>() {{ add(new WhereAreWeCommand()); add(new CopyCommand()); add(new DirectoryInfoCommand());
+        	add(new ExitCommand()); add(new MakeDirectoryCommand()); add(new MoveCommand()); add(new RemoveCommand());  }};
+        Shell<ShellState> shell = new Shell<ShellState>(commands);
+        
         if (args.length != 0) {
             String arg = UtilMethods.uniteItems(Arrays.asList(args), " ");
             try {

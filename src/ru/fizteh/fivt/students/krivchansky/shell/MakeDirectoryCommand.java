@@ -3,7 +3,7 @@ package ru.fizteh.fivt.students.krivchansky.shell;
 import java.io.File;
 
 
-public class MakeDirectoryCommand implements Commands {
+public class MakeDirectoryCommand implements Commands<ShellState> {
     
     public String getCommandName() {
         return "mkdir";
@@ -13,7 +13,7 @@ public class MakeDirectoryCommand implements Commands {
         return 1;
     }
     
-    public void implement (String[] args, Shell.ShellState state) throws SomethingIsWrongException{
+    public void implement (String[] args, ShellState state) throws SomethingIsWrongException{
         String nameOfDirectory = args [0];
         File creating = UtilMethods.getAbsoluteName(nameOfDirectory, state);
         if (!creating.mkdir()) {

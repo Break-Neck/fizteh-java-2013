@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class DirectoryInfoCommand implements Commands {
+public class DirectoryInfoCommand implements Commands<ShellState> {
     
     public String getCommandName() {
         return "dir";
@@ -15,7 +15,7 @@ public class DirectoryInfoCommand implements Commands {
         return 0;
     }
     
-    public void implement(String[] args, Shell.ShellState state) {
+    public void implement(String[] args, ShellState state) {
         File dir = new File(state.getCurDir());
         String[] files = dir.list();
         List<String> tempObj = Arrays.asList(files);

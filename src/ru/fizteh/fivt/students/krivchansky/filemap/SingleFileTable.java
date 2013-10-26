@@ -1,12 +1,13 @@
-import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+import ru.fizteh.fivt.students.krivchansky.shell.*;
 
 import java.io.File;
+import java.io.IOException;
 
 
-public class SingleFileTable extends SomeTable {
+public class SingleFileTable extends SomeTable{
     
-    protected static final String DATABASENAME = "db.dat";
+    public static final String DATABASENAME = "db.dat";
 
     public SingleFileTable(String dir, String name) {
         super(dir, name);
@@ -21,8 +22,15 @@ public class SingleFileTable extends SomeTable {
     }
     
     private String getPathToDatabase() {
-        File databaseFile = new File (getParentDirectory(), DATABASENAME);
-        return databaseFile.getAbsolutePath();
+    	File curDir = new File(new File(".").getAbsolutePath());
+        File databaseFile;
+		try {
+			databaseFile = new File (curDir.getCanonicalPath(), DATABASENAME);
+	        return databaseFile.getAbsolutePath();
+		} catch (IOException e) {
+			e.getMessage();
+		}
+		return "";
     }
     
 

@@ -3,7 +3,7 @@ package ru.fizteh.fivt.students.krivchansky.shell;
 import java.io.File;
 
 
-public class MoveCommand implements Commands {
+public class MoveCommand implements Commands<ShellState> {
     
     public String getCommandName() {
         return "mv";
@@ -29,7 +29,7 @@ public class MoveCommand implements Commands {
     }
     
     
-    public void implement(String[] args, Shell.ShellState state) throws SomethingIsWrongException {
+    public void implement(String[] args, ShellState state) throws SomethingIsWrongException {
         String from = args[0];
         String to = args[1];
         File source = UtilMethods.getAbsoluteName(from, state);

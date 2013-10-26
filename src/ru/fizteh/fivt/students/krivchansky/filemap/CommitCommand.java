@@ -1,7 +1,7 @@
-import ru.fizteh.fivt.students.krivchansky.shell;
 package ru.fizteh.fivt.students.krivchansky.filemap;
+import ru.fizteh.fivt.students.krivchansky.shell.*;
 
-public class CommitCommand implements Commands{
+public class CommitCommand implements Commands<FileMapShellState>{
     
     public String getCommandName() {
         return "commit";
@@ -11,7 +11,7 @@ public class CommitCommand implements Commands{
         return 0;
     }
 
-    public void implement(String[] args, Shell.ShellState state)
+    public void implement(String[] args, FileMapShellState state)
             throws SomethingIsWrongException {
         if (state.table == null) {
             throw new SomethingIsWrongException ("Table not found.");

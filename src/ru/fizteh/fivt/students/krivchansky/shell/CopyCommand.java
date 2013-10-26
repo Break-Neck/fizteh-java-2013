@@ -7,7 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 
-public class CopyCommand implements Commands {
+public class CopyCommand implements Commands<ShellState> {
 
     public String getCommandName() {
         return "cp";
@@ -18,7 +18,7 @@ public class CopyCommand implements Commands {
     }
     
     
-    public void implement(String[] args, Shell.ShellState state) throws SomethingIsWrongException {
+    public void implement(String[] args, ShellState state) throws SomethingIsWrongException {
         String from = args[0];
         String to = args[1];
         File source = UtilMethods.getAbsoluteName(from, state);
