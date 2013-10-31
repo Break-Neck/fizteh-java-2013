@@ -13,14 +13,23 @@ public abstract class SomeTable implements Table {
     protected static HashMap<String, String> currentData;
     protected static HashSet<String> deletedKeys;
     private String name;
-    private String parentDirectory;
+    protected String parentDirectory;
     private static int size;
     public static int unsavedChangesCounter;
     protected abstract void load() throws SomethingIsWrongException;
     protected abstract void save() throws SomethingIsWrongException;
+    protected boolean doAutoCommit;
     
     public String getParentDirectory() {
         return parentDirectory;
+    }
+    
+    public void setAutoCommit(boolean status) {
+    	doAutoCommit = status;
+    }
+    
+    public boolean getAutoCommit() {
+    	return doAutoCommit;
     }
     
     public String getName() {
@@ -30,7 +39,7 @@ public abstract class SomeTable implements Table {
         return size;
     }
     
-    public int getChangesCount() {
+    public int getChangesCounter() {
         return unsavedChangesCounter;
     }
     
@@ -44,7 +53,9 @@ public abstract class SomeTable implements Table {
         try {
             load();
         } catch (SomethingIsWrongException e) {
-            System.err.println("Error aqcuired while opening a table. Message: " + e.getMessage());
+        	if (e.getMessage() != "didn't exist") {
+        	    System.err.println("Error aqcuired while opening a table. Message: " + e.getMessage());
+        	}
         }
         
     }
@@ -120,7 +131,7 @@ public abstract class SomeTable implements Table {
     
     public void scanFromDisk(String file) throws SomethingIsWrongException {
         if (!UtilMethods.doesExist(file)) {
-            throw new SomethingIsWrongException("Unable to scan from disc.");
+            throw new SomethingIsWrongException("didn't exist");
         }
         ReadingUtils read = new ReadingUtils(file);
         while(!read.endOfFile()) {

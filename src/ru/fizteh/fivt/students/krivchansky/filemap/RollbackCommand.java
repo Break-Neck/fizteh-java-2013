@@ -14,9 +14,11 @@ public class RollbackCommand implements Commands<FileMapShellState> {
     public void implement(String[] args, FileMapShellState state)
             throws SomethingIsWrongException {
         if (state.table == null) {
-            throw new SomethingIsWrongException ("No table chosen");
+        	throw new SomethingIsWrongException("no table");
         }
+        int temp = state.table.getChangesCounter();
         state.table.rollback();
+        System.out.println(temp);
     }
 
 }

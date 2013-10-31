@@ -14,9 +14,11 @@ public class CommitCommand implements Commands<FileMapShellState>{
     public void implement(String[] args, FileMapShellState state)
             throws SomethingIsWrongException {
         if (state.table == null) {
-            throw new SomethingIsWrongException ("Table not found.");
+            throw new SomethingIsWrongException ("no table");
         }
+        int temp = state.table.getChangesCounter();
         state.table.commit();
+        System.out.println(temp);
     }
 
 }

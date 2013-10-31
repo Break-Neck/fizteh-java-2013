@@ -66,10 +66,12 @@ public class MultifileTable extends SomeTable {
 
     protected void load() {
         File tableDirectory = getTableDirectory();
-        for(final File backet: tableDirectory.listFiles()) {
-            for(final File file: backet.listFiles()) {
+        for(String backet : tableDirectory.list()) {
+        	File tempOuter = new File (tableDirectory, backet);
+            for(String file : tempOuter.list()) {
+            	File tempInner = new File (tempOuter, file);
                 try {
-					scanFromDisk(file.getAbsolutePath());
+					scanFromDisk(tempInner.getAbsolutePath());
 				} catch (SomethingIsWrongException e) {
 					System.out.println("Error acquired while reading out of table. Message: " + e.getMessage());
 				}
@@ -78,7 +80,7 @@ public class MultifileTable extends SomeTable {
     }
 
     private File getTableDirectory() {
-    	File curDir = new File(new File(".").getAbsolutePath());
+    	File curDir = new File(parentDirectory);
     	String temp = curDir.getAbsolutePath();
 		File tableDirectory = new File(temp, getName());
 		if (!tableDirectory.exists()) {
@@ -89,11 +91,11 @@ public class MultifileTable extends SomeTable {
 
     private int getDirNumber(String key) throws SomethingIsWrongException {
         byte[] bytes = UtilMethods.getBytes(key, UtilMethods.ENCODING);
-        return bytes[0] % DIR_QUANTITY;
+        return Math.abs(bytes[0] % DIR_QUANTITY);
     }
 
     private int getFileNumber(String key) throws SomethingIsWrongException {
         byte[] bytes = UtilMethods.getBytes(key, UtilMethods.ENCODING);
-        return bytes[0] / DIR_QUANTITY % FILES_PER_DIR;
+        return Math.abs(bytes[0] / DIR_QUANTITY % FILES_PER_DIR);
     }
 }

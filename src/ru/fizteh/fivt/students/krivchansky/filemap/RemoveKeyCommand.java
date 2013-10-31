@@ -13,11 +13,14 @@ public class RemoveKeyCommand implements Commands<FileMapShellState> {
 
     public void implement(String[] args, FileMapShellState state)
             throws SomethingIsWrongException {
+    	if (state.table == null) {
+    		throw new SomethingIsWrongException("no table");
+    	}
         String a = state.table.remove(args[0]);
-        if (a.isEmpty()) {
+        if (a == null || a.isEmpty()) {
             System.out.println("not found");
         } else {
-            System.out.println("found\n" + a);
+            System.out.println("removed");
         }
     }
 

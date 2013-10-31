@@ -13,15 +13,13 @@ public class Database implements TableProvider {
     public Database(String databaseDirectoryPath) {
         this.databaseDirectoryPath = databaseDirectoryPath;
         File databaseDirectory = new File(databaseDirectoryPath);
-        //if (databaseDirectory.getUsableSpace() != 0) {
-        	for(File tableFile : databaseDirectory.listFiles()) {
-            	if (tableFile!=null || tableFile.isFile()) {
+        for(File tableFile : databaseDirectory.listFiles()) {
+            	if (tableFile == null || tableFile.isFile()) {
                 	continue;
             	}
             	MultifileTable table = new MultifileTable(databaseDirectoryPath, tableFile.getName());
             	content.put(table.getName(), table);
         	}
-        //}
     }
 
     public MultifileTable getTable(String name) throws SomethingIsWrongException {
@@ -33,10 +31,10 @@ public class Database implements TableProvider {
         if (table == null) {
             throw new SomethingIsWrongException("Tablename does not exist");
         }
-        if (table.getChangesCount() > 0) {
-            throw new SomethingIsWrongException("There are " + table.getChangesCount() + " uncommited changes.");
+        if (table.getChangesCounter() > 0 && !table.getAutoCommit()) {
+            throw new SomethingIsWrongException(table.getChangesCounter() + " uncommited changes");
         }
-
+        table.setAutoCommit(true); //here if you want to open with autocommit option
         return table;
     }
 
@@ -45,9 +43,10 @@ public class Database implements TableProvider {
             throw new IllegalArgumentException("Table's name cannot be null");
         }
         if (content.containsKey(name)) {
-            throw new IllegalStateException("Table already exists");
+            throw new IllegalStateException(name + " exists");
         }
         MultifileTable table = new MultifileTable(databaseDirectoryPath, name);
+        table.setAutoCommit(true);  //here you can change if you need autocommit on use/exit or not 
         content.put(name, table);
         return table;
     }
@@ -58,12 +57,23 @@ public class Database implements TableProvider {
         }
 
         if (!content.containsKey(name)) {
-            throw new SomethingIsWrongException("Table doesn't exist");
+            throw new SomethingIsWrongException(name + " not exists");
         }
-
         content.remove(name);
-
         File tableFile = new File(databaseDirectoryPath, name);
+        if (tableFile.list().length != 0 ) {
+        	for (String temp : tableFile.list() ) {
+        		File toDel = new File (tableFile.getAbsolutePath(), temp);
+        		if (toDel.list().length != 0 ) {
+        			for (String innerTemp : toDel.list()) {
+        				File innerToDel = new File (toDel.getAbsolutePath(), innerTemp);
+        				innerToDel.delete();
+        			}
+        		}
+        		toDel.delete();
+        	}
+        }
         tableFile.delete();
+        
     }
 }

@@ -40,7 +40,7 @@ public class Shell<State> {
         }
         String[] commandArguments = Arrays.copyOfRange(data, 1, data.length);
         usedOne.implement(commandArguments, state);
-    }
+        }
     
     private String[] splitLine(String str) {
         str = str.trim();

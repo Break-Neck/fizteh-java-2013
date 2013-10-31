@@ -15,7 +15,8 @@ public class DropCommand implements Commands<MultiFileMapShellState> {
 	public void implement(String[] args, MultiFileMapShellState state) throws SomethingIsWrongException {
 		try {
 			state.tableProvider.removeTable(args[0]);
-			System.out.println("removed");
+			System.out.println("dropped");
+			state.table = null;
 		} catch (Exception e) {
 			throw new SomethingIsWrongException (e.getMessage());
 		}

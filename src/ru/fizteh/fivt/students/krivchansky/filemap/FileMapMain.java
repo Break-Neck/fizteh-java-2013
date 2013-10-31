@@ -12,6 +12,7 @@ public class FileMapMain {
         Shell<FileMapShellState> shell = new Shell<FileMapShellState>(com);
         String dbDirectory = System.getProperty("fizteh.db.dir");
         state.table = new SingleFileTable(dbDirectory, "master");
+        state.table.setAutoCommit(true);
         shell.setShellState(state);
         shell.consoleWay(state);
     }

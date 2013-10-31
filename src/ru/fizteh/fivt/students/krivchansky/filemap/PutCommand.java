@@ -14,7 +14,7 @@ public class PutCommand implements Commands<FileMapShellState> {
     public void implement(String[] args, FileMapShellState state)
             throws SomethingIsWrongException {
     	if (state.table == null) {
-    		throw new SomethingIsWrongException("No table chosen");
+    		throw new SomethingIsWrongException("no table");
     	}
         String temp = state.table.put(args[0], args[1]);
         if (temp != null) {

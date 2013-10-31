@@ -16,10 +16,14 @@ public class UseCommand implements Commands<MultiFileMapShellState> {
 	
 	public void implement(String[] args, MultiFileMapShellState state) throws SomethingIsWrongException {
 		MultifileTable oldOne = (MultifileTable) state.table;
-		state.table = state.tableProvider.getTable(args[0]);
-		System.out.println("using table " + state.table.getName());
 		if (oldOne != null) {
-			oldOne.commit();
+			if (state.table.getAutoCommit()) {
+		  	    oldOne.commit();
+		    } else if(state.table.getChangesCounter() != 0 && !state.table.getAutoCommit()) {
+			    throw new SomethingIsWrongException (state.table.getChangesCounter() + " unsaved changes");
+		    }
 		}
+		state.table = state.tableProvider.getTable(args[0]);
+		System.out.println("using " + state.table.getName());
 	}
 }
