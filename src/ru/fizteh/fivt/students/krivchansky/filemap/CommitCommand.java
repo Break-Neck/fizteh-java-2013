@@ -18,7 +18,9 @@ public class CommitCommand implements Commands<FileMapShellState>{
         }
         int temp = state.table.getChangesCounter();
         state.table.commit();
-        System.out.println(temp);
+        if(!state.table.getAutoCommit()) {
+        	System.out.println(temp);
+        }
     }
 
 }

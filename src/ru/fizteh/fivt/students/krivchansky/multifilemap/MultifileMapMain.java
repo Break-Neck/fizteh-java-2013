@@ -24,7 +24,6 @@ public class MultifileMapMain {
         HashSet<Commands> actualResult = new HashSet<Commands>(res);
         Shell<MultiFileMapShellState> shell = new Shell<MultiFileMapShellState>(actualResult);
         String dbDirectory = System.getProperty("fizteh.db.dir");
-        System.out.println(dbDirectory);
         DatabaseFactory factory = new DatabaseFactory();
         state.tableProvider = factory.create(dbDirectory);
         shell.setShellState(state);

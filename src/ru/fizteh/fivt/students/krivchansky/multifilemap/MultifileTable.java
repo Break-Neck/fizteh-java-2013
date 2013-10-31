@@ -37,7 +37,7 @@ public class MultifileTable extends SomeTable {
             		}
             	}
             } catch (SomethingIsWrongException e) {
-				e.printStackTrace();
+            	System.out.println(e.getMessage());
             }
             String dirName = String.format("%d.dir", dirNumber);
             File directory = new File(tableDirectory, dirName);

@@ -134,11 +134,11 @@ public abstract class SomeTable implements Table {
             throw new SomethingIsWrongException("didn't exist");
         }
         ReadingUtils read = new ReadingUtils(file);
-        while(!read.endOfFile()) {
+        do {
             String key = read.readKey();
             String value = read.readValue();
             unchangedOldData.put(key, value);
-        }
+        } while(!read.endOfFile());
         UtilMethods.closeCalm(read.tempFile);
     }
     
