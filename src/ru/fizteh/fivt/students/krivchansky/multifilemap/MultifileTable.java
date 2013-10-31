@@ -68,14 +68,16 @@ public class MultifileTable extends SomeTable {
         File tableDirectory = getTableDirectory();
         for(String backet : tableDirectory.list()) {
         	File tempOuter = new File (tableDirectory, backet);
-            for(String file : tempOuter.list()) {
-            	File tempInner = new File (tempOuter, file);
-                try {
-					scanFromDisk(tempInner.getAbsolutePath());
-				} catch (SomethingIsWrongException e) {
-					System.out.println("Error acquired while reading out of table. Message: " + e.getMessage());
-				}
-            }
+        	if (tempOuter!=null && tempOuter.isDirectory()) {
+        		for(String file : tempOuter.list()) {
+        			File tempInner = new File (tempOuter, file);
+        			try {
+        				scanFromDisk(tempInner.getAbsolutePath());
+        			} catch (SomethingIsWrongException e) {
+        				System.out.println("Error acquired while reading out of table. Message: " + e.getMessage());
+        			}
+        		}
+        	}
         }
     }
 

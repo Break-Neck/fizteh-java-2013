@@ -93,7 +93,7 @@ public class UtilMethods {
     public static int countBytes(String string, String encoding) {
         try {
             byte[] bytes = string.getBytes(encoding);
-            return bytes.length;
+            return Math.abs(bytes.length);
         } catch(Exception e) {
             return 0;
         }
