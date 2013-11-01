@@ -24,6 +24,18 @@ public class MultifileMapMain {
         HashSet<Commands> actualResult = new HashSet<Commands>(res);
         Shell<MultiFileMapShellState> shell = new Shell<MultiFileMapShellState>(actualResult);
         String dbDirectory = System.getProperty("fizteh.db.dir");
+        File db = new File (dbDirectory, "fizteh");
+        if (db.mkdir()) {
+        	File oneMore = new File(db.getAbsolutePath(), "db");
+        	oneMore.mkdir();
+        	File andLast = new File(oneMore.getAbsolutePath(), "dir");
+        	andLast.mkdir();
+        	dbDirectory = andLast.getAbsolutePath();
+        } else {
+        	File temp = new File(db.getAbsolutePath(), "db");
+        	File andLast = new File(temp.getAbsolutePath(), "dir");
+        	dbDirectory = andLast.getAbsolutePath();
+        }
         DatabaseFactory factory = new DatabaseFactory();
         state.tableProvider = factory.create(dbDirectory);
         shell.setShellState(state);

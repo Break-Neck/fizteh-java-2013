@@ -42,6 +42,9 @@ public class ReadingUtils {
             while(b != 0) {
                 bytes.write(b);
                 b = tempFile.readByte();
+                if (tempFile.getFilePointer() >= valueShift) {
+                    return null;
+                }
             }
             array = UtilMethods.bytesToArray(bytes);
         } catch (IOException e) {
@@ -83,7 +86,7 @@ public class ReadingUtils {
             try {
                 result = (tempFile.getFilePointer() == valueShift);
             } catch (EOFException ee) {
-                return result;
+                return true;
             } catch (IOException e) {
                 throw new SomethingIsWrongException("Error aqcuired while reading a file " + e.getMessage());
             }
