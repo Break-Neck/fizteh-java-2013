@@ -64,7 +64,7 @@ public class Shell<State> {
     
     public void consoleWay(State state) {
         Scanner forInput = new Scanner(System.in);
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {	
             System.out.print(greeting);
             try {
                 runLine(forInput.nextLine(), state);                  
@@ -85,7 +85,7 @@ public class Shell<State> {
         Set<Commands> commands =  new HashSet<Commands>() {{ add(new WhereAreWeCommand()); add(new CopyCommand()); add(new DirectoryInfoCommand());
         	add(new ExitCommand()); add(new MakeDirectoryCommand()); add(new MoveCommand()); add(new RemoveCommand());  }};
         Shell<ShellState> shell = new Shell<ShellState>(commands);
-        
+      
         if (args.length != 0) {
             String arg = UtilMethods.uniteItems(Arrays.asList(args), " ");
             try {
@@ -104,6 +104,25 @@ public class Shell<State> {
         System.exit(0);
     }
     
+    
+    public void run(String[] args, Shell<State> shell) {
+    	if (args.length != 0) {
+            String arg = UtilMethods.uniteItems(Arrays.asList(args), " ");
+            try {
+                shell.runLine(arg, state);                  
+            } catch (SomethingIsWrongException exc) {
+                if (exc.getMessage().equals("EXIT")) {
+                    System.exit(0);
+                } else {
+                    System.err.println(exc.getMessage());
+                    System.exit(-1);
+                }
+            }
+        } else {
+            shell.consoleWay(state);
+        }
+        System.exit(0);
+    }
     
 
 }

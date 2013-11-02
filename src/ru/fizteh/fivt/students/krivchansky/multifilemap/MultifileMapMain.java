@@ -39,6 +39,6 @@ public class MultifileMapMain {
         DatabaseFactory factory = new DatabaseFactory();
         state.tableProvider = factory.create(dbDirectory);
         shell.setShellState(state);
-        shell.consoleWay(state);
+        shell.run(args, shell);
 	    }
 }

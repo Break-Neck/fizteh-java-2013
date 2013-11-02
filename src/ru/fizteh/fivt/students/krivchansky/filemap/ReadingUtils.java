@@ -42,9 +42,6 @@ public class ReadingUtils {
             while(b != 0) {
                 bytes.write(b);
                 b = tempFile.readByte();
-                if (tempFile.getFilePointer() >= valueShift) {
-                    return null;
-                }
             }
             array = UtilMethods.bytesToArray(bytes);
         } catch (IOException e) {
@@ -123,7 +120,7 @@ public class ReadingUtils {
     
         private int readOffset() throws SomethingIsWrongException {
             try {
-                return tempFile.readInt();
+                return tempFile.readByte();
             } catch (IOException e) {
                 throw new SomethingIsWrongException("Error aqcuired while reading a file: " + e.getMessage());
             }

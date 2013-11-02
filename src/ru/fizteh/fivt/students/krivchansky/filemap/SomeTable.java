@@ -107,7 +107,7 @@ public abstract class SomeTable implements Table {
     private int keySize(Set<String> keys) {
         int keysSize = 0;
         for (String key : keys) {
-            keysSize += UtilMethods.countBytes(key, UtilMethods.ENCODING) + 5;
+            keysSize += UtilMethods.countBytes(key, UtilMethods.ENCODING) + 2;
         }
         return keysSize;
     }
