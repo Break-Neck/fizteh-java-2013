@@ -56,23 +56,23 @@ public class ReadingUtils {
         return returnKey;
     }
     
-        public String readValue() throws SomethingIsWrongException {
-            int offset = readOffset();
-            int nextOffset = readNextOffset();
-            long currentOffset;
-            try {
-                currentOffset = tempFile.getFilePointer();
-                tempFile.seek(offset);
-                int valueLength = nextOffset-offset;
-                byte[] bytes = new byte[valueLength];
-                tempFile.read(bytes, 0, valueLength);
-                tempFile.seek(currentOffset);
-                return new String(bytes, UtilMethods.ENCODING);
-            } catch (IOException e) {
-                throw new SomethingIsWrongException("Error acquired: " + e.getMessage());
-            }
-            
+    public String readValue() throws SomethingIsWrongException {
+        int offset = readOffset();
+        int nextOffset = readNextOffset();
+        long currentOffset;
+        try {
+            currentOffset = tempFile.getFilePointer();
+            tempFile.seek(offset);
+            int valueLength = nextOffset-offset;
+            byte[] bytes = new byte[valueLength];
+            tempFile.read(bytes, 0, valueLength);
+            tempFile.seek(currentOffset);
+            return new String(bytes, UtilMethods.ENCODING);
+        } catch (IOException e) {
+            throw new SomethingIsWrongException("Error acquired: " + e.getMessage());
         }
+            
+    }
     
         public boolean endOfFile() throws SomethingIsWrongException {
             if (tempFile == null) {
@@ -120,7 +120,7 @@ public class ReadingUtils {
     
         private int readOffset() throws SomethingIsWrongException {
             try {
-                return tempFile.readByte();
+                return tempFile.readInt();
             } catch (IOException e) {
                 throw new SomethingIsWrongException("Error aqcuired while reading a file: " + e.getMessage());
             }

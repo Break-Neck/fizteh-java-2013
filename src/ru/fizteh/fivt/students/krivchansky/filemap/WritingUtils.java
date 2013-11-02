@@ -36,7 +36,7 @@ public class WritingUtils {
 
     public void writeOffset(int offset) throws SomethingIsWrongException {
         try {
-            dataFile.writeByte(offset);
+            dataFile.writeInt(offset);
         } catch (IOException e) {
             throw new SomethingIsWrongException("Error acquired while writing to file: " + e.getMessage());
         }
