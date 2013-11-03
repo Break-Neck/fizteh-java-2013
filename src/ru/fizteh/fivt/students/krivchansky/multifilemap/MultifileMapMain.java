@@ -25,15 +25,25 @@ public class MultifileMapMain {
         Shell<MultiFileMapShellState> shell = new Shell<MultiFileMapShellState>(actualResult);
         String dbDirectory = System.getProperty("fizteh.db.dir");
         File db = new File (dbDirectory, "fizteh");
-        if (db.mkdir()) {
-        	File oneMore = new File(db.getAbsolutePath(), "db");
+        if (!db.isDirectory()) {
+        	System.out.println("Error occured. No path to database.");
+        	System.exit(-1);
+        	/*File oneMore = new File(db.getAbsolutePath(), "db");
         	oneMore.mkdir();
         	File andLast = new File(oneMore.getAbsolutePath(), "dir");
         	andLast.mkdir();
-        	dbDirectory = andLast.getAbsolutePath();
+        	dbDirectory = andLast.getAbsolutePath();*/
         } else {
         	File temp = new File(db.getAbsolutePath(), "db");
+        	if (!temp.isDirectory()) {
+        		System.err.println("Error occured. No path to database.");
+            	System.exit(-1);
+        	}
         	File andLast = new File(temp.getAbsolutePath(), "dir");
+        	if (!andLast.isDirectory()) {
+        		System.err.println("Error occured. No path to database.");
+            	System.exit(-1);
+        	}
         	dbDirectory = andLast.getAbsolutePath();
         }
         DatabaseFactory factory = new DatabaseFactory();
