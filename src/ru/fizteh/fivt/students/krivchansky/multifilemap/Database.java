@@ -29,7 +29,7 @@ public class Database implements TableProvider {
         MultifileTable table = content.get(name);
 
         if (table == null) {
-            throw new SomethingIsWrongException("Tablename does not exist");
+            throw new SomethingIsWrongException(name + " not exists");
         }
         if (table.getChangesCounter() > 0 && !table.getAutoCommit()) {
             throw new SomethingIsWrongException(table.getChangesCounter() + " uncommited changes");
