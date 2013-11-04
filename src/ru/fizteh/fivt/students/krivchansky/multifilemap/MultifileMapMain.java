@@ -24,8 +24,8 @@ public class MultifileMapMain {
         HashSet<Commands> actualResult = new HashSet<Commands>(res);
         Shell<MultiFileMapShellState> shell = new Shell<MultiFileMapShellState>(actualResult);
         String dbDirectory = System.getProperty("fizteh.db.dir");
-        if (dbDirectory != null) {
-        	DatabaseFactory factory = new DatabaseFactory();
+        if (dbDirectory != null && new File(dbDirectory).isDirectory()) {
+         	DatabaseFactory factory = new DatabaseFactory();
             state.tableProvider = factory.create(dbDirectory);
             shell.setShellState(state);
             shell.run(args, shell);
@@ -43,13 +43,13 @@ public class MultifileMapMain {
         } else {
         	File temp = new File(db.getAbsolutePath(), "db");
         	if (!temp.isDirectory()) {
-        		System.err.println("Error occured. No path to database.");
-            	System.exit(-1);
+        		System.err.println("Error occured. Wrong path to database.");
+            	System.exit(-2);
         	}
         	File andLast = new File(temp.getAbsolutePath(), "dir");
         	if (!andLast.isDirectory()) {
-        		System.err.println("Error occured. No path to database.");
-            	System.exit(-1);
+        		System.err.println("Error occured. Bad path to database.");
+            	System.exit(-3);
         	}
         	dbDirectory = andLast.getAbsolutePath();
         }
