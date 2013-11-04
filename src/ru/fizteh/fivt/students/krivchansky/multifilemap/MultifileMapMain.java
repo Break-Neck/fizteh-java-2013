@@ -24,6 +24,13 @@ public class MultifileMapMain {
         HashSet<Commands> actualResult = new HashSet<Commands>(res);
         Shell<MultiFileMapShellState> shell = new Shell<MultiFileMapShellState>(actualResult);
         String dbDirectory = System.getProperty("fizteh.db.dir");
+        if (dbDirectory != null) {
+        	DatabaseFactory factory = new DatabaseFactory();
+            state.tableProvider = factory.create(dbDirectory);
+            shell.setShellState(state);
+            shell.run(args, shell);
+            System.exit(0);
+        }
         File db = new File (dbDirectory, "fizteh");
         if (!db.isDirectory()) {
         	System.out.println("Error occured. No path to database.");
