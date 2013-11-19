@@ -1,36 +1,28 @@
 package ru.fizteh.fivt.students.krivchansky.filemap;
-import ru.fizteh.fivt.students.krivchansky.shell.*;
 
 import java.io.File;
 import java.io.IOException;
 
 
-public class SingleFileTable extends SomeTable{
+public class SingleFileTable extends TableUsingStrings{
     
     public static final String DATABASENAME = "db.dat";
 
-    public SingleFileTable(String dir, String name) {
-        super(dir, name);
+    public SingleFileTable(String directory, String tableName) {
+    	super(directory, tableName);
     }
     
-    protected void load() throws SomethingIsWrongException {
-        scanFromDisk(getPathToDatabase());
+    protected void load() throws IOException {
+        FileMapReadingUtils.scanFromDisk(getPathToDatabase(), new SimpleTableBuilder(this));
     }
     
-    protected void save() throws SomethingIsWrongException {
-        writeOnDisk(unchangedOldData.keySet(), getPathToDatabase());
+    protected void save() throws IOException {
+        FileMapWritingUtils.writeOnDisk(unchangedOldData.keySet(), getPathToDatabase(), new SimpleTableBuilder(this));
     }
     
     private String getPathToDatabase() {
-    	File curDir = new File(new File(".").getAbsolutePath());
-        File databaseFile;
-		try {
-			databaseFile = new File (curDir.getCanonicalPath(), DATABASENAME);
-	        return databaseFile.getAbsolutePath();
-		} catch (IOException e) {
-			e.getMessage();
-		}
-		return "";
+    	File file = new File(getParentDirectory(), DATABASENAME);
+    	return file.getAbsolutePath();
     }
     
 

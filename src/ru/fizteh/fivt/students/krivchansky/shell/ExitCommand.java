@@ -9,7 +9,7 @@ public class ExitCommand implements Commands<ShellState> {
     public int getArgumentQuantity() {
         return 0;
     }
-    public void implement(String[] args, ShellState state) throws SomethingIsWrongException {
+    public void implement(String args, ShellState state) throws SomethingIsWrongException {
         throw new SomethingIsWrongException("EXIT");
     }
 

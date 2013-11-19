@@ -13,7 +13,7 @@ public class RemoveCommand implements Commands<ShellState> {
         return 1;
     }
     
-    public void implement(String[] args, ShellState state) throws SomethingIsWrongException {
+    public void implement(String args, ShellState state) throws SomethingIsWrongException {
         String whoToDelete = args[0];
         File deleteIt = UtilMethods.getAbsoluteName(whoToDelete, state);
         try {

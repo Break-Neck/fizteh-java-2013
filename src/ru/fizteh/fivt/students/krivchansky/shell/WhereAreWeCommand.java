@@ -10,7 +10,7 @@ public class WhereAreWeCommand implements Commands<ShellState> {
         return 0;
     }
     
-    public void implement(String[] args, ShellState state) {
+    public void implement(String args, ShellState state) {
         System.out.println(state.getCurDir());
     }
 }

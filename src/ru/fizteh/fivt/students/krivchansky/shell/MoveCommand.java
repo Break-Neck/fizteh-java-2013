@@ -29,7 +29,7 @@ public class MoveCommand implements Commands<ShellState> {
     }
     
     
-    public void implement(String[] args, ShellState state) throws SomethingIsWrongException {
+    public void implement(String args, ShellState state) throws SomethingIsWrongException {
         String from = args[0];
         String to = args[1];
         File source = UtilMethods.getAbsoluteName(from, state);

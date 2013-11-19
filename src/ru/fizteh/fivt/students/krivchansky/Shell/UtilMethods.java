@@ -12,7 +12,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 
 public class UtilMethods {
-	public static final String ENCODING = "UTF-8";
     public static String uniteItems(Collection<?> items, String separator) {
         boolean isFirstIteration = true;
         StringBuilder joinBuilder = new StringBuilder();
@@ -69,33 +68,9 @@ public class UtilMethods {
         }
         return file;
     }
-    public static byte[] getBytes(String string, String encoding) throws SomethingIsWrongException {
-        byte[] bytes = null;
-        try {
-            bytes = string.getBytes(encoding);
-        } catch (UnsupportedEncodingException e) {
-            throw new SomethingIsWrongException("Unable to convert string to bytes of this type: " + e.getMessage());
-        }
-        return bytes;
-    }
     
-    public static byte[] bytesToArray(ByteArrayOutputStream bytes) {
-        byte[] result = new byte[bytes.size()];
-        result = bytes.toByteArray();
-        return result;
-    }
+
     
-    public static boolean doesExist(String path) {
-        File file = new File(path);
-        return file.exists();
-    }
     
-    public static int countBytes(String string, String encoding) {
-        try {
-            byte[] bytes = string.getBytes(encoding);
-            return Math.abs(bytes.length);
-        } catch(Exception e) {
-            return 0;
-        }
-    }
+    
 }

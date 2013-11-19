@@ -15,7 +15,7 @@ public class DirectoryInfoCommand implements Commands<ShellState> {
         return 0;
     }
     
-    public void implement(String[] args, ShellState state) {
+    public void implement(String args, ShellState state) {
         File dir = new File(state.getCurDir());
         String[] files = dir.list();
         List<String> tempObj = Arrays.asList(files);

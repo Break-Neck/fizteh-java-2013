@@ -1,12 +1,17 @@
 package ru.fizteh.fivt.students.krivchansky.multifilemap;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.*;
 
 import java.io.File;
 
-public class DatabaseFactory {
-    public Database create(String directory) {
+public class DatabaseFactory implements TableProviderFactory {
+    public TableProvider create(String directory) {
+    	if (directory.isEmpty() || directory == null) {
+    		throw new IllegalArgumentException ("directory name cannot be null");
+    	}
     	File databaseDirectory = new File(directory);
+    	if (databaseDirectory.isFile()) {
+    		throw new IllegalArgumentException ("it must be directory, not file");
+    	}
     	if (!databaseDirectory.exists()) {
     		databaseDirectory.mkdir();
     	}

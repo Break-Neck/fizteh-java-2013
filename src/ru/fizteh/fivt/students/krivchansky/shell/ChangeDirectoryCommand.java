@@ -14,7 +14,7 @@ public class ChangeDirectoryCommand implements Commands<ShellState>{
         return 1;
     }
     
-    public void implement(String[] args, ShellState state) throws SomethingIsWrongException {
+    public void implement(String args, ShellState state) throws SomethingIsWrongException {
         String newLocation = args[0]; //path
         File newDisposition = UtilMethods.getAbsoluteName(newLocation, state);//Directory
         if (!newDisposition.isDirectory()) {
