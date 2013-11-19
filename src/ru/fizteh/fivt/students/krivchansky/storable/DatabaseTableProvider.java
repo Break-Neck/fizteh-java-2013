@@ -44,7 +44,7 @@ public class DatabaseTableProvider implements TableProvider {
 			tables.put(table.getName(), table);
 		}
 	}
-	
+	@Override
 	public Table getTable(String name) {
 		try {
 			if (name == null || name.isEmpty()) {
@@ -65,7 +65,7 @@ public class DatabaseTableProvider implements TableProvider {
 			tableLock.unlock();
 		}
 	}
-	
+	@Override
 	public Table createTable(String name, List<Class<?>> columnTypes) throws IOException {
 		try {
 			if (name == null || name.isEmpty()) {
@@ -87,7 +87,7 @@ public class DatabaseTableProvider implements TableProvider {
 			tableLock.unlock();
 		}
 	}
-	
+	@Override
 	public void removeTable(String name) throws IOException {
 		try {
 			if (name == null || name.isEmpty()) {

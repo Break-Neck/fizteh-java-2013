@@ -30,7 +30,7 @@ public class Shell<State> {
         this.state = state;
     }
     
-    private void runCommand(String[] data, State state) throws SomethingIsWrongException { //команды с аргументами в разных строках
+    private void runCommand(String[] data, State state) throws SomethingIsWrongException { 
         for (String command : data) {
         	if (data[0].length() == 0) {
             	throw new SomethingIsWrongException ("Empty string.");

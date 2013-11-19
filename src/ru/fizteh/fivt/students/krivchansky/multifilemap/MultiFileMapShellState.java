@@ -15,7 +15,6 @@ public class MultiFileMapShellState extends FileMapShellState implements Multifi
 		}
 
 		public Table createTable(String args) {
-			//
 			return tableProvider.createTable(args);
 		}
 

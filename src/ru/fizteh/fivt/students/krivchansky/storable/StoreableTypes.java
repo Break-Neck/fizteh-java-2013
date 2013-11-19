@@ -63,7 +63,7 @@ public enum StoreableTypes {
 		HashMap<String, StoreableTypes> tempByName = new HashMap<>();
 		HashMap<Class<?>, StoreableTypes> tempByClass = new HashMap<>();
 		for (StoreableTypes value : values()) {
-			tempByName.put(value.name(), value);
+			tempByName.put(value.name, value);
 			tempByClass.put(value.type, value);
 		}
 		typesByName = Collections.unmodifiableMap(tempByName);
