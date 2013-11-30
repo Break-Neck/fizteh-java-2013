@@ -93,6 +93,9 @@ public class StorableTableLine implements GetColumnTypeStorable {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         if (!obj.getClass().getName().equals(this.getClass().getName())) {
             return false;
         }
@@ -120,6 +123,7 @@ public class StorableTableLine implements GetColumnTypeStorable {
             if (!first) {
                 stringBuilder.append(",");
             }
+            first = false;
             if (value != null) {
                 stringBuilder.append(value.toString());
             }
