@@ -34,7 +34,7 @@ public class ProxyInvocationHandler implements InvocationHandler {
         try {
             methodResult = method.invoke(implementation, args);
             if (!method.getReturnType().getName().equals("void")) {
-                jsonObject.put("returnValue", methodResult);
+                writeResult(methodResult);
             }
         } catch (InvocationTargetException e) {
             jsonObject.put("thrown", e.getTargetException().toString());
@@ -55,6 +55,21 @@ public class ProxyInvocationHandler implements InvocationHandler {
         } else {
             jsonObject.put("arguments", makeJSONArray(Arrays.asList(args)));
         }
+    }
+
+    private void writeResult(Object result) throws JSONException {
+        Object resultValue = null;
+        if (result != null) {
+            if (result instanceof Iterable) {
+                resultValue = makeJSONArray((Iterable) result);
+            } else {
+                resultValue = result;
+            }
+        } else {
+            resultValue = JSONObject.NULL;
+        }
+        jsonObject = jsonObject.put("returnValue", resultValue);
+        objects.clear();
     }
 
     private JSONArray makeJSONArray(Iterable collection) {

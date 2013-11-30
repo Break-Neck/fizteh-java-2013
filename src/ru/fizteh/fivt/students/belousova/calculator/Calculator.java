@@ -4,9 +4,10 @@
  @author Alexandra Belousova (sashbel@inbox.ru)
  */
 package ru.fizteh.fivt.students.belousova.calculator;
+
+import java.io.IOException;
 import java.util.EmptyStackException;
 import java.util.Stack;
-import java.io.IOException;
 
 public class Calculator {
 
@@ -15,13 +16,13 @@ public class Calculator {
     private static Stack<Integer> numberStack = new Stack<Integer>();
     private static boolean unarFlag = true;
     private static int[][] priority = {{4, 1, 1, 1, 5},
-            {2, 2, 1, 1, 2},{2, 2, 2, 1, 2},{5, 1, 1, 1, 3}};
+            {2, 2, 1, 1, 2}, {2, 2, 2, 1, 2}, {5, 1, 1, 1, 3}};
     private static boolean atLeastOneNumber = false;
 
     public static void main(String[] args) {
         String s;
         StringBuilder sb = new StringBuilder();
-        for (String si : args){
+        for (String si : args) {
             sb.append(si);
             sb.append(" ");
         }
@@ -50,8 +51,7 @@ public class Calculator {
                 throw new IOException("Некорректное выражение");
             }
             return Integer.toString(res, 18);
-        }
-        catch (EmptyStackException e) {
+        } catch (EmptyStackException e) {
             throw new IOException("Некорректное выражение");
         }
     }
@@ -62,7 +62,7 @@ public class Calculator {
         for (char c : s.toCharArray()) {
             if ((c == '-') && unarFlag) {
                 unarFlag = false;
-                parse ("0-");
+                parse("0-");
                 continue;
             }
             if ((c == '+') && unarFlag) {
@@ -82,8 +82,7 @@ public class Calculator {
                     unwindOpStack(c);
                     if ((c == '(') || (c == '&')) {
                         unarFlag = true;
-                    }
-                    else unarFlag = false;
+                    } else unarFlag = false;
                     break;
                 case ' ':
                     if (!numberStack.empty()) {
@@ -126,23 +125,23 @@ public class Calculator {
                         && (Math.abs(a) > Math.abs(Integer.MAX_VALUE - b))) {
                     throw new IOException("Ошибка переполнения");
                 }
-                return  a+b;
+                return a + b;
             case '-':
                 if (((a > 0 && b < 0) || (a > 0 && b < 0))
                         && (Math.abs(a) > Math.abs(Integer.MAX_VALUE - b))) {
                     throw new IOException("Ошибка переполнения");
                 }
-                return  a-b;
+                return a - b;
             case '*':
                 if (Math.abs(a) > Math.abs(Integer.MAX_VALUE / b)) {
                     throw new IOException("Ошибка переполнения");
                 }
-                return  a*b;
+                return a * b;
             case '/':
                 if (b.equals(0)) {
                     throw new IOException("Деление на ноль");
                 }
-                return  a/b;
+                return a / b;
         }
         return 0;
     }
@@ -157,7 +156,7 @@ public class Calculator {
             while (!numberStack.empty()) {
                 result += numberStack.pop() * k;
                 k *= 18;
-                digits ++;
+                digits++;
                 if (digits > 7) {
                     throw new IOException("Переполнение - слишком большое число");
                 }
@@ -167,9 +166,10 @@ public class Calculator {
         return result;
     }
 
-    private static int convertOp2Int (char op) {
+    private static int convertOp2Int(char op) {
         switch (op) {
-            case '&': return 0;
+            case '&':
+                return 0;
             case '+':
             case '-':
                 return 1;
