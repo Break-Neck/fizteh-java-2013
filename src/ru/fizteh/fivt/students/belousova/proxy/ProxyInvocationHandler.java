@@ -34,7 +34,7 @@ public class ProxyInvocationHandler implements InvocationHandler {
         try {
             methodResult = method.invoke(implementation, args);
             if (!method.getReturnType().getName().equals("void")) {
-                jsonObject.put("returnValue", methodResult.toString());
+                jsonObject.put("returnValue", methodResult);
             }
         } catch (InvocationTargetException e) {
             jsonObject.put("thrown", e.getTargetException().toString());
