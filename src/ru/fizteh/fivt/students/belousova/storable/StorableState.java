@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StorableState extends MultiFileShellState {
-    private ChangesCountingTableProvider tableProvider;
-    private ChangesCountingTable currentTable;
+    private ExtendedTableProvider tableProvider;
+    private ExtendedTable currentTable;
 
-    public StorableState(ChangesCountingTableProvider provider, ChangesCountingTable table) {
+    public StorableState(ExtendedTableProvider provider, ExtendedTable table) {
         tableProvider = provider;
         currentTable = table;
     }

@@ -3,7 +3,7 @@ package ru.fizteh.fivt.students.belousova.storable.tests;
 import org.junit.*;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.students.belousova.storable.ChangesCountingTable;
+import ru.fizteh.fivt.students.belousova.storable.ExtendedTable;
 import ru.fizteh.fivt.students.belousova.storable.StorableTableProvider;
 import ru.fizteh.fivt.students.belousova.storable.StorableTableProviderFactory;
 import ru.fizteh.fivt.students.belousova.utils.FileUtils;
@@ -18,7 +18,7 @@ public class StorableTableTest {
     private static String testString;
     private static Storeable testStorable;
     private static String testString1;
-    private ChangesCountingTable table;
+    private ExtendedTable table;
 
     @BeforeClass
     public static void setUpClass() throws Exception {

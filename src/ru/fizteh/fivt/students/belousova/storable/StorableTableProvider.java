@@ -12,8 +12,8 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StorableTableProvider extends AbstractTableProvider<ChangesCountingTable>
-        implements ChangesCountingTableProvider {
+public class StorableTableProvider extends AbstractTableProvider<StorableTable>
+        implements ExtendedTableProvider {
 
     public StorableTableProvider(File directory) throws IOException {
         if (directory == null) {
@@ -25,7 +25,7 @@ public class StorableTableProvider extends AbstractTableProvider<ChangesCounting
             throw new IllegalArgumentException("'" + directory.getName() + "' is not a directory");
         }
 
-        dataDitectory = directory;
+        dataDirectory = directory;
 
         if (!directory.canRead()) {
             throw new IOException("directory is unavailable");
@@ -36,7 +36,34 @@ public class StorableTableProvider extends AbstractTableProvider<ChangesCounting
     }
 
     @Override
-    public ChangesCountingTable createTable(String name, List<Class<?>> columnTypes) throws IOException {
+    public StorableTable getTable(String name) {
+        checkIfClosed();
+
+        if (name == null) {
+            throw new IllegalArgumentException("null name");
+        }
+        if (name.isEmpty()) {
+            throw new IllegalArgumentException("empty name");
+        }
+        if (!name.matches(TABLE_NAME_FORMAT)) {
+            throw new IllegalArgumentException("incorrect name");
+        }
+
+        tableProviderTransactionLock.writeLock().lock();
+        try {
+            if (tableMap.get(name).isClosed()) {
+                tableMap.remove(name);
+            }
+        } finally {
+            tableProviderTransactionLock.writeLock().unlock();
+        }
+        return super.getTable(name);
+    }
+
+    @Override
+    public ExtendedTable createTable(String name, List<Class<?>> columnTypes) throws IOException {
+        checkIfClosed();
+
         if (name == null) {
             throw new IllegalArgumentException("null name");
         }
@@ -54,7 +81,7 @@ public class StorableTableProvider extends AbstractTableProvider<ChangesCounting
         if (columnTypes.isEmpty()) {
             throw new IllegalArgumentException("ColumnTypes list is empty");
         }
-        File tableFile = new File(dataDitectory, name);
+        File tableFile = new File(dataDirectory, name);
         tableProviderTransactionLock.writeLock().lock();
         tableProviderTransactionLock.readLock().lock();
         try {
@@ -67,7 +94,7 @@ public class StorableTableProvider extends AbstractTableProvider<ChangesCounting
             } catch (IOException e) {
                 throw new IllegalArgumentException("wrong column type table");
             }
-            ChangesCountingTable table = new StorableTable(tableFile, this);
+            StorableTable table = new StorableTable(tableFile, this);
             tableMap.put(name, table);
             return table;
         } finally {
@@ -78,6 +105,8 @@ public class StorableTableProvider extends AbstractTableProvider<ChangesCounting
 
     @Override
     public StorableTableLine deserialize(Table table, String value) throws ParseException {
+        checkIfClosed();
+
         try {
             return StorableUtils.readStorableValue(value, table);
         } catch (IndexOutOfBoundsException e) {
@@ -87,6 +116,8 @@ public class StorableTableProvider extends AbstractTableProvider<ChangesCounting
 
     @Override
     public String serialize(Table table, Storeable value) throws ColumnFormatException {
+        checkIfClosed();
+
         List<Class<?>> columnTypes = new ArrayList<>();
         for (int i = 0; i < table.getColumnsCount(); i++) {
             columnTypes.add(table.getColumnType(i));
@@ -96,11 +127,15 @@ public class StorableTableProvider extends AbstractTableProvider<ChangesCounting
 
     @Override
     public StorableTableLine createFor(Table table) {
+        checkIfClosed();
+
         return new StorableTableLine(table);
     }
 
     @Override
     public StorableTableLine createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException {
+        checkIfClosed();
+
         if (values.size() > table.getColumnsCount()) {
             throw new IndexOutOfBoundsException("too many values");
         }
@@ -111,5 +146,10 @@ public class StorableTableProvider extends AbstractTableProvider<ChangesCounting
             columnIndex++;
         }
         return storeable;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[" + dataDirectory.getAbsolutePath() + "]";
     }
 }

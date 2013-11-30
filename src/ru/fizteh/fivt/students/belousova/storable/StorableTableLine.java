@@ -109,4 +109,23 @@ public class StorableTableLine implements GetColumnTypeStorable {
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
         return table.getColumnType(columnIndex);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(getClass().getSimpleName());
+        stringBuilder.append("[");
+        boolean first = true;
+        for (Object value : columns) {
+            if (!first) {
+                stringBuilder.append(",");
+            }
+            if (value != null) {
+                stringBuilder.append(value.toString());
+            }
+        }
+        stringBuilder.append("]");
+
+        return stringBuilder.toString();
+    }
 }

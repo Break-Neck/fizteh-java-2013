@@ -9,13 +9,16 @@ import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class AbstractTableProvider<TableType> {
+public abstract class AbstractTableProvider<TableType extends AutoCloseable> implements AutoCloseable {
     protected final String TABLE_NAME_FORMAT = "[A-Za-zА-Яа-я0-9]+";
     protected final ReadWriteLock tableProviderTransactionLock = new ReentrantReadWriteLock(true);
     protected Map<String, TableType> tableMap = new HashMap<>();
-    protected File dataDitectory;
+    protected File dataDirectory;
+    protected boolean isClosed = false;
 
     public TableType getTable(String name) {
+        checkIfClosed();
+
         if (name == null) {
             throw new IllegalArgumentException("null name");
         }
@@ -35,6 +38,8 @@ public abstract class AbstractTableProvider<TableType> {
     }
 
     public void removeTable(String name) {
+        checkIfClosed();
+
         if (name == null) {
             throw new IllegalArgumentException("null name");
         }
@@ -48,7 +53,7 @@ public abstract class AbstractTableProvider<TableType> {
         tableProviderTransactionLock.writeLock().lock();
         try {
 
-            File tableDirectory = new File(dataDitectory, name);
+            File tableDirectory = new File(dataDirectory, name);
             try {
                 FileUtils.deleteDirectory(tableDirectory);
             } catch (IOException e) {
@@ -57,6 +62,25 @@ public abstract class AbstractTableProvider<TableType> {
             tableMap.remove(name);
         } finally {
             tableProviderTransactionLock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        tableProviderTransactionLock.writeLock().lock();
+        try {
+            for (String tableName : tableMap.keySet()) {
+                tableMap.get(tableName).close();
+            }
+            isClosed = true;
+        } finally {
+            tableProviderTransactionLock.writeLock().unlock();
+        }
+    }
+
+    protected void checkIfClosed() {
+        if (isClosed) {
+            throw new IllegalStateException("TableProvider is closed");
         }
     }
 }
