@@ -14,7 +14,7 @@ import java.util.IdentityHashMap;
 public class ProxyInvocationHandler implements InvocationHandler {
     private final Writer writer;
     private final Object implementation;
-    private JSONObject jsonObject = new JSONObject();
+    private JSONObject jsonObject;
     private IdentityHashMap<Object, Boolean> objects = new IdentityHashMap<>();
 
     public ProxyInvocationHandler(Writer writer, Object implementation) {
@@ -24,6 +24,7 @@ public class ProxyInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        jsonObject = new JSONObject();
         jsonObject.put("timestamp", System.currentTimeMillis());
         jsonObject.put("class", implementation.getClass().getName());
         jsonObject.put("method", method.getName());
