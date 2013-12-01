@@ -27,9 +27,11 @@ public class StorableTableProviderFactory implements ExtendedTableProviderFactor
 
     @Override
     public void close() throws Exception {
-        for (StorableTableProvider tableProvider : tableProviderSet) {
-            tableProvider.close();
+        if (!isClosed) {
+            for (StorableTableProvider tableProvider : tableProviderSet) {
+                tableProvider.close();
+            }
+            isClosed = true;
         }
-        isClosed = true;
     }
 }

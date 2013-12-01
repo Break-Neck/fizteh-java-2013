@@ -179,8 +179,10 @@ public abstract class AbstractTable<KeyType, ValueType> implements AutoCloseable
 
     @Override
     public void close() throws Exception {
-        rollback();
-        isClosed = true;
+        if (!isClosed) {
+            rollback();
+            isClosed = true;
+        }
     }
 
     public void checkIfClosed() {

@@ -51,8 +51,10 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
 
         tableProviderTransactionLock.writeLock().lock();
         try {
-            if (tableMap.get(name).isClosed()) {
-                tableMap.remove(name);
+            if (tableMap.get(name) != null) {
+                if (tableMap.get(name).isClosed()) {
+                    tableMap.remove(name);
+                }
             }
         } finally {
             tableProviderTransactionLock.writeLock().unlock();
@@ -128,7 +130,9 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
     @Override
     public StorableTableLine createFor(Table table) {
         checkIfClosed();
-
+        if (table == null) {
+            throw new IllegalArgumentException("table cannot be null");
+        }
         return new StorableTableLine(table);
     }
 
@@ -136,10 +140,16 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
     public StorableTableLine createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
         checkIfClosed();
-
+        if (table == null) {
+            throw new IllegalArgumentException("table cannot be null");
+        }
+        if (values == null) {
+            throw new IllegalArgumentException("values cannot be null");
+        }
         if (values.size() > table.getColumnsCount()) {
             throw new IndexOutOfBoundsException("too many values");
         }
+
         StorableTableLine storeable = new StorableTableLine(table);
         int columnIndex = 0;
         for (Object value : values) {

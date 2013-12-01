@@ -67,14 +67,16 @@ public abstract class AbstractTableProvider<TableType extends AutoCloseable> imp
 
     @Override
     public void close() throws Exception {
-        tableProviderTransactionLock.writeLock().lock();
-        try {
-            for (String tableName : tableMap.keySet()) {
-                tableMap.get(tableName).close();
+        if (!isClosed) {
+            tableProviderTransactionLock.writeLock().lock();
+            try {
+                for (String tableName : tableMap.keySet()) {
+                    tableMap.get(tableName).close();
+                }
+                isClosed = true;
+            } finally {
+                tableProviderTransactionLock.writeLock().unlock();
             }
-            isClosed = true;
-        } finally {
-            tableProviderTransactionLock.writeLock().unlock();
         }
     }
 

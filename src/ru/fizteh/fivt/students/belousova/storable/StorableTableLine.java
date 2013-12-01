@@ -11,6 +11,9 @@ public class StorableTableLine implements GetColumnTypeStorable {
     private Table table;
 
     public StorableTableLine(Table table) {
+        if (table == null) {
+            throw new IllegalArgumentException("table cannot be null");
+        }
         this.table = table;
         for (int i = 0; i < table.getColumnsCount(); i++) {
             columns.add(null);
