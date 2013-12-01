@@ -5,7 +5,6 @@ import ru.fizteh.fivt.students.belousova.shell.Command;
 import java.io.IOException;
 
 public class CommandGet implements Command {
-    private static final String name = "get";
     private TableState state;
 
     public CommandGet(TableState state) {
@@ -19,7 +18,7 @@ public class CommandGet implements Command {
 
     @Override
     public String getName() {
-        return name;
+        return "get";
     }
 
     @Override

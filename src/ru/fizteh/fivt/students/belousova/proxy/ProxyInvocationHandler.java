@@ -54,11 +54,12 @@ public class ProxyInvocationHandler implements InvocationHandler {
             jsonObject.put("arguments", new JSONArray());
         } else {
             jsonObject.put("arguments", makeJSONArray(Arrays.asList(args)));
+            objects.clear();
         }
     }
 
     private void writeResult(Object result) throws JSONException {
-        Object resultValue = null;
+        Object resultValue;
         if (result != null) {
             if (result instanceof Iterable) {
                 resultValue = makeJSONArray((Iterable) result);

@@ -127,13 +127,15 @@ public class StorableUtils {
                         if (reader.getLocalName().equals("null")) {
                             reader.nextTag();
                             if (!reader.isEndElement()) {
-                                throw new ParseException("invalid xml format", reader.getLocation().getCharacterOffset());
+                                throw new ParseException("invalid xml format",
+                                        reader.getLocation().getCharacterOffset());
                             }
                             columnIndex++;
 
                         } else {
                             if (!reader.isEndElement()) {
-                                throw new ParseException("invalid xml format", reader.getLocation().getCharacterOffset());
+                                throw new ParseException("invalid xml format",
+                                        reader.getLocation().getCharacterOffset());
                             }
                             if (reader.isEndElement() && reader.getLocalName().equals("row")) {
                                 break;

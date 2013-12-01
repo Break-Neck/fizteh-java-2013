@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class AbstractTableProvider<TableType extends AutoCloseable> implements AutoCloseable {
-    protected final String TABLE_NAME_FORMAT = "[A-Za-zА-Яа-я0-9]+";
+    protected static final String TABLE_NAME_FORMAT = "[A-Za-zА-Яа-я0-9]+";
     protected final ReadWriteLock tableProviderTransactionLock = new ReentrantReadWriteLock(true);
     protected Map<String, TableType> tableMap = new HashMap<>();
     protected File dataDirectory;

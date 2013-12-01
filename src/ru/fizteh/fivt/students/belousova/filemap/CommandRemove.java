@@ -5,7 +5,6 @@ import ru.fizteh.fivt.students.belousova.shell.Command;
 import java.io.IOException;
 
 public class CommandRemove implements Command {
-    private static final String name = "remove";
     private TableState state;
 
     public CommandRemove(TableState state) {
@@ -19,7 +18,7 @@ public class CommandRemove implements Command {
 
     @Override
     public String getName() {
-        return name;
+        return "remove";
     }
 
     @Override

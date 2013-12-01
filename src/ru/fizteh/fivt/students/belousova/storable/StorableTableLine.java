@@ -32,7 +32,9 @@ public class StorableTableLine implements GetColumnTypeStorable {
     @Override
     public void setColumnAt(int columnIndex, Object value) throws ColumnFormatException, IndexOutOfBoundsException {
         checkColumnIndexBounds(columnIndex);
-        checkColumnFormat(columnIndex, value.getClass());
+        if (value != null) {
+            checkColumnFormat(columnIndex, value.getClass());
+        }
         columns.set(columnIndex, value);
     }
 
@@ -131,5 +133,10 @@ public class StorableTableLine implements GetColumnTypeStorable {
         stringBuilder.append("]");
 
         return stringBuilder.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

@@ -133,7 +133,8 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
     }
 
     @Override
-    public StorableTableLine createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException {
+    public StorableTableLine createFor(Table table, List<?> values)
+            throws ColumnFormatException, IndexOutOfBoundsException {
         checkIfClosed();
 
         if (values.size() > table.getColumnsCount()) {

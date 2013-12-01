@@ -6,6 +6,7 @@
 package ru.fizteh.fivt.students.belousova.calculator;
 
 import java.io.IOException;
+import java.rmi.UnexpectedException;
 import java.util.EmptyStackException;
 import java.util.Stack;
 
@@ -82,7 +83,9 @@ public class Calculator {
                     unwindOpStack(c);
                     if ((c == '(') || (c == '&')) {
                         unarFlag = true;
-                    } else unarFlag = false;
+                    } else {
+                        unarFlag = false;
+                    }
                     break;
                 case ' ':
                     if (!numberStack.empty()) {
@@ -142,8 +145,9 @@ public class Calculator {
                     throw new IOException("Деление на ноль");
                 }
                 return a / b;
+            default:
+                throw new UnexpectedException("");
         }
-        return 0;
     }
 
     private static int calculateNumber() throws IOException {
@@ -213,8 +217,8 @@ public class Calculator {
                     break;
                 case 5:
                     throw new IOException("Нарушен баланс скобок");
-
-
+                default:
+                    throw new UnexpectedException("");
             }
         }
     }

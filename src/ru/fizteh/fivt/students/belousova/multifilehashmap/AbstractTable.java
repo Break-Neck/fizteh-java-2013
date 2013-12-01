@@ -11,8 +11,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class AbstractTable<KeyType, ValueType> implements AutoCloseable {
     protected Map<KeyType, ValueType> dataBase = new HashMap<KeyType, ValueType>();
-    protected ThreadLocal<Map<KeyType, ValueType>> addedKeys;// = new HashMap<KeyType, ValueType>();
-    protected ThreadLocal<Set<KeyType>> deletedKeys;// = new HashSet<KeyType>();
+    protected ThreadLocal<Map<KeyType, ValueType>> addedKeys;
+    protected ThreadLocal<Set<KeyType>> deletedKeys;
 
     protected final Lock tableTransactionsLock = new ReentrantLock(true);
 
