@@ -126,6 +126,7 @@ public class StorableTable extends AbstractTable<String, Storeable> implements E
 
     @Override
     public String toString() {
+        checkIfClosed();
         return getClass().getSimpleName() + "[" + dataDirectory.getAbsolutePath() + "]";
     }
 }

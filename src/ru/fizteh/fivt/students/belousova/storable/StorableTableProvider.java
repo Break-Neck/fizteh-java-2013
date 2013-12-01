@@ -161,6 +161,7 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
 
     @Override
     public String toString() {
+        checkIfClosed();
         return getClass().getSimpleName() + "[" + dataDirectory.getAbsolutePath() + "]";
     }
 }

@@ -21,6 +21,7 @@ public abstract class AbstractTable<KeyType, ValueType> implements AutoCloseable
     protected boolean isClosed = false;
 
     public String getName() {
+        checkIfClosed();
         return dataDirectory.getName();
     }
 
