@@ -8,7 +8,6 @@ import ru.fizteh.fivt.students.belousova.utils.StorableUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.rmi.UnexpectedException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,12 +59,7 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
                         tableMap.put(name, table);
                         return table;
                     } catch (IOException e) {
-                        if (e.getCause() != null) {
-                            throw new RuntimeException("creating new table error" + e.getMessage()
-                                    + e.getCause().getMessage());
-                        } else {
-                            throw new RuntimeException("creating new table error" + e.getMessage());
-                        }
+                        throw new RuntimeException("creating new table error: " + e.getMessage());
                     }
                 }
             }
