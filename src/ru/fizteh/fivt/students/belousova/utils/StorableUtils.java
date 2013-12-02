@@ -202,13 +202,14 @@ public class StorableUtils {
             try {
                 writer.writeStartElement("row");
                 for (int i = 0; i < columnTypes.size(); i++) {
-                    writer.writeStartElement("col");
                     if (storeable.getColumnAt(i) == null) {
                         writer.writeStartElement("null");
+                        writer.writeEndElement();
                     } else {
+                        writer.writeStartElement("col");
                         writer.writeCharacters(getStringFromElement(storeable, i, columnTypes.get(i)));
+                        writer.writeEndElement();
                     }
-                    writer.writeEndElement();
                 }
                 writer.writeEndElement();
             } finally {
