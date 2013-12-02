@@ -60,7 +60,12 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
                         tableMap.put(name, table);
                         return table;
                     } catch (IOException e) {
-                        throw new RuntimeException("creating new table error");
+                        if (e.getCause() != null) {
+                            throw new RuntimeException("creating new table error" + e.getMessage()
+                                    + e.getCause().getMessage());
+                        } else {
+                            throw new RuntimeException("creating new table error" + e.getMessage());
+                        }
                     }
                 }
             }
