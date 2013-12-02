@@ -8,6 +8,7 @@ import ru.fizteh.fivt.students.belousova.utils.StorableUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.rmi.UnexpectedException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +54,14 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
         try {
             if (tableMap.get(name) != null) {
                 if (tableMap.get(name).isClosed()) {
-                    tableMap.remove(name);
+                    try {
+                        File tableFile = new File(dataDirectory, name);
+                        StorableTable table = new StorableTable(tableFile, this);
+                        tableMap.put(name, table);
+                        return table;
+                    } catch (IOException e) {
+                        throw new RuntimeException("creating new table error");
+                    }
                 }
             }
         } finally {
@@ -88,6 +96,11 @@ public class StorableTableProvider extends AbstractTableProvider<StorableTable>
         tableProviderTransactionLock.readLock().lock();
         try {
             if (tableMap.containsKey(name)) {
+                if (tableMap.get(name).isClosed()) {
+                    StorableTable table = new StorableTable(tableFile, this);
+                    tableMap.put(name, table);
+                    return table;
+                }
                 return null;
             }
             tableFile.mkdir();
