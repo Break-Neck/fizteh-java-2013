@@ -65,6 +65,9 @@ public class StorableState extends MultiFileShellState {
     @Override
     public String getFromCurrentTable(String key) {
         Storeable storeable = currentTable.get(key);
+        if (storeable == null) {
+            return null;
+        }
         return tableProvider.serialize(currentTable, storeable);
     }
 
