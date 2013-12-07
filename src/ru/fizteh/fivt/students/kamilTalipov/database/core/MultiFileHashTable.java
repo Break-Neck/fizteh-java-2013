@@ -403,8 +403,8 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             if (inputTypes.length == 0) {
                 throw new IOException("Signature file is empty (table '" + tableName + "')");
             }
-            for (String type : inputTypes) {
-                switch (type) {
+            for (int i = 1; i < inputTypes.length; ++i) {
+                switch (inputTypes[i]) {
                     case "int":
                         types.add(Integer.class);
                         break;
@@ -435,7 +435,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
 
                     default:
                         throw new IOException("Signature file contain unsupported type '"
-                                + type + "' (table '" + tableName + "')");
+                                + inputTypes[i] + "' (table '" + tableName + "')");
                 }
             }
         }
