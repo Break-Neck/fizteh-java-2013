@@ -96,7 +96,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
                 return new HashMap<>();
             }
         };
-        readTables();
     }
 
     public MultiFileHashTable(String workingDirectory, String tableName,
@@ -335,22 +334,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         }
     }
 
-    private void readTables() throws DatabaseException, FileNotFoundException {
-        File[] innerFiles = tableDirectory.listFiles();
-        for (File file : innerFiles) {
-            if (!file.isDirectory() && file.getName().equals(SIGNATURE_FILE_NAME)) {
-                continue;
-            }
-            if (!file.isDirectory()
-                    || (file.isDirectory() && !isCorrectDirectoryName(file.getName()))) {
-                throw new DatabaseException("At table '" + tableName
-                        + "': directory contain redundant files ");
-            }
-
-            readData(file);
-        }
-    }
-
     private void writeChanges(HashSet<ChangedFile> changes,
                               int deltaSize) throws DatabaseException, IOException {
         if (changes.isEmpty()) {
@@ -526,7 +509,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     private int getTableSize() {
-        File signatureFile = new File(tableDirectory.getAbsolutePath() + SIGNATURE_FILE_NAME);
+        File signatureFile = new File(tableDirectory.getAbsolutePath() + File.separator + SIGNATURE_FILE_NAME);
         if (!signatureFile.exists()) {
             return 0;
         }
@@ -556,7 +539,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         if (!table.containsKey(key)) {
             return readKey(key);
         }
-        return table.get(key);  //TODO
+        return table.get(key);
     }
 
     private Storeable putToTable(String key, Storeable value) {
