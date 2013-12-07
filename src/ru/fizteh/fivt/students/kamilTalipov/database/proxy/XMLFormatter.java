@@ -89,6 +89,7 @@ public class XMLFormatter {
                         writeNull();
                     } else if (object instanceof Iterable) {
                         identityHashMap.clear();
+                        identityHashMap.put(object, true);
                         writeItereable((Iterable) object);
                     } else {
                         writeObject(object);
