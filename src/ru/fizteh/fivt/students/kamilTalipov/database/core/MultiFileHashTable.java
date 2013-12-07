@@ -524,7 +524,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private int getTableSize() {
         File signatureFile = new File(tableDirectory.getAbsolutePath() + SIGNATURE_FILE_NAME);
         if (!signatureFile.exists()) {
-            throw new RuntimeException("Signature file is not exist (table '" + tableName + "')");
+            return 0;
         }
 
         try (FileInputStream signatureStream = new FileInputStream(signatureFile);
