@@ -254,7 +254,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             }
 
             try {
-                writeChanges(changesFile);
+                writeChanges(changesFile, changes);
             } catch (DatabaseException e) {
                 throw new IOException("Database io error", e);
             }
@@ -351,12 +351,16 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         }
     }
 
-    private void writeChanges(HashSet<ChangedFile> changes) throws DatabaseException, IOException {
+    private void writeChanges(HashSet<ChangedFile> changes,
+                              int deltaSize) throws DatabaseException, IOException {
         if (changes.isEmpty()) {
             return;
         }
 
         removeChangesFile(changes);
+        int tableSize = getTableSize();
+        FileUtils.remove(new File(tableDirectory.getAbsolutePath() + File.separator + SIGNATURE_FILE_NAME));
+        writeSignatureFile(tableSize + deltaSize);
 
         for (ChangedFile file : changes) {
             if (table[file.directoryId][file.fileId] == null) {
