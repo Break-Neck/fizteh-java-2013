@@ -509,6 +509,17 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     private int getTableSize() {
+        int size = 0;
+        for (int i = 0; i < ALL_DIRECTORIES; ++i) {
+            for (int j = 0; j < FILES_IN_DIRECTORY; ++j) {
+                if (table[i][j] != null) {
+                    size += table[i][j].size();
+                }
+            }
+        }
+        return size;
+
+        /*
         File signatureFile = new File(tableDirectory.getAbsolutePath() + File.separator + SIGNATURE_FILE_NAME);
         if (!signatureFile.exists()) {
             return 0;
@@ -528,7 +539,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             return Integer.valueOf(input[0]);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
+        }*/
     }
 
     private Storeable getFromTable(String key) {
