@@ -423,10 +423,13 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         if (tableSize < 0) {
             throw new IllegalArgumentException("Table size must be not negative");
         }
-
-        FileUtils.remove(tableDirectory.getAbsolutePath(), TABLE_SIZE_FILE_NAME);
-
-        File tableSizeFile = FileUtils.makeFile(tableDirectory.getAbsolutePath(), TABLE_SIZE_FILE_NAME);
+		
+		File tableSizeFile = new File(tableDirectory.getAbsolutePath() + File.separator + TABLE_SIZE_FILE_NAME);
+		if (tableSizeFile.exists()) {
+			FileUtils.remove(tableSizeFile);
+		}
+		
+        tableSizeFile = FileUtils.makeFile(tableDirectory.getAbsolutePath(), TABLE_SIZE_FILE_NAME);
         try (FileOutputStream output = new FileOutputStream(tableSizeFile)) {
             output.write(ByteBuffer.allocate(4).putInt(tableSize).array());
         }
