@@ -559,7 +559,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         try {
             return readTableSize(tableDirectory.getAbsolutePath());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return 0;
         }
     }
 
