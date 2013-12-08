@@ -352,8 +352,10 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private void readTable() throws DatabaseException, FileNotFoundException {
         File[] innerFiles = tableDirectory.listFiles();
         for (File file : innerFiles) {
-            if (!file.isDirectory() && file.getName().equals(SIGNATURE_FILE_NAME)) {
-                continue;
+            if (!file.isDirectory()) {
+                if (file.getName().equals(SIGNATURE_FILE_NAME) || file.getName().equals(TABLE_SIZE_FILE_NAME)) {
+                    continue;
+                }
             }
             if (!file.isDirectory()
                     || (file.isDirectory() && !isCorrectDirectoryName(file.getName()))) {
@@ -423,12 +425,12 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         if (tableSize < 0) {
             throw new IllegalArgumentException("Table size must be not negative");
         }
-		
-		File tableSizeFile = new File(tableDirectory.getAbsolutePath() + File.separator + TABLE_SIZE_FILE_NAME);
-		if (tableSizeFile.exists()) {
-			FileUtils.remove(tableSizeFile);
-		}
-		
+
+        File tableSizeFile = new File(tableDirectory.getAbsolutePath() + File.separator + TABLE_SIZE_FILE_NAME);
+        if (tableSizeFile.exists()) {
+            tableSizeFile.delete();
+        }
+
         tableSizeFile = FileUtils.makeFile(tableDirectory.getAbsolutePath(), TABLE_SIZE_FILE_NAME);
         try (FileOutputStream output = new FileOutputStream(tableSizeFile)) {
             output.write(ByteBuffer.allocate(4).putInt(tableSize).array());
@@ -653,8 +655,12 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private void removeDataFiles() throws DatabaseException {
         File[] innerFiles = tableDirectory.listFiles();
         for (File file : innerFiles) {
-            if ((!file.isDirectory() && !file.getName().equals(SIGNATURE_FILE_NAME))
-                    || (file.isDirectory() && !isCorrectDirectoryName(file.getName()))) {
+            if (file.isDirectory() && !isCorrectDirectoryName(file.getName())) {
+                throw new DatabaseException("At table '" + tableName
+                        + "': directory contain redundant files");
+            }
+            if (!file.isDirectory() && !file.getName().equals(SIGNATURE_FILE_NAME)
+                    && !file.getName().equals(TABLE_SIZE_FILE_NAME)) {
                 throw new DatabaseException("At table '" + tableName
                         + "': directory contain redundant files");
             }
