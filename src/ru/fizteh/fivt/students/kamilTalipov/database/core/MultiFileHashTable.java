@@ -108,7 +108,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
 
     public MultiFileHashTable(String workingDirectory, String tableName,
                               MultiFileHashTableProvider myTableProvider) throws DatabaseException,
-            IOException {
+                                                                                        IOException {
         this(workingDirectory, tableName, myTableProvider, getTypes(workingDirectory, tableName));
     }
 
@@ -358,6 +358,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             throw new DatabaseException("At table '" + tableName + "': directory contain redundant files");
         }
 
+        table[directoryId][fileId] = new HashMap<>();
         readData(tableFile, Integer.valueOf(directoryId).toString());
     }
 
@@ -544,7 +545,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         int directoryId = getDirectoryId(keyByte);
         int fileId = getFileId(keyByte);
         if (table[directoryId][fileId] == null) {
-            table[directoryId][fileId] = new HashMap<>();
             try {
                 readTable(directoryId, fileId);
             } catch (DatabaseException | FileNotFoundException e) {
