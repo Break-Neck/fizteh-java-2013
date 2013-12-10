@@ -410,7 +410,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         try (FileInputStream tableSizeStream = new FileInputStream(tableSizeFile);
              Scanner tableSizeScanner = new Scanner(tableSizeStream)) {
             if (!tableSizeScanner.hasNextInt()) {
-                throw new IOException("Table size file is empty");
+                return 0;
             }
 
             return tableSizeScanner.nextInt();
@@ -728,3 +728,4 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         }
     }
 }
+
