@@ -540,7 +540,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
                 + FILES_IN_DIRECTORY) % FILES_IN_DIRECTORY;
     }
 
-    private HashMap<String, Storeable> getKeyTable(String key) {
+    private HashMap<String, Storeable> getKeyTable(String key, boolean needCreate) {
         byte keyByte = key.getBytes(StandardCharsets.UTF_8)[0];
         int directoryId = getDirectoryId(keyByte);
         int fileId = getFileId(keyByte);
@@ -552,6 +552,9 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             }
         }
 
+        if (table[directoryId][fileId] == null && needCreate) {
+            table[directoryId][fileId] = new HashMap<>();
+        }
         return table[directoryId][fileId];
     }
 
@@ -564,7 +567,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     private Storeable getFromTable(String key) {
-        HashMap<String, Storeable> table = getKeyTable(key);
+        HashMap<String, Storeable> table = getKeyTable(key, false);
         if (table == null) {
             return null;
         }
@@ -572,11 +575,11 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     private Storeable putToTable(String key, Storeable value) {
-        return getKeyTable(key).put(key, value);
+        return getKeyTable(key, true).put(key, value);
     }
 
     private Storeable removeFromTable(String key) {
-        HashMap<String, Storeable> table = getKeyTable(key);
+        HashMap<String, Storeable> table = getKeyTable(key, false);
         if (table == null) {
             return null;
         }
