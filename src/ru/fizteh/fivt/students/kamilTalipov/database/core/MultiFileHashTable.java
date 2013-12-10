@@ -98,7 +98,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
                 return new HashMap<>();
             }
         };
-        readTable();
     }
 
     public MultiFileHashTable(String workingDirectory, String tableName,
@@ -349,22 +348,17 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         }
     }
 
-    private void readTable() throws DatabaseException, FileNotFoundException {
-        File[] innerFiles = tableDirectory.listFiles();
-        for (File file : innerFiles) {
-            if (!file.isDirectory()) {
-                if (file.getName().equals(SIGNATURE_FILE_NAME) || file.getName().equals(TABLE_SIZE_FILE_NAME)) {
-                    continue;
-                }
-            }
-            if (!file.isDirectory()
-                    || (file.isDirectory() && !isCorrectDirectoryName(file.getName()))) {
-                throw new DatabaseException("At table '" + tableName
-                        + "': directory contain redundant files ");
-            }
-
-            readData(file);
+    private void readTable(int directoryId, int fileId) throws DatabaseException, FileNotFoundException {
+        File tableFile = new File(tableDirectory.getAbsolutePath() + File.separator + directoryId
+                                    + File.separator + fileId);
+        if (!tableFile.exists()) {
+            return;
         }
+        if (!tableFile.isFile()) {
+            throw new DatabaseException("At table '" + tableName + "': directory contain redundant files");
+        }
+
+        readData(tableFile);
     }
 
     private void writeChanges(HashSet<ChangedFile> changes) throws DatabaseException, IOException {
@@ -410,7 +404,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         try (FileInputStream tableSizeStream = new FileInputStream(tableSizeFile);
              Scanner tableSizeScanner = new Scanner(tableSizeStream)) {
             if (!tableSizeScanner.hasNextInt()) {
-                return 0;
+                throw new IOException("Size file hasn't size");
             }
 
             return tableSizeScanner.nextInt();
@@ -545,13 +539,19 @@ public class MultiFileHashTable implements Table, AutoCloseable {
                 + FILES_IN_DIRECTORY) % FILES_IN_DIRECTORY;
     }
 
-    private HashMap<String, Storeable> getKeyTable(String key, boolean needCreate) {
+    private HashMap<String, Storeable> getKeyTable(String key) {
         byte keyByte = key.getBytes(StandardCharsets.UTF_8)[0];
         int directoryId = getDirectoryId(keyByte);
         int fileId = getFileId(keyByte);
-        if (table[directoryId][fileId] == null && needCreate) {
+        if (table[directoryId][fileId] == null) {
             table[directoryId][fileId] = new HashMap<>();
+            try {
+                readTable(directoryId, fileId);
+            } catch (DatabaseException | FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
         }
+
         return table[directoryId][fileId];
     }
 
@@ -559,12 +559,12 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         try {
             return readTableSize(tableDirectory.getAbsolutePath());
         } catch (IOException e) {
-            return 0;
+            throw new RuntimeException(e);
         }
     }
 
     private Storeable getFromTable(String key) {
-        HashMap<String, Storeable> table = getKeyTable(key, false);
+        HashMap<String, Storeable> table = getKeyTable(key);
         if (table == null) {
             return null;
         }
@@ -572,11 +572,11 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     private Storeable putToTable(String key, Storeable value) {
-        return getKeyTable(key, true).put(key, value);
+        return getKeyTable(key).put(key, value);
     }
 
     private Storeable removeFromTable(String key) {
-        HashMap<String, Storeable> table = getKeyTable(key, false);
+        HashMap<String, Storeable> table = getKeyTable(key);
         if (table == null) {
             return null;
         }
