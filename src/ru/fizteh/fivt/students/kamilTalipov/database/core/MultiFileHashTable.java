@@ -358,7 +358,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             throw new DatabaseException("At table '" + tableName + "': directory contain redundant files");
         }
 
-        readData(tableFile);
+        readData(tableFile, Integer.valueOf(directoryId).toString());
     }
 
     private void writeChanges(HashSet<ChangedFile> changes) throws DatabaseException, IOException {
@@ -601,44 +601,38 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         return false;
     }
 
-    private void readData(File dbDir) throws DatabaseException, FileNotFoundException {
-        File[] innerFiles = dbDir.listFiles();
-        if (innerFiles.length == 0) {
-            throw new DatabaseException("Empty database dir '" + dbDir.getAbsolutePath() + "'");
+    private void readData(File dbFile, String directoryName) throws DatabaseException, FileNotFoundException {
+        boolean wasRead = false;
+        try (FileInputStream input = new FileInputStream(dbFile)) {
+            while (input.available() > 0) {
+                int keyLen = readInt(input);
+                int valueLen = readInt(input);
+                if (keyLen > MAX_KEY_LEN || valueLen > MAX_VALUE_LEN) {
+                    throw new DatabaseException("Database file '" + dbFile.getAbsolutePath()
+                            + "' have incorrect format");
+                }
+                String key = readString(input, keyLen);
+                if (!getDirectoryName(key.getBytes(StandardCharsets.UTF_8)[0]).equals(directoryName)
+                        || !getFileName(key.getBytes(StandardCharsets.UTF_8)[0]).equals(dbFile.getName())) {
+                    throw new DatabaseException("Database file '" + dbFile.getAbsolutePath()
+                            + "' have incorrect format");
+                }
+                String value = readString(input, valueLen);
+                try {
+                    putToTable(key, deserialize(value));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Database file '" + dbFile.getAbsolutePath()
+                                + "' have incorrect format");
+                }
+                wasRead = true;
+            }
+        } catch (IOException e) {
+            throw new DatabaseException("Database file '" + dbFile.getAbsolutePath()
+                        + "' have incorrect format");
         }
 
-        for (File dbFile : innerFiles) {
-            boolean wasRead = false;
-            try (FileInputStream input = new FileInputStream(dbFile)) {
-                while (input.available() > 0) {
-                    int keyLen = readInt(input);
-                    int valueLen = readInt(input);
-                    if (keyLen > MAX_KEY_LEN || valueLen > MAX_VALUE_LEN) {
-                        throw new DatabaseException("Database file '" + dbFile.getAbsolutePath()
-                                + "' have incorrect format");
-                    }
-                    String key = readString(input, keyLen);
-                    if (!getDirectoryName(key.getBytes(StandardCharsets.UTF_8)[0]).equals(dbDir.getName())
-                            || !getFileName(key.getBytes(StandardCharsets.UTF_8)[0]).equals(dbFile.getName())) {
-                        throw new DatabaseException("Database file '" + dbFile.getAbsolutePath()
-                                + "' have incorrect format");
-                    }
-                    String value = readString(input, valueLen);
-                    try {
-                        putToTable(key, deserialize(value));
-                    } catch (IllegalArgumentException e) {
-                        throw new IllegalArgumentException("Database file '" + dbFile.getAbsolutePath()
-                                + "' have incorrect format");
-                    }
-                    wasRead = true;
-                }
-            } catch (IOException e) {
-                throw new DatabaseException("Database file '" + dbFile.getAbsolutePath()
-                        + "' have incorrect format");
-            }
-            if (!wasRead) {
-                throw new DatabaseException("Empty database file '" + dbFile.getAbsolutePath() + "'");
-            }
+        if (!wasRead) {
+            throw new DatabaseException("Empty database file '" + dbFile.getAbsolutePath() + "'");
         }
     }
 
