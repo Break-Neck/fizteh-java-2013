@@ -432,8 +432,8 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         }
 
         tableSizeFile = FileUtils.makeFile(tableDirectory.getAbsolutePath(), TABLE_SIZE_FILE_NAME);
-        try (FileOutputStream output = new FileOutputStream(tableSizeFile)) {
-            output.write(ByteBuffer.allocate(4).putInt(tableSize).array());
+        try (FileWriter output = new FileWriter(tableSizeFile)) {
+            output.write(Integer.valueOf(tableSize).toString());
         }
     }
 
@@ -728,4 +728,3 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         }
     }
 }
-
