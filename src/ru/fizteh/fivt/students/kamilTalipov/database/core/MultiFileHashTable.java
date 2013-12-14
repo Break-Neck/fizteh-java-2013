@@ -92,6 +92,11 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         writeTableSize(tableSize);
 
         table = new WeakHashMap[ALL_DIRECTORIES][FILES_IN_DIRECTORY];
+        for (int i = 0; i < ALL_DIRECTORIES; ++i) {
+            for (int j = 0; j < FILES_IN_DIRECTORY; ++j) {
+                table[i][j] = new WeakHashMap<>();
+            }
+        }
         newValues = new ThreadLocal<HashMap<String, Storeable>>() {
             @Override
             protected HashMap<String, Storeable> initialValue() {
@@ -358,7 +363,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             throw new DatabaseException("At table '" + tableName + "': directory contain redundant files");
         }
 
-        table[directoryId][fileId] = new WeakHashMap<>();
         readData(tableFile, Integer.valueOf(directoryId).toString());
     }
 
@@ -544,7 +548,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         byte keyByte = key.getBytes(StandardCharsets.UTF_8)[0];
         int directoryId = getDirectoryId(keyByte);
         int fileId = getFileId(keyByte);
-        if (table[directoryId][fileId] == null) {
+        if (table[directoryId][fileId].isEmpty()) {
             try {
                 readTable(directoryId, fileId);
             } catch (DatabaseException | FileNotFoundException e) {
@@ -552,9 +556,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             }
         }
 
-        if (table[directoryId][fileId] == null && needCreate) {
-            table[directoryId][fileId] = new WeakHashMap<>();
-        }
         return table[directoryId][fileId];
     }
 
