@@ -1,10 +1,10 @@
-package ru.fizteh.fivt.students.krivchansky.multifilemap;
+package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
 import java.io.File;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
-import ru.fizteh.fivt.students.krivchansky.filemap.SimpleTableBuilder;
-import ru.fizteh.fivt.students.krivchansky.filemap.TableUsingStrings;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.SimpleTableBuilder;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.TableUsingStrings;
 
 public class MultiFileMapTableBuilder extends SimpleTableBuilder {
 	private int currentDir;

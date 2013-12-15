@@ -1,10 +1,10 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
 import java.io.IOException;
 import java.text.ParseException;
 
 
-import ru.fizteh.fivt.students.krivchansky.multifilemap.*;
+import src.ru.fizteh.fivt.students.krivchansky.multifilemap.*;
 
 public class StorableShellState implements  MultifileMapShellStateInterface<Table, String, Storeable> {
 	Table table;

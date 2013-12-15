@@ -1,5 +1,5 @@
-package ru.fizteh.fivt.students.krivchansky.filemap;
-import ru.fizteh.fivt.students.krivchansky.shell.*;
+package src.ru.fizteh.fivt.students.krivchansky.filemap;
+import src.ru.fizteh.fivt.students.krivchansky.shell.*;
 
 public class RollbackCommand<State extends FileMapShellStateInterface> extends SomeCommand<State>{
     

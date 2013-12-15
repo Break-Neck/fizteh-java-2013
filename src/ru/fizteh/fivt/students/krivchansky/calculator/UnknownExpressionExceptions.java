@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.calculator;
+package src.ru.fizteh.fivt.students.krivchansky.calculator;
 
 class UnknownExpressionExceptions extends Exception {
     public UnknownExpressionExceptions() {

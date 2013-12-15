@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.multifilemap;
+package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
 
 public class MultiFileMapWritingUtils {
     

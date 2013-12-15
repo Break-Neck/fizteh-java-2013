@@ -1,6 +1,6 @@
-package ru.fizteh.fivt.students.krivchansky.multifilemap;
-import ru.fizteh.fivt.students.krivchansky.shell.*;
-import ru.fizteh.fivt.students.krivchansky.filemap.*;
+package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
+import src.ru.fizteh.fivt.students.krivchansky.shell.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
 
 public class CreateCommand<Table, Key, Value, State extends MultifileMapShellStateInterface<Table, Key, Value>> extends SomeCommand<State> {
 	public String getCommandName() {

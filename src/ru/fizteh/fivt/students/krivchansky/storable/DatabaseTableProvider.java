@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
 
 public class DatabaseTableProvider implements TableProvider {
 	static final String SIGNATURE_FILE = "signature.tsv";
-	private static final String CHECKER = "[0-9A-Za-z¿-ﬂ‡-ˇ]+";
+	private static final String CHECKER = "[0-9A-Za-z–ê-–Ø–∞-—è]+";
 	private final Lock tableLock = new ReentrantLock(true);
 	
 	HashMap<String, DatabaseTable> tables = new HashMap<String, DatabaseTable>();
@@ -44,7 +44,7 @@ public class DatabaseTableProvider implements TableProvider {
 			tables.put(table.getName(), table);
 		}
 	}
-	@Override
+	
 	public Table getTable(String name) {
 		try {
 			if (name == null || name.isEmpty()) {
@@ -65,7 +65,7 @@ public class DatabaseTableProvider implements TableProvider {
 			tableLock.unlock();
 		}
 	}
-	@Override
+	
 	public Table createTable(String name, List<Class<?>> columnTypes) throws IOException {
 		try {
 			if (name == null || name.isEmpty()) {
@@ -76,9 +76,11 @@ public class DatabaseTableProvider implements TableProvider {
 				throw new IllegalArgumentException("column types cannot be null");
 			}
 			checkColumnTypes(columnTypes);
-			if (tables.containsKey(name)) {
-				return null;
-			}
+			DatabaseTable exists = tables.get(name);
+
+            if (exists == null) {
+                return null;
+            }
 			tableLock.lock();
 			DatabaseTable table = new DatabaseTable(this, databaseDirPath, name, columnTypes);
 			tables.put(name, table);
@@ -87,7 +89,7 @@ public class DatabaseTableProvider implements TableProvider {
 			tableLock.unlock();
 		}
 	}
-	@Override
+	
 	public void removeTable(String name) throws IOException {
 		try {
 			if (name == null || name.isEmpty()) {

@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.shell;
+package src.ru.fizteh.fivt.students.krivchansky.shell;
 
 public abstract class SomeCommand<State> implements Commands<State> { 
 }

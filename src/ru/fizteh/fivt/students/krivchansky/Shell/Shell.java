@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.shell;
+package src.ru.fizteh.fivt.students.krivchansky.shell;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +10,8 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+
 
 
 public class Shell<State> {

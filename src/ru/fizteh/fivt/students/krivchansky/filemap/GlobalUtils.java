@@ -1,5 +1,5 @@
-package ru.fizteh.fivt.students.krivchansky.filemap;
-import ru.fizteh.fivt.students.krivchansky.shell.*;
+package src.ru.fizteh.fivt.students.krivchansky.filemap;
+import src.ru.fizteh.fivt.students.krivchansky.shell.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;

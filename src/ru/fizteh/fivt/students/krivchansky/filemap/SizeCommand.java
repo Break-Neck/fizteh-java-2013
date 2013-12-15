@@ -1,8 +1,8 @@
-package ru.fizteh.fivt.students.krivchansky.filemap;
+package src.ru.fizteh.fivt.students.krivchansky.filemap;
 
 
-import ru.fizteh.fivt.students.krivchansky.shell.SomeCommand;
-import ru.fizteh.fivt.students.krivchansky.shell.SomethingIsWrongException;
+import src.ru.fizteh.fivt.students.krivchansky.shell.SomeCommand;
+import src.ru.fizteh.fivt.students.krivchansky.shell.SomethingIsWrongException;
 
 public class SizeCommand<Table, Key, Value, State extends FileMapShellStateInterface<Table, Key, Value>> extends SomeCommand<State> {
 

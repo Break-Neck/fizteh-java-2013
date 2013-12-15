@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.filemap;
+package src.ru.fizteh.fivt.students.krivchansky.filemap;
 
 public class FileMapShellState implements FileMapShellStateInterface<Table, String, String> {
 

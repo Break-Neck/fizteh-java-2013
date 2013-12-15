@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.shell;
+package src.ru.fizteh.fivt.students.krivchansky.shell;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;

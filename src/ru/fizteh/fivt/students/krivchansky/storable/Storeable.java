@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
 public interface Storeable {
 	void setColumnAt(int columnIndex, Object value) throws ColumnFormatException, IndexOutOfBoundsException;

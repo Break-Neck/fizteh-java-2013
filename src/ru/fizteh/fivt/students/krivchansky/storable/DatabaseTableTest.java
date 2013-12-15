@@ -1,12 +1,7 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
-import static org.junit.Assert.*;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.*;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;

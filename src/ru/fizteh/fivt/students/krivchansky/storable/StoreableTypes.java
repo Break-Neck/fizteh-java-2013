@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
 import java.util.Collections;
 import java.util.HashMap;

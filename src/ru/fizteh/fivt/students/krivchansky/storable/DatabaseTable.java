@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.SomeStorage;
-import ru.fizteh.fivt.students.krivchansky.multifilemap.MultiFileMapReadingUtils;
-import ru.fizteh.fivt.students.krivchansky.multifilemap.MultiFileMapWritingUtils;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.SomeStorage;
+import src.ru.fizteh.fivt.students.krivchansky.multifilemap.MultiFileMapReadingUtils;
+import src.ru.fizteh.fivt.students.krivchansky.multifilemap.MultiFileMapWritingUtils;
 
-public class DatabaseTable extends SomeStorage<String, Storeable> implements ru.fizteh.fivt.students.krivchansky.storable.Table {
+public class DatabaseTable extends SomeStorage<String, Storeable> implements src.ru.fizteh.fivt.students.krivchansky.storable.Table {
 
 	DatabaseTableProvider provider;
 	private List<Class<?>> columnTypes;

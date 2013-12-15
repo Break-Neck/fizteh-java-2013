@@ -1,6 +1,6 @@
-package ru.fizteh.fivt.students.krivchansky.multifilemap;
+package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
 
 import java.io.File;
 import java.util.HashMap;
@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Database implements TableProvider {
-	private static final String CHECK_NAME_EXPRESSION = "[^0-9A-Za-z¿-ﬂ‡-ˇ]";
+	private static final String CHECK_NAME_EXPRESSION = "[^0-9A-Za-z–ê-–Ø–∞-—è]+";
     HashMap<String, MultifileTable> content = new HashMap<String, MultifileTable>();
     private String databaseDirectoryPath;
     private MultifileTable currentTable = null;
@@ -37,7 +37,7 @@ public class Database implements TableProvider {
         if (currentTable != null && currentTable.getChangesCounter() > 0) {
         		throw new IllegalStateException(table.getChangesCounter() + " unsaved changes");
         }
-        table.setAutoCommit(false); //here if you want to start with autocommit option
+        table.setAutoCommit(true); //here if you want to start with autocommit option
         currentTable = table;
         return table;
     }
@@ -55,7 +55,7 @@ public class Database implements TableProvider {
         	tableDirectory.mkdir();
         }
         MultifileTable table = new MultifileTable(databaseDirectoryPath, name);
-        table.setAutoCommit(false);  //here you can change if you need autocommit on use/exit or not 
+        table.setAutoCommit(true);  //here you can change if you need autocommit on use/exit or not 
         content.put(name, table);
         return table;
     }

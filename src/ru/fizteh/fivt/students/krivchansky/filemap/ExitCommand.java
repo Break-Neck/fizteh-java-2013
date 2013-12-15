@@ -1,6 +1,6 @@
-package ru.fizteh.fivt.students.krivchansky.filemap;
+package src.ru.fizteh.fivt.students.krivchansky.filemap;
 
-import ru.fizteh.fivt.students.krivchansky.shell.*;
+import src.ru.fizteh.fivt.students.krivchansky.shell.*;
 
 public class ExitCommand<State extends FileMapShellStateInterface> extends SomeCommand<State>{
 

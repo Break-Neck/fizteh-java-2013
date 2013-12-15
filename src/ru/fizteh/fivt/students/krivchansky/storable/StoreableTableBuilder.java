@@ -1,11 +1,11 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
 import java.io.File;
 import java.text.ParseException;
 import java.util.Set;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
-import ru.fizteh.fivt.students.krivchansky.filemap.TableBuilder;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.TableBuilder;
 
 public class StoreableTableBuilder implements TableBuilder {
 	DatabaseTableProvider provider;

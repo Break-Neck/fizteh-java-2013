@@ -1,12 +1,12 @@
-package ru.fizteh.fivt.students.krivchansky.multifilemap;
+package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
 
-import ru.fizteh.fivt.students.krivchansky.shell.*;
-import ru.fizteh.fivt.students.krivchansky.filemap.*;
-import ru.fizteh.fivt.students.krivchansky.filemap.ExitCommand;
+import src.ru.fizteh.fivt.students.krivchansky.shell.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.ExitCommand;
 
 
 public class MultifileMapMain {

@@ -1,10 +1,10 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
 
 import java.util.ArrayList;
 import java.util.List;
 
-import ru.fizteh.fivt.students.krivchansky.shell.Parser;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Parser;
 
 public class LocalUtils {
 	public static List<Object> parseValues(List<String> valuesRepresentation, Table table) throws ColumnFormatException {

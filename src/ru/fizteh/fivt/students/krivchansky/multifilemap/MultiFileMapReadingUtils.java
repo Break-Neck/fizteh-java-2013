@@ -1,9 +1,9 @@
-package ru.fizteh.fivt.students.krivchansky.multifilemap;
+package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
 import java.io.File;
 import java.io.IOException;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
 
 
 public class MultiFileMapReadingUtils {

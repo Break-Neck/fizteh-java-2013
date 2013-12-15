@@ -1,18 +1,34 @@
-package ru.fizteh.fivt.students.krivchansky.multifilemap;
+package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
-import org.junit.*;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.Table;
-
+import org.junit.Before;
+import org.junit.Assert;
+import org.junit.Test;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.Table;
 
 public class DatabaseTest {
-    TableProviderFactory factory;
+
+	TableProviderFactory factory;
     TableProvider provider;
 
     @Before
     public void beforeTest() {
         factory = new DatabaseFactory();
-        provider = factory.create("C:\\Users\\user\\Documents\\GitHub\\fizteh-java-2013\\temp\\");
+        provider = factory.create("C:\\temp\\database_test");
+    }
+    
+    @Test
+    public void testCreateTable() throws Exception {
+        // non-existing tables
+        Assert.assertNotNull(provider.createTable("newtable1"));
+        Assert.assertNotNull(provider.createTable("newtable2"));
+        // existing tables
+        Assert.assertNull(provider.createTable("table1"));
+        Assert.assertNull(provider.createTable("table2"));
+
+        // clean-up
+        provider.removeTable("newtable1");
+        provider.removeTable("newtable2");
     }
 
     @Test
@@ -31,20 +47,6 @@ public class DatabaseTest {
     @Test(expected = IllegalArgumentException.class)
     public void testGetTableExceptions() {
         provider.getTable(null);
-    }
-
-    @Test
-    public void testCreateTable() throws Exception {
-        // non-existing tables
-        Assert.assertNotNull(provider.createTable("newtable1"));
-        Assert.assertNotNull(provider.createTable("newtable2"));
-        // existing tables
-        Assert.assertNull(provider.createTable("table1"));
-        Assert.assertNull(provider.createTable("table2"));
-
-        // clean-up
-        provider.removeTable("newtable1");
-        provider.removeTable("newtable2");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -73,4 +75,5 @@ public class DatabaseTest {
         provider.removeTable("nonexistingtable");
         provider.removeTable("nosuchtable");
     }
+
 }

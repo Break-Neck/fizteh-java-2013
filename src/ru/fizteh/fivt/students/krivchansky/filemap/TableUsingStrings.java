@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.filemap;
+package src.ru.fizteh.fivt.students.krivchansky.filemap;
 
 public abstract class TableUsingStrings extends SomeStorage<String, String> implements Table {
 	protected TableUsingStrings(String dir, String name) {

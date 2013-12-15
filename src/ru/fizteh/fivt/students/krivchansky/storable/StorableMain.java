@@ -1,21 +1,21 @@
-package ru.fizteh.fivt.students.krivchansky.storable;
+package src.ru.fizteh.fivt.students.krivchansky.storable;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.CommitCommand;
-import ru.fizteh.fivt.students.krivchansky.filemap.ExitCommand;
-import ru.fizteh.fivt.students.krivchansky.filemap.GetCommand;
-import ru.fizteh.fivt.students.krivchansky.filemap.PutCommand;
-import ru.fizteh.fivt.students.krivchansky.filemap.RemoveKeyCommand;
-import ru.fizteh.fivt.students.krivchansky.filemap.RollbackCommand;
-import ru.fizteh.fivt.students.krivchansky.multifilemap.CreateCommand;
-import ru.fizteh.fivt.students.krivchansky.multifilemap.DropCommand;
-import ru.fizteh.fivt.students.krivchansky.multifilemap.UseCommand;
-import ru.fizteh.fivt.students.krivchansky.shell.Commands;
-import ru.fizteh.fivt.students.krivchansky.shell.Shell;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.CommitCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.ExitCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.GetCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.PutCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.RemoveKeyCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.RollbackCommand;
+import src.ru.fizteh.fivt.students.krivchansky.multifilemap.CreateCommand;
+import src.ru.fizteh.fivt.students.krivchansky.multifilemap.DropCommand;
+import src.ru.fizteh.fivt.students.krivchansky.multifilemap.UseCommand;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Commands;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Shell;
 
 public class StorableMain {
 	public static void main(String[] args) {

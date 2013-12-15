@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.krivchansky.filemap;
+package src.ru.fizteh.fivt.students.krivchansky.filemap;
 
 import java.io.IOException;
 import java.util.HashMap;
