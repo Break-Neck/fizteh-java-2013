@@ -122,6 +122,17 @@ public class DBTableTest {
     }
 
     @Test
+    public void commitSimpleWork() throws IOException {
+        List<Class<?>> types = new ArrayList<>();
+        types.add(Integer.class);
+        Storeable row = new DBStoreable(types);
+        table.put("0", row);
+        table.commit();
+        table.remove("0");
+        table.commit();
+    }
+
+    @Test
     public void commitWork() throws IOException {
         List<Class<?>> types = new ArrayList<>();
         types.add(Integer.class);

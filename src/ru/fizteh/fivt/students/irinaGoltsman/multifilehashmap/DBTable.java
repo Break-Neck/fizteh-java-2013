@@ -14,15 +14,22 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class DBTable implements Table, AutoCloseable {
-
     private File tableDirectory;
     private volatile boolean isClosed = false;
+    private volatile int size = 0;
     private HashMap<String, Storeable> originalTable = new HashMap<>();
     private List<Class<?>> columnTypes;
     private TableProvider tableProvider;
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
     private final Lock readLock = lock.readLock();
     private final Lock writeLock = lock.writeLock();
+    private ThreadLocal<Integer> countOfChanges
+            = new ThreadLocal<Integer>() {
+        @Override
+        protected Integer initialValue() {
+            return 0;
+        }
+    };
     private ThreadLocal<HashMap<String, Storeable>> tableOfChanges
             = new ThreadLocal<HashMap<String, Storeable>>() {
         @Override
@@ -38,22 +45,10 @@ public class DBTable implements Table, AutoCloseable {
     };
 
     public DBTable(File inputTableDirectory, TableProvider provider) throws IOException {
-        FileManager.checkTableDir(inputTableDirectory);
+        size = FileManager.checkTable(inputTableDirectory);
         tableDirectory = inputTableDirectory;
         tableProvider = provider;
         columnTypes = FileManager.readTableSignature(tableDirectory);
-        HashMap<String, String> tmpTable = new HashMap<>();
-        FileManager.readDBFromDisk(tableDirectory, tmpTable);
-        List<String> keys = new ArrayList<>(tmpTable.keySet());
-        List<String> values = new ArrayList<>(tmpTable.values());
-        for (int i = 0; i < values.size(); i++) {
-            try {
-                Storeable rowValue = tableProvider.deserialize(this, values.get(i));
-                originalTable.put(keys.get(i), rowValue);
-            } catch (ParseException e) {
-                throw new IOException(e);
-            }
-        }
     }
 
     @Override
@@ -90,6 +85,17 @@ public class DBTable implements Table, AutoCloseable {
                 value = originalTable.get(key);
             } finally {
                 readLock.unlock();
+            }
+            if (value == null) {
+                writeLock.lock();
+                try {
+                    value = loadRowByKey(key);
+                    if (value != null) {
+                        originalTable.put(key, value);
+                    }
+                } finally {
+                    writeLock.unlock();
+                }
             }
         }
         return value;
@@ -139,10 +145,22 @@ public class DBTable implements Table, AutoCloseable {
         } finally {
             readLock.unlock();
         }
+        if (originalValue == null) {
+            writeLock.lock();
+            try {
+                originalValue = loadRowByKey(key);
+                if (originalValue != null) {
+                    originalTable.put(key, originalValue);
+                }
+            } finally {
+                writeLock.unlock();
+            }
+        }
         Storeable oldValue = tableOfChanges.get().put(key, newValue);
         //Значит здесь впервые происходит перезаписывание старого значения.
         if (!removedKeys.get().contains(key) && oldValue == null) {
             oldValue = originalValue;
+            countOfChanges.set(countOfChanges.get() + 1);
         }
         if (originalValue != null) {
             removedKeys.get().add(key);
@@ -156,85 +174,68 @@ public class DBTable implements Table, AutoCloseable {
         if (key == null) {
             throw new IllegalArgumentException("table remove: key is null");
         }
+        Storeable originalValue;
+        readLock.lock();
+        try {
+            originalValue = originalTable.get(key);
+        } finally {
+            readLock.unlock();
+        }
+        if (originalValue == null) {
+            writeLock.lock();
+            try {
+                originalValue = loadRowByKey(key);
+                if (originalValue != null) {
+                    originalTable.put(key, originalValue);
+                }
+            } finally {
+                writeLock.unlock();
+            }
+        }
         Storeable value = tableOfChanges.get().get(key);
         if (value == null) {
             if (!removedKeys.get().contains(key)) {
-                readLock.lock();
-                try {
-                    value = originalTable.get(key);
-                } finally {
-                    readLock.unlock();
-                }
-                if (value != null) {
+                if (originalValue != null) {
                     removedKeys.get().add(key);
+                    countOfChanges.set(countOfChanges.get() + 1);
+                    value = originalValue;
                 }
             }
         } else {
             tableOfChanges.get().remove(key);
-            readLock.lock();
-            try {
-                if (originalTable.containsKey(key)) {
-                    removedKeys.get().add(key);
-                }
-            } finally {
-                readLock.unlock();
+            countOfChanges.set(countOfChanges.get() - 1);
+            if (originalValue != null) {
+                removedKeys.get().add(key);
+                countOfChanges.set(countOfChanges.get() + 1);
             }
         }
         return value;
     }
 
     @Override
+    //TODO: Check it!
     public int size() {
         checkIsClosed();
-        int count;
-        readLock.lock();
-        try {
-            count = originalTable.size();
-            for (String currentKey : removedKeys.get()) {
-                if (!originalTable.containsKey(currentKey)) {
-                    continue;
-                }
-                if (tableOfChanges.get().containsKey(currentKey)) {
-                    continue;
-                }
-                count--;
-            }
-            for (String currentKey : tableOfChanges.get().keySet()) {
-                //Если этот ключ был среди удалённых, то его уже рассмотрели
-                if (!removedKeys.get().contains(currentKey)) {
-                    if (!originalTable.containsKey(currentKey)) {
-                        count++;
-                    }
-                }
-            }
-            return count;
-        } finally {
-            readLock.unlock();
-        }
+        return size - removedKeys.get().size() + tableOfChanges.get().size();
     }
 
     //@return Количество сохранённых ключей.
     @Override
     public int commit() throws IOException {
         checkIsClosed();
-        int count = -1;
+        List<String> keys = new ArrayList<>(tableOfChanges.get().keySet());
+        List<Storeable> values = new ArrayList<>(tableOfChanges.get().values());
+        HashMap<String, String> serializedTableOfChanges = new HashMap<>();
+        for (int i = 0; i < values.size(); i++) {
+            String serializedValue = tableProvider.serialize(this, values.get(i));
+            serializedTableOfChanges.put(keys.get(i), serializedValue);
+        }
+        int count;
         writeLock.lock();
         try {
-            count = countTheNumberOfChanges();
-            for (String delString : removedKeys.get()) {
-                if (originalTable.containsKey(delString)) {
-                    originalTable.remove(delString);
-                }
-            }
-            originalTable.putAll(tableOfChanges.get());
-            List<String> keys = new ArrayList<>(originalTable.keySet());
-            List<Storeable> values = new ArrayList<>(originalTable.values());
-            HashMap<String, String> serializedTable = new HashMap<>();
-            for (int i = 0; i < values.size(); i++) {
-                String serializedValue = tableProvider.serialize(this, values.get(i));
-                serializedTable.put(keys.get(i), serializedValue);
-            }
-            FileManager.writeTableOnDisk(tableDirectory, serializedTable);
+            count = FileManager.writeTableOnDisk(tableDirectory, serializedTableOfChanges,
+                    removedKeys.get());
+            size = FileManager.readSize(tableDirectory);
         } finally {
             writeLock.unlock();
         }
@@ -246,15 +247,10 @@ public class DBTable implements Table, AutoCloseable {
     @Override
     public int rollback() {
         checkIsClosed();
-        int count = -1;
-        readLock.lock();
-        try {
-            count = countTheNumberOfChanges();
-        } finally {
-            readLock.unlock();
-        }
         tableOfChanges.get().clear();
         removedKeys.get().clear();
+        int count = countOfChanges.get();
+        countOfChanges.set(0);
         return count;
     }
 
@@ -276,25 +272,7 @@ public class DBTable implements Table, AutoCloseable {
     //Перед вызовом этой функции нужно блокировать запись в originalTable
     public int countTheNumberOfChanges() {
         checkIsClosed();
-        int countOfChanges = 0;
-        for (String currentKey : removedKeys.get()) {
-            if (!originalTable.containsKey(currentKey)) {
-                continue;
-            }
-            if (tableOfChanges.get().containsKey(currentKey)) {
-                Storeable currentValue = tableOfChanges.get().get(currentKey);
-                if (checkStoreableForEquality(originalTable.get(currentKey), currentValue)) {
-                    continue;
-                }
-            }
-            countOfChanges++;
-        }
-        for (String currentKey : tableOfChanges.get().keySet()) {
-            if (!originalTable.containsKey(currentKey)) {
-                countOfChanges++;
-            }
-        }
-        return countOfChanges;
+        return countOfChanges.get();
     }
 
     private boolean checkStoreableForEquality(Storeable first, Storeable second) {
@@ -311,5 +289,24 @@ public class DBTable implements Table, AutoCloseable {
 
     public Boolean isClosed() {
         return isClosed;
+    }
+
+    private Storeable loadRowByKey(String key) {
+        String value;
+        try {
+            value = FileManager.loadValueByKey(key, tableDirectory);
+        } catch (IOException e) {
+            throw new RuntimeException("error while reading a dir: " + e.getMessage(), e);
+        }
+        if (value == null) {
+            return null;
+        }
+        Storeable rowValue;
+        try {
+            rowValue = tableProvider.deserialize(this, value);
+        } catch (ParseException e) {
+            throw new RuntimeException("error while parsing storeable: " + e.getMessage(), e);
+        }
+        return rowValue;
     }
 }
