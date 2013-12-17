@@ -522,10 +522,10 @@ public class FileManager {
     private static int checkKeysInDatFileOnRightHashCode(File dirFile, File datFile) throws IOException {
         String dirIndex = dirFile.getName();
         int last = dirIndex.lastIndexOf('.');
-        dirIndex = dirIndex.substring(0, last - 1);
+        dirIndex = dirIndex.substring(0, last);
         String datIndex = datFile.getName();
         last = datIndex.lastIndexOf('.');
-        datIndex = datIndex.substring(0, last - 1);
+        datIndex = datIndex.substring(0, last);
         RandomAccessFile fileIndexDat = new RandomAccessFile(datFile, "rw");
         long length = datFile.length();
         int countOfKeys = 0;
