@@ -508,6 +508,7 @@ public class FileManager {
                 writeSizeFile(sizeFile, realSize);
             } else {
                 String sizeAsString = scan.nextLine();
+                sizeAsString = sizeAsString.trim();
                 int sizeInFile = Integer.parseInt(sizeAsString);
                 if (sizeInFile != realSize) {
                     writeSizeFile(sizeFile, realSize);
