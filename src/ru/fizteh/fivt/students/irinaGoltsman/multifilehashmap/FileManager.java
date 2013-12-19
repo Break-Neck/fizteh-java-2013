@@ -472,7 +472,7 @@ public class FileManager {
         try (RandomAccessFile sizeRAFile = new RandomAccessFile(sizeFile, "rw")) {
             sizeRAFile.setLength(0);
             sizeRAFile.seek(0);
-            sizeRAFile.writeUTF(Integer.toString(size));
+            sizeRAFile.write(Integer.toString(size).getBytes(StandardCharsets.UTF_8));
         }
     }
 
