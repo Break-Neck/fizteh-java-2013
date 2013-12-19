@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
 
@@ -69,7 +70,7 @@ public class DatabaseTable extends SomeStorage<String, Storeable> implements src
 	    }
 
 	    public int getColumnsCount() {
-	        return columnTypes.size();
+	        return columnTypes.size();	
 	    }
 	    public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
 	        if (columnIndex < 0 || columnIndex > getColumnsCount()) {
@@ -113,6 +114,7 @@ public class DatabaseTable extends SomeStorage<String, Storeable> implements src
 	        writer.close();
 	    }
 	    
+	   	    
 	    public boolean checkAlienStoreable(Storeable storeable) {
 	        for (int index = 0; index < getColumnsCount(); ++index) {
 	            try {
