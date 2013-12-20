@@ -22,8 +22,8 @@ public class StoreableTableBuilder implements TableBuilder {
 	public String get(String key) {
 		Storeable val = table.get(key);
         try {
-            String representation = provider.serialize(table, val);
-            return representation;
+            String presentation = provider.serialize(table, val);
+            return presentation;
         } catch (ColumnFormatException e) {
             return null;
         }
