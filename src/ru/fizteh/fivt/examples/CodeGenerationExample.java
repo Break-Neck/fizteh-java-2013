@@ -249,8 +249,7 @@ public class CodeGenerationExample {
     }
 
     private static void generateMethod(ClassWriter cw, int access, String name, String descriptor,
-            Function1V<GeneratorAdapter> f)
-    {
+            Function1V<GeneratorAdapter> f) {
         MethodVisitor mv = cw.visitMethod(access, name, descriptor, null, null);
         GeneratorAdapter ga = new GeneratorAdapter(mv, access, name, descriptor);
         ga.visitCode();

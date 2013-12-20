@@ -9,13 +9,13 @@ import sun.misc.Unsafe;
  */
 public class UnsafeExample {
 
-    private static final Unsafe unsafeInstance;
+    private static final Unsafe UNSAFE_INSTANCE;
 
     static {
         try {
             Field field = Unsafe.class.getDeclaredField("theUnsafe");
             field.setAccessible(true);
-            unsafeInstance = Unsafe.class.cast(field.get(null));
+            UNSAFE_INSTANCE = Unsafe.class.cast(field.get(null));
         } catch (NoSuchFieldException e) {
             throw new RuntimeException("Failed to get Unsafe instance", e);
         } catch (IllegalAccessException e) {
@@ -34,7 +34,7 @@ public class UnsafeExample {
     }
 
     public static void main(String[] args) throws Exception {
-        Object o = unsafeInstance.allocateInstance(NoDefaultConstructorClass.class);
+        Object o = UNSAFE_INSTANCE.allocateInstance(NoDefaultConstructorClass.class);
         assert o != null;
         NoDefaultConstructorClass c = (NoDefaultConstructorClass) o;
         assert c.n == 0;
