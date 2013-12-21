@@ -7,16 +7,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.Table;
+import ru.fizteh.fivt.students.krivchansky.filemap.MyTable;
 
 public class MultifileTableTest {
 
 	private static final int KEYS_COUNT = 20;
     private static final String TABLE_NAME = "testtable";
-    Table currentTable;
+    MyTable currentTable;
 
-    TableProviderFactory factory = new DatabaseFactory();
-    TableProvider provider = factory.create("C:\\temp\\database_test");
+    MyTableProviderFactory factory = new DatabaseFactory();
+    MyTableProvider provider = factory.create("C:\\temp\\database_test");
     
 
     @Before

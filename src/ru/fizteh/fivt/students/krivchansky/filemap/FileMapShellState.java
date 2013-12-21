@@ -1,8 +1,10 @@
 package ru.fizteh.fivt.students.krivchansky.filemap;
 
-public class FileMapShellState implements FileMapShellStateInterface<Table, String, String> {
 
-	public Table table = null;
+
+public class FileMapShellState implements FileMapShellStateInterface<MyTable, String, String> {
+
+	public MyTable table = null;
 	
 	public String put (String key, String value) {
 		return table.put(key, value);
@@ -28,7 +30,7 @@ public class FileMapShellState implements FileMapShellStateInterface<Table, Stri
 		return table.remove(key);
 	}
 	
-	public Table getTable() {
+	public MyTable getTable() {
 		return table;
 	}
 	

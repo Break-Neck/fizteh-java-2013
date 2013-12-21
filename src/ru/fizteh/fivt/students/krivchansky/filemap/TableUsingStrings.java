@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.krivchansky.filemap;
 
-public abstract class TableUsingStrings extends SomeStorage<String, String> implements Table {
+public abstract class TableUsingStrings extends SomeStorage<String, String> implements MyTable {
 	protected TableUsingStrings(String dir, String name) {
 		super(dir, name);
 	}

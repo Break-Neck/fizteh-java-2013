@@ -6,7 +6,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import ru.fizteh.fivt.students.krivchansky.filemap.Table;
+import ru.fizteh.fivt.storage.strings.*;
 
 public class DatabaseTest {
 

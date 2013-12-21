@@ -16,6 +16,11 @@ import ru.fizteh.fivt.students.krivchansky.multifilemap.DropCommand;
 import ru.fizteh.fivt.students.krivchansky.multifilemap.UseCommand;
 import ru.fizteh.fivt.students.krivchansky.shell.Commands;
 import ru.fizteh.fivt.students.krivchansky.shell.Shell;
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class StorableMain {
 	public static void main(String[] args) {

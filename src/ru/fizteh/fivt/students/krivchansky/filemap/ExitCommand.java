@@ -15,7 +15,7 @@ public class ExitCommand<State extends FileMapShellStateInterface> extends SomeC
 
 	public void implement(String args, State state)
 			throws SomethingIsWrongException {
-		Table temp = (Table) state.getTable();
+		MyTable temp = (MyTable) state.getTable();
 		if (temp != null && !temp.getAutoCommit()) {
 			state.rollback();
 		} else if (temp.getAutoCommit()) {

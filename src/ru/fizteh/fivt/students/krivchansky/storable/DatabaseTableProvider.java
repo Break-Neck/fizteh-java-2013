@@ -12,6 +12,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
+
 
 public class DatabaseTableProvider implements TableProvider {
 	static final String SIGNATURE_FILE = "signature.tsv";

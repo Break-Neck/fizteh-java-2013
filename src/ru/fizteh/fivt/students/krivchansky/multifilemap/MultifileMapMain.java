@@ -28,6 +28,10 @@ public class MultifileMapMain {
         Shell<MultiFileMapShellState> shell = new Shell<MultiFileMapShellState>(actualResult);
         try {
         	String dbDirectory = System.getProperty("fizteh.db.dir");
+        	if (dbDirectory == null) {
+        		System.err.println("error: nope. Gimme something.");
+            	System.exit(-2);
+        	}
         	MultiFileMapShellState state = new MultiFileMapShellState();
         	DatabaseFactory factory = new DatabaseFactory();
         	state.tableProvider = factory.create(dbDirectory);
@@ -35,9 +39,6 @@ public class MultifileMapMain {
         } catch (IllegalArgumentException e) {
         	System.err.println("error: " + e.getMessage());
         	System.exit(-1);
-        } catch (NullPointerException e) {
-        	System.err.println("error: no db dir passed");
-        	System.exit(-2);
         }
         shell.run(args, shell);
 	}

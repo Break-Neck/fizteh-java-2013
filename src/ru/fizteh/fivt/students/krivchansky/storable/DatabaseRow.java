@@ -4,6 +4,9 @@ package ru.fizteh.fivt.students.krivchansky.storable;
 import java.util.ArrayList;
 import java.util.List;
 
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
+
 public class DatabaseRow implements Storeable {
 	final List<Class<?>> classes = new ArrayList<>();
 	List<Object> columns = new ArrayList<>();

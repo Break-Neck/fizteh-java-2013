@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
 
-public class Database implements TableProvider {
+public class Database implements MyTableProvider {
 	private static final String CHECK_NAME_EXPRESSION = "[^0-9A-Za-zА-Яа-я]+";
     HashMap<String, MultifileTable> content = new HashMap<String, MultifileTable>();
     private String databaseDirectoryPath;

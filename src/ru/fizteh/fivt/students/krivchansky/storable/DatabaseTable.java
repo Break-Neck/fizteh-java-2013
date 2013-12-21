@@ -1,6 +1,7 @@
 package ru.fizteh.fivt.students.krivchansky.storable;
 
 import java.io.BufferedWriter;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,8 +12,11 @@ import java.util.Set;
 import ru.fizteh.fivt.students.krivchansky.filemap.SomeStorage;
 import ru.fizteh.fivt.students.krivchansky.multifilemap.MultiFileMapReadingUtils;
 import ru.fizteh.fivt.students.krivchansky.multifilemap.MultiFileMapWritingUtils;
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
 
-public class DatabaseTable extends SomeStorage<String, Storeable> implements ru.fizteh.fivt.students.krivchansky.storable.Table {
+public class DatabaseTable extends SomeStorage<String, Storeable> implements Table {
 
 	DatabaseTableProvider provider;
 	private List<Class<?>> columnTypes;

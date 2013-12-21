@@ -1,9 +1,9 @@
 package ru.fizteh.fivt.students.krivchansky.filemap;
 import java.util.ArrayList;
 
-import ru.fizteh.fivt.students.krivchansky.shell.Parser;
 import ru.fizteh.fivt.students.krivchansky.shell.SomeCommand;
 import ru.fizteh.fivt.students.krivchansky.shell.SomethingIsWrongException;
+import ru.fizteh.fivt.students.krivchansky.shell.Parser;
 
 public class RemoveKeyCommand<Table, Key, Value, State extends FileMapShellStateInterface<Table, Key, Value>> extends SomeCommand<State>{
 

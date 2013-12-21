@@ -3,8 +3,8 @@ package ru.fizteh.fivt.students.krivchansky.multifilemap;
 
 import java.io.File;
 
-public class DatabaseFactory implements TableProviderFactory {
-    public TableProvider create(String directory) {
+public class DatabaseFactory implements MyTableProviderFactory {
+    public MyTableProvider create(String directory) {
     	if (directory.isEmpty() || directory == null) {
     		throw new IllegalArgumentException ("directory name cannot be null");
     	}

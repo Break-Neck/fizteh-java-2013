@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.fizteh.fivt.students.krivchansky.shell.Parser;
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class LocalUtils {
 	public static List<Object> parseValues(List<String> valuesRepresentation, Table table) throws ColumnFormatException {

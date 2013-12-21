@@ -6,6 +6,11 @@ import java.util.Set;
 
 import ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
 import ru.fizteh.fivt.students.krivchansky.filemap.TableBuilder;
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class StoreableTableBuilder implements TableBuilder {
 	DatabaseTableProvider provider;
