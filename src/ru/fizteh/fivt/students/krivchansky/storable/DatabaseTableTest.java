@@ -75,7 +75,7 @@ public class DatabaseTableTest {
             add("    ");
         }};
         row.setColumns(values);
-        currentTable.put("keysasdasda", row);
+        currentTable.put("somekey", row);
     }
 
     private String getXml(int value1, String value2) {

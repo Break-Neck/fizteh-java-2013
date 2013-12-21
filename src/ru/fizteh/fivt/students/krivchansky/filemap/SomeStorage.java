@@ -64,7 +64,7 @@ public abstract class SomeStorage<Key, Value> {
     	}
     	
     	public int calculateSize() {
-    		int size = 0;
+    		int size = unchangedOldData.size();
     		for(Key key : currentData.keySet()) {
     			Value newOne = currentData.get(key);
     			Value oldOne = unchangedOldData.get(key);
@@ -124,7 +124,7 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public int getChangesCounter() {
-        return transaction.get().getUnsavedChangesCounter();
+        return transaction.get().calculateChangesQuantity();
     }
     
     protected abstract void load() throws IOException;
@@ -134,7 +134,7 @@ public abstract class SomeStorage<Key, Value> {
         this.parentDirectory = dir;
         this.name = name;
         unchangedOldData = new HashMap<Key, Value>();
-        setAutoCommit(false);
+        setAutoCommit(true);  //change here to change autocommit status
         try {
             load();
         } catch (IOException e) {

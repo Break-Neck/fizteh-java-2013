@@ -1,7 +1,7 @@
 package src.ru.fizteh.fivt.students.krivchansky.filemap;
 import src.ru.fizteh.fivt.students.krivchansky.shell.*;
 
-public class CommitCommand<State extends FileMapShellStateInterface> extends SomeCommand<State>{
+public class CommitCommand<State extends FileMapShellStateInterface> extends SomeCommand<State> {
     
     public String getCommandName() {
         return "commit";

@@ -12,7 +12,7 @@ import src.ru.fizteh.fivt.students.krivchansky.filemap.ExitCommand;
 public class MultifileMapMain {
 	public static void main(String args[]) {
 		HashSet<Commands<FileMapShellState>> com =  new HashSet<Commands<FileMapShellState>>() {{ add(new ExitCommand()); add(new RollbackCommand()); add(new CommitCommand()); 
-        add(new PutCommand()); add(new GetCommand()); add(new RemoveKeyCommand());}};
+        add(new PutCommand()); add(new GetCommand()); add(new RemoveKeyCommand()); add(new SizeCommand());}};
         HashSet<Commands<MultiFileMapShellState>> com1 =  new HashSet<Commands<MultiFileMapShellState>>() {{add(new DropCommand()); add(new UseCommand()); 
          add(new CreateCommand());}};
         ArrayList<Commands<?>> res = new ArrayList<Commands<?>>();

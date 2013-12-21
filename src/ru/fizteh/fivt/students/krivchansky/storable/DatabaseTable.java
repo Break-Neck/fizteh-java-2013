@@ -72,6 +72,7 @@ public class DatabaseTable extends SomeStorage<String, Storeable> implements src
 	    public int getColumnsCount() {
 	        return columnTypes.size();	
 	    }
+	    
 	    public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
 	        if (columnIndex < 0 || columnIndex > getColumnsCount()) {
 	            throw new IndexOutOfBoundsException();

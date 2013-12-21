@@ -34,8 +34,13 @@ public class Database implements TableProvider {
         if (table == null) {
             return table;
         }
-        if (currentTable != null && currentTable.getChangesCounter() > 0) {
-        		throw new IllegalStateException(table.getChangesCounter() + " unsaved changes");
+        if (currentTable != null) {
+        	int changes = currentTable.getChangesCounter();
+            if (changes > 0 && !currentTable.getAutoCommit()) {
+        		throw new IllegalStateException(changes + " unsaved changes");
+            } else if (currentTable.getAutoCommit()) {
+        	    currentTable.commit();
+            }
         }
         table.setAutoCommit(true); //here if you want to start with autocommit option
         currentTable = table;

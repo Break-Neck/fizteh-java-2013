@@ -76,12 +76,10 @@ public class DatabaseTableProvider implements TableProvider {
 				throw new IllegalArgumentException("column types cannot be null");
 			}
 			checkColumnTypes(columnTypes);
-			DatabaseTable exists = tables.get(name);
-
-            if (exists == null) {
+			tableLock.lock();
+			if (tables.containsKey(name)) {
                 return null;
             }
-			tableLock.lock();
 			DatabaseTable table = new DatabaseTable(this, databaseDirPath, name, columnTypes);
 			tables.put(name, table);
 			return table;
@@ -96,7 +94,7 @@ public class DatabaseTableProvider implements TableProvider {
 				throw new IllegalArgumentException("table's name cannot be null");
 			}
 			
-			if (tables.containsKey(name)) {
+			if (!tables.containsKey(name)) {
 				throw new IllegalArgumentException(name + " not exists");
 			}
 			
@@ -209,6 +207,10 @@ public class DatabaseTableProvider implements TableProvider {
         return columnTypes;
     }
 	 
+	private boolean checkCorrectTable(File tableDirectory) {
+	     File signatureFile = new File(tableDirectory, SIGNATURE_FILE);
+	     return signatureFile.exists();
+	}
 	
 	private void checkColumnTypes(List<Class<?>> columnTypes) {
         for (final Class<?> columnType : columnTypes) {
