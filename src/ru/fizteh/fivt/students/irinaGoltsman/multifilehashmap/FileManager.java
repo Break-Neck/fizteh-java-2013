@@ -481,16 +481,18 @@ public class FileManager {
         if (!sizeFile.exists()) {
             throw new IOException("no file size.tsv");
         }
-        Scanner scan = new Scanner(sizeFile);
-        if (!scan.hasNext()) {
-            scan.close();
-            throw new IOException("empty file size.tsv");
+        int size = -1;
+        try (RandomAccessFile sizeRAFile = new RandomAccessFile(sizeFile, "r")) {
+            if (sizeRAFile.length() == 0) {
+                throw new IOException("empty file size.tsv");
+            }
+            byte [] bytes = new byte[64];
+            sizeRAFile.read(bytes);
+            String sizeAsString = new String(bytes, "UTF-8");
+            sizeAsString = sizeAsString.trim();
+            size = Integer.parseInt(sizeAsString);
         }
-
-        String sizeAsString = scan.nextLine();
-        scan.close();
-        sizeAsString = sizeAsString.trim();
-        return Integer.parseInt(sizeAsString);
+        return size;
     }
 
     //TODO: проверить
@@ -502,18 +504,22 @@ public class FileManager {
             }
             writeSizeFile(sizeFile, realSize);
         } else {
-            Scanner scan = new Scanner(sizeFile);
-            if (!scan.hasNext()) {
-                scan.close();
-                writeSizeFile(sizeFile, realSize);
-            } else {
-                String sizeAsString = scan.nextLine();
+            boolean needRewriteSizeFile = false;
+            try (RandomAccessFile sizeRAFile = new RandomAccessFile(sizeFile, "r")) {
+                if (sizeRAFile.length() == 0) {
+                    needRewriteSizeFile = true;
+                }
+                byte [] bytes = new byte[64];
+                sizeRAFile.read(bytes);
+                String sizeAsString = new String(bytes, "UTF-8");
                 sizeAsString = sizeAsString.trim();
                 int sizeInFile = Integer.parseInt(sizeAsString);
                 if (sizeInFile != realSize) {
-                    writeSizeFile(sizeFile, realSize);
+                    needRewriteSizeFile = true;
                 }
-                scan.close();
+            }
+            if (needRewriteSizeFile) {
+                writeSizeFile(sizeFile, realSize);
             }
         }
     }
