@@ -1,11 +1,11 @@
 package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
-import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import src.ru.fizteh.fivt.students.krivchansky.filemap.GlobalUtils;
 
 public class Database implements TableProvider {
 	private static final String CHECK_NAME_EXPRESSION = "[^0-9A-Za-zА-Яа-я]+";

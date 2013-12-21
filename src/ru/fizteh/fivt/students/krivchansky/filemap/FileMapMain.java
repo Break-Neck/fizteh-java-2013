@@ -1,8 +1,9 @@
-package src.ru.fizteh.fivt.students.krivchansky.filemap;
+package ru.fizteh.fivt.students.krivchansky.filemap;
 import java.util.HashSet;
 import java.util.Set;
 
-import src.ru.fizteh.fivt.students.krivchansky.shell.*;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Commands;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Shell;
 
 public class FileMapMain {
     public static void main(String[] args) {

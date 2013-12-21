@@ -3,8 +3,9 @@ package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
 import java.util.ArrayList;
 
-import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
-import src.ru.fizteh.fivt.students.krivchansky.shell.*;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Parser;
+import src.ru.fizteh.fivt.students.krivchansky.shell.SomeCommand;
+import src.ru.fizteh.fivt.students.krivchansky.shell.SomethingIsWrongException;
 
 public class UseCommand<Table, Key, Value, State extends MultifileMapShellStateInterface<Table, Key, Value>> extends SomeCommand<State> {
 	public String getCommandName() {

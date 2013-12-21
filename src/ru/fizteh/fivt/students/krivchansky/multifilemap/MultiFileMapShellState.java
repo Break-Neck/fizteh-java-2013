@@ -1,8 +1,8 @@
 package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 import java.io.IOException;
 
-
-import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.FileMapShellState;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.Table;
 
 
 

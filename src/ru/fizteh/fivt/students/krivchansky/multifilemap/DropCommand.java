@@ -2,7 +2,9 @@ package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import src.ru.fizteh.fivt.students.krivchansky.shell.*;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Parser;
+import src.ru.fizteh.fivt.students.krivchansky.shell.SomeCommand;
+import src.ru.fizteh.fivt.students.krivchansky.shell.SomethingIsWrongException;
 
 
 public class DropCommand<State extends MultifileMapShellStateInterface> extends SomeCommand<State>{

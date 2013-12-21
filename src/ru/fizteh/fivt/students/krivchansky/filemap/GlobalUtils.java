@@ -1,6 +1,4 @@
-package src.ru.fizteh.fivt.students.krivchansky.filemap;
-import src.ru.fizteh.fivt.students.krivchansky.shell.*;
-
+package ru.fizteh.fivt.students.krivchansky.filemap;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -11,6 +9,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import src.ru.fizteh.fivt.students.krivchansky.shell.ShellState;
 
 public class GlobalUtils {
 	public static final Charset ENCODING = StandardCharsets.UTF_8;

@@ -1,10 +1,9 @@
 package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
-import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
-
-
-
 import java.io.IOException;
+
+import src.ru.fizteh.fivt.students.krivchansky.filemap.SimpleTableBuilder;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.TableUsingStrings;
 
 
 public class MultifileTable extends TableUsingStrings {

@@ -1,5 +1,6 @@
-package src.ru.fizteh.fivt.students.krivchansky.filemap;
-import src.ru.fizteh.fivt.students.krivchansky.shell.*;
+package ru.fizteh.fivt.students.krivchansky.filemap;
+import src.ru.fizteh.fivt.students.krivchansky.shell.SomeCommand;
+import src.ru.fizteh.fivt.students.krivchansky.shell.SomethingIsWrongException;
 
 public class CommitCommand<State extends FileMapShellStateInterface> extends SomeCommand<State> {
     

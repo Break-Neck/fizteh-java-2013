@@ -3,7 +3,8 @@ package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 import java.io.File;
 import java.io.IOException;
 
-import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.FileMapReadingUtils;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.TableBuilder;
 
 
 public class MultiFileMapReadingUtils {

@@ -3,10 +3,16 @@ package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-
-import src.ru.fizteh.fivt.students.krivchansky.shell.*;
-import src.ru.fizteh.fivt.students.krivchansky.filemap.*;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.CommitCommand;
 import src.ru.fizteh.fivt.students.krivchansky.filemap.ExitCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.FileMapShellState;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.GetCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.PutCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.RemoveKeyCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.RollbackCommand;
+import src.ru.fizteh.fivt.students.krivchansky.filemap.SizeCommand;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Commands;
+import src.ru.fizteh.fivt.students.krivchansky.shell.Shell;
 
 
 public class MultifileMapMain {

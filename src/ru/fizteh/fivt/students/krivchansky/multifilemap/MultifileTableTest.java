@@ -1,10 +1,13 @@
 package src.ru.fizteh.fivt.students.krivchansky.multifilemap;
 
-import org.junit.*;
-import src.ru.fizteh.fivt.students.krivchansky.filemap.Table;
-
-import org.junit.Test;
 import java.util.Random;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import src.ru.fizteh.fivt.students.krivchansky.filemap.Table;
 
 public class MultifileTableTest {
 

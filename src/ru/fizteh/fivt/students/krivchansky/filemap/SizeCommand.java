@@ -1,4 +1,4 @@
-package src.ru.fizteh.fivt.students.krivchansky.filemap;
+package ru.fizteh.fivt.students.krivchansky.filemap;
 
 
 import src.ru.fizteh.fivt.students.krivchansky.shell.SomeCommand;
