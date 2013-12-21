@@ -458,10 +458,7 @@ public class FileManager {
             if (!sizeFile.createNewFile()) {
                 throw new IOException("failed to create new size.tsv: probably a file with such name already exists");
             }
-            try (RandomAccessFile sizeRAFile = new RandomAccessFile(sizeFile, "rw")) {
-                //String intAsString = Integer.toString(realSize);
-                sizeRAFile.writeUTF(Integer.toString(realSize));
-            }
+            writeSizeFile(sizeFile, realSize);
         } else {
             checkTableSize(tableDir, realSize);
         }
@@ -486,7 +483,7 @@ public class FileManager {
             if (sizeRAFile.length() == 0) {
                 throw new IOException("empty file size.tsv");
             }
-            byte [] bytes = new byte[64];
+            byte[] bytes = new byte[64];
             sizeRAFile.read(bytes);
             String sizeAsString = new String(bytes, "UTF-8");
             sizeAsString = sizeAsString.trim();
@@ -509,7 +506,7 @@ public class FileManager {
                 if (sizeRAFile.length() == 0) {
                     needRewriteSizeFile = true;
                 }
-                byte [] bytes = new byte[64];
+                byte[] bytes = new byte[64];
                 sizeRAFile.read(bytes);
                 String sizeAsString = new String(bytes, "UTF-8");
                 sizeAsString = sizeAsString.trim();
