@@ -36,7 +36,7 @@ public class MultifileMapMain {
         	System.err.println("error: " + e.getMessage());
         	System.exit(-1);
         } catch (NullPointerException e) {
-        	System.err.println("error: " + e.getMessage());
+        	System.err.println("error: no db dir passed");
         	System.exit(-2);
         }
         shell.run(args, shell);
