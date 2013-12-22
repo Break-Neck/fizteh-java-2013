@@ -9,10 +9,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
-import ru.fizteh.fivt.storage.structured.Storeable;
-import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.storage.structured.TableProvider;
-import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class XmlDeserializer {
 	String representation;
@@ -26,7 +22,10 @@ public class XmlDeserializer {
 	            	throw new ParseException("xml presentation is empty", 0);
 	            }
 	            int type = reader.next();
-	            if (type != XMLStreamConstants.START_ELEMENT || !reader.getName().getLocalPart().equals("row")) {
+	            if (type != XMLStreamConstants.START_ELEMENT) {
+	            	throw new ParseException("incorrect xml", 0);
+	            }
+	            if (!reader.getName().getLocalPart().equals("row")) {
 	            	throw new ParseException("incorrect xml", 0);
 	            }
 	            
@@ -43,19 +42,19 @@ public class XmlDeserializer {
 				throw new ParseException ("incorrect xml", 0);
 			}
 			type = reader.next();
-			if (type == XMLStreamReader.CHARACTERS) {
+			if (type == XMLStreamConstants.CHARACTERS) {
 				val = StoreableTypes.parseByClass(reader.getText(), typeExpected);
 			} else {
 				if (!reader.getName().getLocalPart().equals("null")) {
                     throw new ParseException("incorrect xml", 0);
                 }
-				type = reader.next();
 				val = null;
+				type = reader.next();
 				if (type != XMLStreamConstants.END_ELEMENT) {
 					throw new ParseException("incorrect xml", 0);
 				}
 			}
-			reader.next();
+			type = reader.next();
 			if (type != XMLStreamConstants.END_ELEMENT) {
 				throw new ParseException("incorrect xml", 0);
 			}

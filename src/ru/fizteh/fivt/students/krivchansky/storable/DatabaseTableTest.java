@@ -6,11 +6,9 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProvider;
-import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class DatabaseTableTest {
     private static final String DATABASE = "C:\\temp\\storeable_test";
@@ -29,12 +27,11 @@ public class DatabaseTableTest {
         List<Class<?>> columnTypes = new ArrayList<>();
         columnTypes.add(Integer.class);
         columnTypes.add(String.class);
-
         try {
-            currentTable = provider.createTable("testTable", columnTypes);
-        } catch (IOException e) {
-            // SAD
-        }
+			currentTable = provider.createTable("testTable", columnTypes);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 
     @After
@@ -56,12 +53,12 @@ public class DatabaseTableTest {
 
     @Test(expected = ParseException.class)
     public void putEmptyValueTest() throws ParseException {
-        Storeable storeable = provider.deserialize(currentTable, getXml(1, ""));
+        Storeable smth = provider.deserialize(currentTable, getXml(1, ""));
     }
 
     @Test(expected = ParseException.class)
     public void putNlValueTest() throws ParseException {
-        Storeable storeable = provider.deserialize(currentTable, getXml(1, "    "));
+        Storeable smth = provider.deserialize(currentTable, getXml(1, "    "));
     }
 
     @Test(expected = IllegalArgumentException.class)

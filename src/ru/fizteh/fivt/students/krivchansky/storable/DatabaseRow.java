@@ -1,6 +1,7 @@
 package ru.fizteh.fivt.students.krivchansky.storable;
 
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,6 +86,7 @@ public class DatabaseRow implements Storeable {
         return (Boolean) columns.get(columnIndex);
     }
 	
+    @Override
 	public String toString() {
         return LocalUtils.join(columns);
     }
@@ -105,6 +107,11 @@ public class DatabaseRow implements Storeable {
         checkBounds(columnIndex);
         if (value != null) {
             checkColumnType(columnIndex, value.getClass());
+            try {
+            	LocalUtils.checkValue(value, value.getClass());
+            } catch(ParseException e) {
+            	throw new IllegalArgumentException("incorrect value: " + value.toString());
+            }
         }
         columns.set(columnIndex, value);
     }

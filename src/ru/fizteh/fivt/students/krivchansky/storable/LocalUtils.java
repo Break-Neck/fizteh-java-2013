@@ -1,15 +1,13 @@
 package ru.fizteh.fivt.students.krivchansky.storable;
 
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 import ru.fizteh.fivt.students.krivchansky.shell.Parser;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
-import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.storage.structured.TableProvider;
-import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class LocalUtils {
 	public static List<Object> parseValues(List<String> valuesRepresentation, Table table) throws ColumnFormatException {
@@ -66,6 +64,19 @@ public class LocalUtils {
         return formattedColumnTypes;
     }
 
+    public static void checkValue(Object value, Class<?> type) throws ParseException {
+        if (value == null) {
+            return;
+        }
+
+        switch (StoreableTypes.getSimpleName(type)) {
+            case "String":
+                String stringValue = (String) value;
+                if (checkStringCorrect(stringValue)) 
+                    throw new ParseException("value cannot be null", 0);   
+                break;
+        }
+    }
 
     public static boolean checkStringCorrect(String string) {
         return string.matches("\\s*") || string.split("\\s+").length != 1;

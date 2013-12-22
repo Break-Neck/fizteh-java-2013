@@ -133,6 +133,7 @@ public class DatabaseTableProvider implements TableProvider {
 
 	
 	public Storeable deserialize(Table table, String val) throws ParseException {
+		val = val.trim();
         if (val == null || val.isEmpty()) {
             throw new IllegalArgumentException("value cannot be null or empty");
         }
