@@ -21,7 +21,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class DataBase implements Table {
+public class DataBase implements Table, AutoCloseable {
     private String dataBaseDirectory;
     private TableProvider provider;
     private List<Class<?>> types;
@@ -33,6 +33,7 @@ public class DataBase implements Table {
     public Lock readLock = readWriteLock.readLock();
     public Lock writeLock = readWriteLock.writeLock();
     
+    private volatile boolean isClosed = false;
     private ThreadLocal<HashMap<String, String>> changes = new ThreadLocal<HashMap<String, String>>() {
 
         public HashMap<String, String> initialValue() {
@@ -222,6 +223,7 @@ public class DataBase implements Table {
     	return result;
     }
     public Storeable get(String keyString) {
+    	checkClosed();
     	checkString(keyString);
         String result;
         if (changes.get().containsKey(keyString)){
@@ -234,7 +236,8 @@ public class DataBase implements Table {
     }
 
     public Storeable put(String keyString, Storeable storeable) {
-        checkString(keyString);
+        checkClosed();
+    	checkString(keyString);
         String valueString = JSONClass.serialize(this, storeable);
         checkString(valueString);
         Storeable result = get(keyString);
@@ -243,6 +246,7 @@ public class DataBase implements Table {
     }
 
     public Storeable remove(String keyString) {
+    	checkClosed();
     	checkString(keyString);
     	Storeable result = get(keyString);
     	changes.get().put(keyString, null);
@@ -267,7 +271,8 @@ public class DataBase implements Table {
         return count;
     }
     public int size() {
-    	 readLock.lock();
+    	checkClosed(); 
+    	readLock.lock();
     	 try {
          int count = 0;
          for (Map.Entry<String, String> change: changes.get().entrySet()) {
@@ -296,7 +301,7 @@ public class DataBase implements Table {
     }
     public int commit() throws FileNotFoundException, IOException {
         
-        
+        checkClosed();
         	ThreadLocal<Map<Integer, Map<String, String>>> newDataBase =
                     new ThreadLocal<Map<Integer, Map<String, String>>>() {
                 protected Map<Integer, Map<String, String>> initialValue() {
@@ -377,6 +382,7 @@ public class DataBase implements Table {
     }
 
     public int rollback() {
+    	checkClosed();
     	int res = countCommits();
         changes.get().clear();
         return res;
@@ -390,6 +396,7 @@ public class DataBase implements Table {
     }
 
     public String getName() {
+    	checkClosed();
         return new File(dataBaseDirectory).getName();
     }
 
@@ -408,17 +415,31 @@ public class DataBase implements Table {
 
 
     public int getColumnsCount() {
-        return types.size();
+        checkClosed();
+    	return types.size();
     }
 
 
     public Class<?> getColumnType(int columnIndex)
             throws IndexOutOfBoundsException {
-        if ((columnIndex < 0) || (columnIndex >= types.size())) {
+        checkClosed();
+    	if ((columnIndex < 0) || (columnIndex >= types.size())) {
             throw new IndexOutOfBoundsException("wrong columnIndex");
         }
         return types.get(columnIndex);
     }
+
+    private void checkClosed() {
+        if (isClosed) {
+            throw new IllegalStateException("call for closed object");
+        }
+    }
+	public void close() {
+		if (!isClosed) {
+            rollback();
+            isClosed = true;
+        }
+	}
 
 
 }
