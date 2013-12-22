@@ -7,7 +7,7 @@ import java.util.Set;
 
 import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 import ru.fizteh.fivt.storage.structured.TableProvider;
-public class MyTableProviderFactory implements TableProviderFactory{
+public class MyTableProviderFactory implements TableProviderFactory, AutoCloseable{
 	private volatile boolean isClosed = false;
 	private Set<DataBaseTable> tables = new HashSet<>();
 	public TableProvider create(String directory) throws IOException{

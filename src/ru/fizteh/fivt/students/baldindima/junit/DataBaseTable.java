@@ -20,7 +20,7 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProvider;
 
-public class DataBaseTable implements TableProvider {
+public class DataBaseTable implements TableProvider, AutoCloseable {
 
     private String tableDirectory;
     private Map<String, DataBase> tables;
