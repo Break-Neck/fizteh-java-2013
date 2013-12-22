@@ -140,7 +140,7 @@ public class DataBase implements Table, AutoCloseable {
     private void loadDataBase() throws IOException {
        
     	sizeFile = new File(dataBaseDirectory, "size.tsv");
-    	if (!sizeFile.exists()){
+    	if ((!sizeFile.exists())){
     		sizeTable = 0;
     		for (int i = 0; i < 16; ++i) {
                 for (int j = 0; j < 16; ++j) {
@@ -154,13 +154,29 @@ public class DataBase implements Table, AutoCloseable {
     		if (!sizeFile.createNewFile()){
     			throw new IllegalArgumentException("cannot create a size file");
     		}
-    		RandomAccessFile randomSizeFile = new RandomAccessFile(sizeFile, "rw");
-    		randomSizeFile.getChannel().truncate(0);
-    		randomSizeFile.writeInt(sizeTable);
-    		randomSizeFile.close();
+    		try (PrintStream printStream = new PrintStream(sizeFile)) {
+                printStream.print(sizeTable);
+            }
     	} else {
     		try (Scanner scanner = new Scanner(sizeFile)) {
-                sizeTable = scanner.nextInt();
+    			if (scanner.hasNextInt()){
+    				sizeTable = scanner.nextInt();
+    			} else {
+    				sizeTable = 0;
+    	    		for (int i = 0; i < 16; ++i) {
+    	                for (int j = 0; j < 16; ++j) {
+    	                   int nFile = j;
+    	                   int nDir = i;
+    	                   files.put(nDir * 16 + nFile, new DataBaseFile(getFullName(i, j), i, j, provider, this));
+    	                   
+    	                   sizeTable += files.get(nDir * 16 + nFile).mapFromFile.size();
+    	                }
+    	            }
+    	    		try (PrintStream printStream = new PrintStream(sizeFile)) {
+    	                printStream.print(sizeTable);
+    	            }	
+    			}
+                
             }
     	}
     }
@@ -317,6 +333,7 @@ public class DataBase implements Table, AutoCloseable {
 
             int count = countCommits();
             sizeTable = size();
+            
             try (PrintStream printStream = new PrintStream(sizeFile)) {
                 printStream.print(sizeTable);
             }
