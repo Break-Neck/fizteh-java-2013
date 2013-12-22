@@ -28,11 +28,11 @@ public class DataBase implements Table, AutoCloseable {
     private Map<Integer, DataBaseFile> files = new WeakHashMap<>();
     private File sizeFile;
     private int sizeTable;
-    
+
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
     public Lock readLock = readWriteLock.readLock();
     public Lock writeLock = readWriteLock.writeLock();
-    
+
     private volatile boolean isClosed = false;
     private ThreadLocal<HashMap<String, String>> changes = new ThreadLocal<HashMap<String, String>>() {
 
@@ -40,6 +40,7 @@ public class DataBase implements Table, AutoCloseable {
             return new HashMap<String, String>();
         }
     };
+
     private void checkNames(String[] fileList, String extension) throws IOException {
         for (String fileNumber : fileList) {
             if ((fileNumber.equals("signature.tsv")) || (fileNumber.equals("size.tsv"))) {
@@ -68,11 +69,11 @@ public class DataBase implements Table, AutoCloseable {
             throw new IOException(directoryName + " isn't a directory!");
         }
         if (file.list().length <= 0) {
-        	throw new IOException (directoryName + " is empty");
+            throw new IOException(directoryName + " is empty");
         }
         checkNames(file.list(), "dat");
         for (String fileName : file.list()) {
-        	File fileHelp = new File(directoryName, fileName);
+            File fileHelp = new File(directoryName, fileName);
             if (fileHelp.isDirectory()) {
                 throw new IOException(directoryName + File.separator + fileName + " isn't a file!");
             }
@@ -91,7 +92,7 @@ public class DataBase implements Table, AutoCloseable {
             throw new IOException(dataBaseDirectory + " isn't exist");
         }
         if (file.list().length <= 0) {
-        	throw new IOException (dataBaseDirectory + " is empty");
+            throw new IOException(dataBaseDirectory + " is empty");
         }
         checkNames(file.list(), "dir");
         for (String fileNumber : file.list()) {
@@ -111,7 +112,7 @@ public class DataBase implements Table, AutoCloseable {
 
         types = nTypes;
         BaseSignature.setBaseSignature(dataBaseDirectory, types);
-        
+
 
         checkCorrection();
         loadDataBase();
@@ -130,55 +131,49 @@ public class DataBase implements Table, AutoCloseable {
     }
 
 
-    
-
     private String getFullName(int nDir, int nFile) {
         return dataBaseDirectory + File.separator + Integer.toString(nDir)
                 + ".dir" + File.separator + Integer.toString(nFile) + ".dat";
     }
 
-    private void loadDataBase() throws IOException {
-       
-    	sizeFile = new File(dataBaseDirectory, "size.tsv");
-    	if ((!sizeFile.exists())){
-    		sizeTable = 0;
-    		for (int i = 0; i < 16; ++i) {
-                for (int j = 0; j < 16; ++j) {
-                   int nFile = j;
-                   int nDir = i;
-                   files.put(nDir * 16 + nFile, new DataBaseFile(getFullName(i, j), i, j, provider, this));
-                   
-                   sizeTable += files.get(nDir * 16 + nFile).mapFromFile.size();
-                }
+    private int realSizeTable() throws IOException {
+        int sizeTable = 0;
+        for (int i = 0; i < 16; ++i) {
+            for (int j = 0; j < 16; ++j) {
+                int nFile = j;
+                int nDir = i;
+                files.put(nDir * 16 + nFile, new DataBaseFile(getFullName(i, j), i, j, provider, this));
+
+                sizeTable += files.get(nDir * 16 + nFile).mapFromFile.size();
             }
-    		if (!sizeFile.createNewFile()){
-    			throw new IllegalArgumentException("cannot create a size file");
-    		}
-    		try (PrintStream printStream = new PrintStream(sizeFile)) {
+        }
+        return sizeTable;
+    }
+
+    private void loadDataBase() throws IOException {
+
+        sizeFile = new File(dataBaseDirectory, "size.tsv");
+        if ((!sizeFile.exists())) {
+            sizeTable = realSizeTable();
+            if (!sizeFile.createNewFile()) {
+                throw new IllegalArgumentException("cannot create a size file");
+            }
+            try (PrintStream printStream = new PrintStream(sizeFile)) {
                 printStream.print(sizeTable);
             }
-    	} else {
-    		try (Scanner scanner = new Scanner(sizeFile)) {
-    			if (scanner.hasNextInt()){
-    				sizeTable = scanner.nextInt();
-    			} else {
-    				sizeTable = 0;
-    	    		for (int i = 0; i < 16; ++i) {
-    	                for (int j = 0; j < 16; ++j) {
-    	                   int nFile = j;
-    	                   int nDir = i;
-    	                   files.put(nDir * 16 + nFile, new DataBaseFile(getFullName(i, j), i, j, provider, this));
-    	                   
-    	                   sizeTable += files.get(nDir * 16 + nFile).mapFromFile.size();
-    	                }
-    	            }
-    	    		try (PrintStream printStream = new PrintStream(sizeFile)) {
-    	                printStream.print(sizeTable);
-    	            }	
-    			}
-                
+        } else {
+            try (Scanner scanner = new Scanner(sizeFile)) {
+                if (scanner.hasNextInt()) {
+                    sizeTable = scanner.nextInt();
+                } else {
+                    sizeTable = realSizeTable();
+                    try (PrintStream printStream = new PrintStream(sizeFile)) {
+                        printStream.print(sizeTable);
+                    }
+                }
+
             }
-    	}
+        }
     }
 
     private void deleteEmptyDirectory(final String name) throws IOException {
@@ -212,48 +207,46 @@ public class DataBase implements Table, AutoCloseable {
         }
     }
 
-    
-    private String getFromOld(String keyString){
-    	String result;
-    	//int nDir = Math.abs(keyString.getBytes()[0]) % 16;
-        //int nFile = Math.abs((keyString.getBytes()[0] / 16) % 16);
-    	//int nFileInMap = nDir * 16 + nFile;
-    	int nDir = getnDir(keyString);
-    	int nFile = getnFile(keyString);
-    	int nFileInMap = getnFileInMap(keyString);
-    	readLock.lock();
-    	try {
-    		if (files.containsKey(nFileInMap)){
-            	result = files.get(nFileInMap).mapFromFile.get(keyString);
-            } else {
-            	try {
-    				files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
-    				result = files.get(nFileInMap).mapFromFile.get(keyString);
-    			} catch (IOException e) {
-    				throw new IllegalArgumentException(e);
-    			}
-            }
-    	} finally {
-    		readLock.unlock();
-    	}
-    	return result;
-    }
-    public Storeable get(String keyString) {
-    	checkClosed();
-    	checkString(keyString);
+
+    private String getFromOld(String keyString) {
         String result;
-        if (changes.get().containsKey(keyString)){
-        	result = changes.get().get(keyString);
-        } else {
-        	result = getFromOld(keyString);
+        int nDir = getnDir(keyString);
+        int nFile = getnFile(keyString);
+        int nFileInMap = getnFileInMap(keyString);
+        readLock.lock();
+        try {
+            if (files.containsKey(nFileInMap)) {
+                result = files.get(nFileInMap).mapFromFile.get(keyString);
+            } else {
+                try {
+                    files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
+                    result = files.get(nFileInMap).mapFromFile.get(keyString);
+                } catch (IOException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            }
+        } finally {
+            readLock.unlock();
         }
-        
+        return result;
+    }
+
+    public Storeable get(String keyString) {
+        checkClosed();
+        checkString(keyString);
+        String result;
+        if (changes.get().containsKey(keyString)) {
+            result = changes.get().get(keyString);
+        } else {
+            result = getFromOld(keyString);
+        }
+
         return JSONClass.deserialize(this, result);
     }
 
     public Storeable put(String keyString, Storeable storeable) {
         checkClosed();
-    	checkString(keyString);
+        checkString(keyString);
         String valueString = JSONClass.serialize(this, storeable);
         checkString(valueString);
         Storeable result = get(keyString);
@@ -262,116 +255,115 @@ public class DataBase implements Table, AutoCloseable {
     }
 
     public Storeable remove(String keyString) {
-    	checkClosed();
-    	checkString(keyString);
-    	Storeable result = get(keyString);
-    	changes.get().put(keyString, null);
-    	return result;
+        checkClosed();
+        checkString(keyString);
+        Storeable result = get(keyString);
+        changes.get().put(keyString, null);
+        return result;
     }
 
     public int countCommits() {
-    	int count = 0;
-    	readLock.lock();
+        int count = 0;
+        readLock.lock();
         try {
-        	for (String change: changes.get().keySet()){
-        		String s = getFromOld(change);
-        	    if (!((s == null) && (changes.get().get(change) == null) ||
-        	        ((s != null) && (changes.get().get(change) != null) &&
-        	        	s.equals(changes.get().get(change))))){
-        	        ++count;
-        	    }
-        	}
+            for (String change : changes.get().keySet()) {
+                String s = getFromOld(change);
+                if (!((s == null) && (changes.get().get(change) == null) ||
+                        ((s != null) && (changes.get().get(change) != null) &&
+                                s.equals(changes.get().get(change))))) {
+                    ++count;
+                }
+            }
         } finally {
-        	readLock.unlock();
+            readLock.unlock();
         }
         return count;
     }
-    public int size() {
-    	checkClosed(); 
-    	readLock.lock();
-    	 try {
-         int count = 0;
-         for (Map.Entry<String, String> change: changes.get().entrySet()) {
-             if (change.getValue() == null && getFromOld(change.getKey()) != null) {
-			     --count;
-			 } else if (change.getValue() != null && getFromOld(change.getKey()) == null) {
-			     ++count;
-			 }
-         }
-         return sizeTable + count;
-    	 }
-    	 finally {
-    		 readLock.unlock();
-    	 }
-    }
-    private int getnDir(String key){
-    	return Math.abs(key.getBytes()[0]) % 16;
-    	//return Math.abs((key.getBytes()[0]) % 16);
-    }
-    private int getnFile(String key){
-    	return Math.abs((key.getBytes()[0] / 16) % 16);
-    	//return Math.abs((key.getBytes()[0] / 16) % 16);
-    }
-    private int getnFileInMap(String key){
-    	return (getnDir(key) * 16 + getnFile(key));
-    }
-    public int commit() throws FileNotFoundException, IOException {
-        
-        checkClosed();
-        	ThreadLocal<Map<Integer, Map<String, String>>> newDataBase =
-                    new ThreadLocal<Map<Integer, Map<String, String>>>() {
-                protected Map<Integer, Map<String, String>> initialValue() {
-                    return new HashMap<>();
-                }
-            };
-            ThreadLocal<Set<Integer>> update = new ThreadLocal<Set<Integer>>() {
-                
-                protected Set<Integer> initialValue() {
-                    return new HashSet<>();
-                }
-            };
 
-            int count = countCommits();
-            sizeTable = size();
-            
-            try (PrintStream printStream = new PrintStream(sizeFile)) {
-                printStream.print(sizeTable);
+    public int size() {
+        checkClosed();
+        readLock.lock();
+        try {
+            int count = 0;
+            for (Map.Entry<String, String> change : changes.get().entrySet()) {
+                if (change.getValue() == null && getFromOld(change.getKey()) != null) {
+                    --count;
+                } else if (change.getValue() != null && getFromOld(change.getKey()) == null) {
+                    ++count;
+                }
             }
-            writeLock.lock();
-            try {
-            	for (Map.Entry<String, String> change: changes.get().entrySet()) {
-                    
-            		//int nDir = Math.abs(( change.getKey()).getBytes()[0]) % 16;
-            		//int nFileInMap = nDir * 16 + nFile;
-            		//int nDir = getnDir(change.getKey());
-            		//int nFile = getnFile(change.getKey());
-                    int nFileInMap = getnFileInMap(change.getKey());
-                    update.get().add(nFileInMap);
-                    if (newDataBase.get().get(nFileInMap) == null) {
-                         newDataBase.get().put(nFileInMap, new HashMap<String, String>());
-                    }
-                    newDataBase.get().get(nFileInMap).put(change.getKey(), change.getValue());
-                    }
-                    for (Integer nfile: update.get()) {
-                        DataBaseFile updateFile = putNewValues(nfile, newDataBase.get().get(nfile));
-                        updateFile.write();
-                    }
-            } finally {
-            	writeLock.unlock();
-            }
-            
-            changes.get().clear();
-            return count;
-    }
-    private DataBaseFile getOldMap( int nFileInMap) throws IOException{
-    	if (!files.containsKey(nFileInMap)){
-    		files.put(nFileInMap, new DataBaseFile(getFullName(nFileInMap / 16, nFileInMap % 16), 
-        			nFileInMap / 16 ,nFileInMap % 16, provider, this));
+            return sizeTable + count;
+        } finally {
+            readLock.unlock();
         }
-    	return files.get(nFileInMap);
     }
-    private void mergeNewAndOld(DataBaseFile newValuesMap, Map<String, String> changes){
-    	for (Map.Entry<String, String> change: changes.entrySet()) {
+
+    private int getnDir(String key) {
+        return Math.abs(key.getBytes()[0]) % 16;
+    }
+
+    private int getnFile(String key) {
+        return Math.abs((key.getBytes()[0] / 16) % 16);
+    }
+
+    private int getnFileInMap(String key) {
+        return (getnDir(key) * 16 + getnFile(key));
+    }
+
+    public int commit() throws FileNotFoundException, IOException {
+
+        checkClosed();
+        ThreadLocal<Map<Integer, Map<String, String>>> newDataBase =
+                new ThreadLocal<Map<Integer, Map<String, String>>>() {
+                    protected Map<Integer, Map<String, String>> initialValue() {
+                        return new HashMap<>();
+                    }
+                };
+        ThreadLocal<Set<Integer>> update = new ThreadLocal<Set<Integer>>() {
+
+            protected Set<Integer> initialValue() {
+                return new HashSet<>();
+            }
+        };
+
+        int count = countCommits();
+        sizeTable = size();
+
+        try (PrintStream printStream = new PrintStream(sizeFile)) {
+            printStream.print(sizeTable);
+        }
+        writeLock.lock();
+        try {
+            for (Map.Entry<String, String> change : changes.get().entrySet()) {
+                int nFileInMap = getnFileInMap(change.getKey());
+                update.get().add(nFileInMap);
+                if (newDataBase.get().get(nFileInMap) == null) {
+                    newDataBase.get().put(nFileInMap, new HashMap<String, String>());
+                }
+                newDataBase.get().get(nFileInMap).put(change.getKey(), change.getValue());
+            }
+            for (Integer nfile : update.get()) {
+                DataBaseFile updateFile = putNewValues(nfile, newDataBase.get().get(nfile));
+                updateFile.write();
+            }
+        } finally {
+            writeLock.unlock();
+        }
+
+        changes.get().clear();
+        return count;
+    }
+
+    private DataBaseFile getOldMap(int nFileInMap) throws IOException {
+        if (!files.containsKey(nFileInMap)) {
+            files.put(nFileInMap, new DataBaseFile(getFullName(nFileInMap / 16, nFileInMap % 16),
+                    nFileInMap / 16, nFileInMap % 16, provider, this));
+        }
+        return files.get(nFileInMap);
+    }
+
+    private void mergeNewAndOld(DataBaseFile newValuesMap, Map<String, String> changes) {
+        for (Map.Entry<String, String> change : changes.entrySet()) {
             if (change.getValue() == null) {
                 newValuesMap.mapFromFile.remove(change.getKey());
             } else {
@@ -379,68 +371,53 @@ public class DataBase implements Table, AutoCloseable {
             }
         }
     }
-    public DataBaseFile putNewValues(int nFileInMap,Map<String, String> changes) throws IOException {
-    	DataBaseFile newValuesMap = getOldMap(nFileInMap);
-    	/*if (!files.containsKey(nFileInMap)){
-    		files.put(nFileInMap, new DataBaseFile(getFullName(nFileInMap / 16, nFileInMap % 16), 
-        			nFileInMap / 16 ,nFileInMap % 16, provider, this));
-        }
-    	newValuesMap = files.get(nFileInMap);*/
-        /*for (Map.Entry<String, String> change: changes.entrySet()) {
-            if (change.getValue() == null) {
-                newValuesMap.mapFromFile.remove(change.getKey());
-            } else {
-                newValuesMap.mapFromFile.put(change.getKey(), change.getValue());
-            }
-        }*/
-    	mergeNewAndOld(newValuesMap, changes);
+
+    public DataBaseFile putNewValues(int nFileInMap, Map<String, String> changes) throws IOException {
+        DataBaseFile newValuesMap = getOldMap(nFileInMap);
+        mergeNewAndOld(newValuesMap, changes);
         files.put(nFileInMap, newValuesMap);
         return newValuesMap;
     }
 
     public int rollback() {
-    	checkClosed();
-    	int res = countCommits();
+        checkClosed();
+        int res = countCommits();
         changes.get().clear();
         return res;
-    	
-    }
 
-    
+    }
 
     public Storeable putStoreable(String keyStr, String valueStr) throws ParseException {
         return put(keyStr, provider.deserialize(this, valueStr));
     }
 
     public String getName() {
-    	checkClosed();
+        checkClosed();
         return new File(dataBaseDirectory).getName();
     }
 
     private void checkString(String str) {
-    	if ((str == null) || (str.trim().length() == 0)) {
+        if ((str == null) || (str.trim().length() == 0)) {
             throw new IllegalArgumentException("Wrong key!");
         }
-    	for (int i = 0; i < str.length(); ++i) {
+        for (int i = 0; i < str.length(); ++i) {
             if (Character.isWhitespace(str.charAt(i))) {
-            	throw new IllegalArgumentException("Wrong key!");
+                throw new IllegalArgumentException("Wrong key!");
             }
         }
-    	
-        
-    }
 
+
+    }
 
     public int getColumnsCount() {
         checkClosed();
-    	return types.size();
+        return types.size();
     }
-
 
     public Class<?> getColumnType(int columnIndex)
             throws IndexOutOfBoundsException {
         checkClosed();
-    	if ((columnIndex < 0) || (columnIndex >= types.size())) {
+        if ((columnIndex < 0) || (columnIndex >= types.size())) {
             throw new IndexOutOfBoundsException("wrong columnIndex");
         }
         return types.get(columnIndex);
@@ -451,12 +428,11 @@ public class DataBase implements Table, AutoCloseable {
             throw new IllegalStateException("call for closed object");
         }
     }
-	public void close() {
-		if (!isClosed) {
+
+    public void close() {
+        if (!isClosed) {
             rollback();
             isClosed = true;
         }
-	}
-
-
+    }
 }

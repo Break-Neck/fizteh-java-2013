@@ -5,11 +5,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.text.ParseException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.locks.Lock;
+
 
 import ru.fizteh.fivt.storage.structured.TableProvider;
 
@@ -22,9 +19,6 @@ public class DataBaseFile {
     private DataBase table;
     private int fileNumber;
     private int directoryNumber;
-
-    
-
 
     public DataBaseFile(String fullName, int nDirectoryNumber, int nFileNumber,
                         TableProvider nProvider, DataBase nTable) throws IOException {
@@ -103,7 +97,7 @@ public class DataBaseFile {
 
     }
 
-    
+
     public void write() throws IOException {
         File dataBaseDirectory = new File(dataBaseFile.getParent());
         if (mapFromFile.isEmpty()) {
@@ -143,166 +137,5 @@ public class DataBaseFile {
         }
     }
 
-    private void checkString(String str) {
-        if ((str == null) || (str.trim().length() == 0)) {
-            throw new IllegalArgumentException("Wrong key or value");
-        }
-    }
-
-/*    public String put(String keyString, String valueString) {
-        checkString(keyString);
-        checkString(valueString);
-        String result = null;
-        if (diffMap.get().containsKey(keyString)) {
-            result = diffMap.get().get(keyString);
-        } else {
-        	readLock.lock();
-        	try {
-        		if (oldMap.containsKey(keyString)) {
-                    result = oldMap.get(keyString);
-                }
-        	} finally {
-        		readLock.unlock();
-        	}
-            
-        }
-
-        if (deletedMap.get().contains(keyString)) {
-            deletedMap.get().remove(keyString);
-            result = null;
-        }
-
-        diffMap.get().put(keyString, valueString);
-        return result;
-
-    }*/
-
-
-  /*  public String get(String keyString) {
-        checkString(keyString);
-        if (deletedMap.get().contains(keyString)) {
-            return null;
-        }
-        if (diffMap.get().containsKey(keyString)) {
-            return diffMap.get().get(keyString);
-        }
-
-        readLock.lock();
-        try {
-        	if (oldMap.containsKey(keyString)) {
-                return oldMap.get(keyString);
-            }
-        } finally {
-        	readLock.unlock();
-        }
-        
-
-
-        return null;
-    }*/
-
-    /*public String remove(String keyString) {
-
-        checkString(keyString);
-        if (deletedMap.get().contains(keyString)) {
-            return null;
-        }
-        String result = null;
-        if (diffMap.get().containsKey(keyString)) {
-            result = diffMap.get().get(keyString);
-            diffMap.get().remove(keyString);
-            deletedMap.get().add(keyString);
-            return result;
-        }
-        readLock.lock();
-        try {
-        	if (oldMap.containsKey(keyString)) {
-                result = oldMap.get(keyString);
-                deletedMap.get().add(keyString);
-            }
-        } finally {
-        	readLock.unlock();
-        }
-        
-
-
-        return result;
-    }*/
-
-  /*  private void normalizeDataBaseFile() {
-        Set<String> newDeleted = new HashSet<>();
-        newDeleted.addAll(deletedMap.get());
-
-
-        for (String key : oldMap.keySet()) {
-            if (oldMap.get(key).equals(diffMap.get().get(key))) {
-                diffMap.get().remove(key);
-            }
-            if (newDeleted.contains(key)) {
-                newDeleted.remove(key);
-            }
-        }
-
-        for (String key : deletedMap.get()) {
-            if (diffMap.get().containsKey(key)) {
-                diffMap.get().remove(key);
-            }
-        }
-
-        for (String key : newDeleted) {
-            deletedMap.get().remove(key);
-        }
-    }*/
-
-
-    /*public int countCommits() {
-        readLock.lock();
-        try {
-        	normalizeDataBaseFile();
-            return diffMap.get().size() + deletedMap.get().size();
-        } finally {
-        	readLock.unlock();
-        }
-    	
-    }*/
-
-    /*public void commit() throws IOException {
-        normalizeDataBaseFile();
-        for (Map.Entry<String, String> node : diffMap.get().entrySet()) {
-            oldMap.put(node.getKey(), node.getValue());
-        }
-
-        for (String key : deletedMap.get()) {
-            oldMap.remove(key);
-        }
-
-        diffMap.get().clear();
-        deletedMap.get().clear();
-
-        write();
-    }*/
-
-    /*public void rollback() {
-        diffMap.get().clear();
-        deletedMap.get().clear();
-    }*/
-
-    /*public int countSize() {
-        readLock.lock();
-        try {
-        	normalizeDataBaseFile();
-            int result = diffMap.get().size() + oldMap.size() - deletedMap.get().size();
-            for (String key : diffMap.get().keySet()) {
-                if (oldMap.containsKey(key)) {
-                    --result;
-                }
-            }
-            return result;
-        } finally {
-        	readLock.unlock();
-        }
-    	
-    }*/
-
-
+    
 }
