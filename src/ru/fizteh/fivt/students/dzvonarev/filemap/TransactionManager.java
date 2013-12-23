@@ -2,12 +2,15 @@ package ru.fizteh.fivt.students.dzvonarev.filemap;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class TransactionManager {
 
     private Map<String, Transaction> changesMap;
     private MyTableProvider currentProvider;  // for starting transaction
     private int numberOfTransactions;
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public TransactionManager(MyTableProvider provider) {
         currentProvider = provider;
@@ -30,16 +33,31 @@ public class TransactionManager {
 
     public String startTransaction(String name) {
         Transaction transaction = new Transaction(currentProvider, name, this);
-        changesMap.put(transaction.getId(), transaction);
+        lock.writeLock().lock();
+        try {
+            changesMap.put(transaction.getId(), transaction);
+        } finally {
+            lock.writeLock().unlock();
+        }
         return transaction.getId();
     }
 
     void stopTransaction(String id) {
-        changesMap.remove(id);
+        lock.writeLock().lock();
+        try {
+            changesMap.remove(id);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public Transaction getTransaction(String id) {
-        return changesMap.get(id);
+        lock.readLock().lock();
+        try {
+            return changesMap.get(id);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
 }
