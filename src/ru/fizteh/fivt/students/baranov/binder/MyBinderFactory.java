@@ -22,7 +22,7 @@ public class MyBinderFactory implements BinderFactory {
         if (clazz.isArray()) {
             throw new IllegalArgumentException("arrays not supported");
         }
-        Field[] fields = clazz.getFields();
+        Field[] fields = clazz.getDeclaredFields();
         int countOfUselessFields = 0;
         for (Field field : fields) {
             if (field.getType().isArray()) {

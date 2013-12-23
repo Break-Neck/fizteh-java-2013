@@ -35,7 +35,7 @@ public class MyBinder<T> implements Binder<T> {
 
     MyBinder(Class<T> newClazz) {
         this.clazz = newClazz;
-        this.fields = clazz.getFields();
+        this.fields = clazz.getDeclaredFields();
         this.fieldMap = getMap(fields);
     }
 
@@ -152,7 +152,7 @@ public class MyBinder<T> implements Binder<T> {
 
     private void goThroughNode(Node parent, Field field, Object result) throws IllegalAccessException {
         Object innerObj = field.get(result);
-        HashMap<String, Field> innerFieldMap = getMap(innerObj.getClass().getFields());
+        HashMap<String, Field> innerFieldMap = getMap(innerObj.getClass().getDeclaredFields());
 
         NodeList nodes = parent.getChildNodes();
         for (int i = 0; i < nodes.getLength(); ++i) {

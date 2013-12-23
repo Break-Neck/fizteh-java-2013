@@ -33,7 +33,7 @@ public class Main {
 
         MyBinderFactory factory = new MyBinderFactory();
         try {
-            MyBinder binder = factory.create(MyClass.class, 0);
+            MyBinder binder = factory.create(MyClass.class);
             binder.serialize(c, System.out);
             System.out.println("------------");
             MyClass d = (MyClass) binder.deserialize(iStream);
