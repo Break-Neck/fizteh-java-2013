@@ -258,12 +258,12 @@ public class FileManager {
             }
         } else {
             File tmpFile = new File(dir, "tmp.dat");
-            try (RandomAccessFile datFile = new RandomAccessFile(dat, "rw")) {
-                try (RandomAccessFile file = new RandomAccessFile(tmpFile, "rw")) {
-                    long length = datFile.length();
-                    datFile.seek(0);
+            try (RandomAccessFile oldDatFile = new RandomAccessFile(dat, "rw")) {
+                oldDatFile.seek(0);
+                try (RandomAccessFile newDatFile = new RandomAccessFile(tmpFile, "rw")) {
+                    long length = oldDatFile.length();
                     while (length > 0) {
-                        LineOfDB line = readLineOfDatFile(datFile, length, dirIndex, datIndex);
+                        LineOfDB line = readLineOfDatFile(oldDatFile, length, dirIndex, datIndex);
                         length -= line.length;
                         if (tableOfChanges.containsKey(line.key)) {
                             String value = tableOfChanges.get(line.key);
@@ -275,17 +275,17 @@ public class FileManager {
                             }
                             byte[] bytesOfKey = line.key.getBytes("UTF-8");
                             byte[] bytesOfValue = value.getBytes("UTF-8");
-                            datFile.writeInt(bytesOfKey.length);
-                            datFile.writeInt(bytesOfValue.length);
-                            datFile.write(bytesOfKey);
-                            datFile.write(bytesOfValue);
+                            newDatFile.writeInt(bytesOfKey.length);
+                            newDatFile.writeInt(bytesOfValue.length);
+                            newDatFile.write(bytesOfKey);
+                            newDatFile.write(bytesOfValue);
                         } else {
                             byte[] bytesOfKey = line.key.getBytes("UTF-8");
                             byte[] bytesOfValue = line.value.getBytes("UTF-8");
-                            datFile.writeInt(bytesOfKey.length);
-                            datFile.writeInt(bytesOfValue.length);
-                            datFile.write(bytesOfKey);
-                            datFile.write(bytesOfValue);
+                            newDatFile.writeInt(bytesOfKey.length);
+                            newDatFile.writeInt(bytesOfValue.length);
+                            newDatFile.write(bytesOfKey);
+                            newDatFile.write(bytesOfValue);
                         }
                     }
                     for (String key : tableOfChanges.keySet()) {
@@ -297,21 +297,24 @@ public class FileManager {
                         addedKeys++;
                         byte[] bytesOfKey = key.getBytes("UTF-8");
                         byte[] bytesOfValue = value.getBytes("UTF-8");
-                        datFile.writeInt(bytesOfKey.length);
-                        datFile.writeInt(bytesOfValue.length);
-                        datFile.write(bytesOfKey);
-                        datFile.write(bytesOfValue);
+                        newDatFile.writeInt(bytesOfKey.length);
+                        newDatFile.writeInt(bytesOfValue.length);
+                        newDatFile.write(bytesOfKey);
+                        newDatFile.write(bytesOfValue);
                     }
-                    file.close();
+                    newDatFile.close();
                 }
-                datFile.close();
+                oldDatFile.close();
             }
-            dat.delete();
-            tmpFile.renameTo(dat);
+            if (!dat.delete()) {
+                throw new IOException("Error while commit: file '" + dat.getName() + "' can't be deleted");
+            }
+            if (!tmpFile.renameTo(dat)) {
+                throw new IOException("Error while commit: file '" + tmpFile.getName() + "' can't be renamed");
+            }
         }
         return new SizeOfTable(countOfRemovedKeys, addedKeys, countOfChanges);
     }
-
 
     //Возвращает число записанных изменений
     public static int writeTableOnDisk(File tableDirectory, HashMap<String, String> tableOfChanges,
@@ -321,7 +324,7 @@ public class FileManager {
         }
         HashMap<String, String>[][] parsedStorage = new HashMap[16][16];
         parseStorage(parsedStorage, tableOfChanges, removedKeys);
-        SizeOfTable size = new SizeOfTable();
+        SizeOfTable size;
         int countOfChanges = 0;
         int countOfRemovedKeys = 0;
         int countOfAddedKeys = 0;

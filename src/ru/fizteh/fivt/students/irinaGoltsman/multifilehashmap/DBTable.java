@@ -241,6 +241,7 @@ public class DBTable implements Table, AutoCloseable {
         }
         tableOfChanges.get().clear();
         removedKeys.get().clear();
+        countOfChanges.set(0);
         return count;
     }
 
