@@ -8,16 +8,16 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
 
-public class MyBinderFactory {
-    MyBinderFactory() {
+public class MyBinderFactory implements BinderFactory {
+    public MyBinderFactory() {
     }
 
-    public MyBinder create(Class clazz, int level) {
+    public <T> MyBinder<T> create(Class<T> clazz) {
         if (clazz == null) {
             throw new IllegalArgumentException("class " + clazz.getName() + " is null");
         }
         if (clazz.isPrimitive() || clazz.equals(String.class)) {
-            return new MyBinder(clazz, level);
+            return new MyBinder(clazz);
         }
         if (clazz.isArray()) {
             throw new IllegalArgumentException("arrays not supported");
@@ -45,6 +45,6 @@ public class MyBinderFactory {
             throw new IllegalArgumentException("class " + clazz.getName() + " don't have constructor");
         }
 
-        return new MyBinder(clazz, level);
+        return new MyBinder(clazz);
     }
 }

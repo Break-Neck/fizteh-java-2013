@@ -32,19 +32,11 @@ public class MyBinder<T> implements Binder<T> {
     private Class clazz;
     private Field[] fields;
     private HashMap<String, Field> fieldMap;
-    private int level;
 
-    MyBinder(Class<T> newClazz, int newLevel) {
+    MyBinder(Class<T> newClazz) {
         this.clazz = newClazz;
         this.fields = clazz.getFields();
         this.fieldMap = getMap(fields);
-        this.level = newLevel;
-    }
-
-    private void printTabs(OutputStream output) throws IOException {
-        for (int i = 0; i < level; ++i) {
-            output.write(tab.getBytes());
-        }
     }
 
     public T deserialize(InputStream input) throws IOException {
@@ -122,7 +114,6 @@ public class MyBinder<T> implements Binder<T> {
         mapOfObjects.put(valueOfClass, true);
 
         output.write(("<" + clazz.getName() + ">" + ls).getBytes());
-        level++;
         for (Field field : fields) {
             if (!(field.getType().isPrimitive() || field.getType().equals(String.class))) {
                 if (!mapOfObjects.containsKey(field)) {
@@ -147,8 +138,6 @@ public class MyBinder<T> implements Binder<T> {
                 printField(valueOfClass, field, fieldName, output);
             }
         }
-        level--;
-        printTabs(output);
         output.write(("</" + clazz.getName() + ">" + ls).getBytes());
 
     }
@@ -203,7 +192,6 @@ public class MyBinder<T> implements Binder<T> {
             }
         }
         if (needPrintField) {
-            printTabs(output);
             output.write(("<" + fieldName + ">").getBytes());
             Class typeOfField = field.getType();
             if (typeOfField.isPrimitive() || typeOfField.equals(String.class)) {
@@ -215,9 +203,7 @@ public class MyBinder<T> implements Binder<T> {
                 }
                 output.write(("</" + fieldName + ">" + ls).getBytes());
             } else {
-                level++;
                 output.write(ls.getBytes());
-                printTabs(output);
                 Object objectOfField = null;
                 field.setAccessible(true);
                 try {
@@ -226,10 +212,8 @@ public class MyBinder<T> implements Binder<T> {
                     //
                 }
                 MyBinderFactory factory = new MyBinderFactory();
-                MyBinder binder = factory.create(typeOfField, level);
+                MyBinder binder = factory.create(typeOfField);
                 binder.serialize(objectOfField, output);
-                level--;
-                printTabs(output);
                 output.write(("</" + fieldName + ">" + ls).getBytes());
             }
         }
