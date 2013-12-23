@@ -34,14 +34,14 @@ public class MyBinder<T> implements Binder<T> {
     private HashMap<String, Field> fieldMap;
     private int level;
 
-    MyBinder (Class<T> newClazz, int newLevel) {
+    MyBinder(Class<T> newClazz, int newLevel) {
         this.clazz = newClazz;
         this.fields = clazz.getFields();
         this.fieldMap = getMap(fields);
         this.level = newLevel;
     }
 
-    private void printTabs(OutputStream output) throws IOException{
+    private void printTabs(OutputStream output) throws IOException {
         for (int i = 0; i < level; ++i) {
             output.write(tab.getBytes());
         }
@@ -52,26 +52,26 @@ public class MyBinder<T> implements Binder<T> {
             throw new IllegalArgumentException("input is null");
         }
         try {
-            T result = (T)clazz.newInstance();
+            T result = (T) clazz.newInstance();
 
             DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
             f.setValidating(false);
             DocumentBuilder builder = f.newDocumentBuilder();
             Document doc = builder.parse(input);
-
-            for (Field field : fields) {
-                NodeList nodes = doc.getElementsByTagName(field.getName());
-                for (int i = 0; i < nodes.getLength(); ++i) {
-                    Node node = nodes.item(i);
-                    if (node.getNodeType() == Node.ELEMENT_NODE) {
-                        Element element = (Element) node;
-                        if (field.getClass().isPrimitive() || field.getClass().equals(String.class)) {
-                            Object value = casting(field, element);
-                            if (value != null) {
-                                field.set(result, value);
-                            }
-                        } else {
+            NodeList nodes = doc.getDocumentElement().getChildNodes();
+            for (int i = 0; i < nodes.getLength(); ++i) {
+                Node node = nodes.item(i);
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+                    String nodeName = node.getNodeName();
+                    Field field = fieldMap.get(nodeName);
+                    NodeList childNodes = node.getChildNodes();
+                    for (int j = 0; j < childNodes.getLength(); ++j) {
+                        Node innerNode = childNodes.item(j);
+                        String nodeValue = innerNode.getTextContent();
+                        if (innerNode.hasChildNodes()) {
                             goThroughNode(node, field, result);
+                        } else {
+                            field.set(result, casting(field, nodeValue));
                         }
                     }
                 }
@@ -82,9 +82,8 @@ public class MyBinder<T> implements Binder<T> {
         }
     }
 
-    private Object casting(Field field, Element element) {
-        Class type = field.getClass();
-        String value =  element.getElementsByTagName(field.getName()).item(0).getTextContent();
+    private Object casting(Field field, String value) {
+        Class type = field.getType();
         if (type.equals(byte.class)) {
             return Byte.parseByte(value);
         } else if (type.equals(short.class)) {
@@ -102,7 +101,7 @@ public class MyBinder<T> implements Binder<T> {
         } else if (type.equals(char.class)) {
             return value.charAt(0);
         }
-        return null;
+        return value;
     }
 
     public void serialize(T valueOfClass, OutputStream output) throws IOException {
@@ -162,11 +161,33 @@ public class MyBinder<T> implements Binder<T> {
         return result;
     }
 
-    private void goThroughNode(Node node, Field field, T result) {
-    //
+    private void goThroughNode(Node parent, Field field, Object result) throws IllegalAccessException {
+        Object innerObj = field.get(result);
+        HashMap<String, Field> innerFieldMap = getMap(innerObj.getClass().getFields());
+
+        NodeList nodes = parent.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); ++i) {
+            Node node = nodes.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                NodeList childNodes = node.getChildNodes();
+                String nodeName = node.getNodeName();
+                Field innerField = innerFieldMap.get(nodeName);
+                for (int j = 0; j < childNodes.getLength(); ++j) {
+                    Node innerNode = childNodes.item(j);
+                    String nodeValue = innerNode.getTextContent();
+                    if (innerNode.hasChildNodes()) {
+                        goThroughNode(innerNode, innerField, innerObj);
+                    } else {
+                        innerField.set((T)innerObj, casting(innerField, nodeValue));
+                    }
+                }
+            }
+        }
+
+        field.set(result, innerObj);
     }
 
-    private void printField(T valueOfClass, Field field, String fieldName, OutputStream output) throws IOException{
+    private void printField(T valueOfClass, Field field, String fieldName, OutputStream output) throws IOException {
         boolean needPrintField = true;
         Annotation[] annotations = field.getAnnotations();
         for (Annotation annotation : annotations) {

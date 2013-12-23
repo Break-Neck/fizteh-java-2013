@@ -9,7 +9,8 @@ import java.lang.reflect.Field;
 
 
 public class MyBinderFactory {
-    MyBinderFactory () {}
+    MyBinderFactory() {
+    }
 
     public MyBinder create(Class clazz, int level) {
         if (clazz == null) {
@@ -36,7 +37,7 @@ public class MyBinderFactory {
             }
         }
         if (countOfUselessFields == fields.length) {
-            throw  new IllegalArgumentException("in class " + clazz.getName() + " nothing to serialize");
+            throw new IllegalArgumentException("in class " + clazz.getName() + " nothing to serialize");
         }
         try {
             clazz.getConstructor();
