@@ -20,7 +20,7 @@ public class TransactionChanges {
         return it;
     }
 
-    public HashMap<String, Storeable> getTransaction(Long number) {
+    public HashMap<String, Storeable> getChangesMap(Long number) {
         lock.readLock().lock();
         try {
             return transactionToChangesMap.get(number);
@@ -33,9 +33,8 @@ public class TransactionChanges {
         lock.writeLock().lock();
         try {
             ++countOfTrans;
-            long num = countOfTrans;
-            transactionToChangesMap.put(num, new HashMap<String, Storeable>());
-            return num;
+            transactionToChangesMap.put(countOfTrans, new HashMap<String, Storeable>());
+            return countOfTrans;
         } finally {
             lock.writeLock().unlock();
         }

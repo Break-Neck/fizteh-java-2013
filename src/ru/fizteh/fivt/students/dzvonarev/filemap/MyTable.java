@@ -70,7 +70,7 @@ public class MyTable implements Table, AutoCloseable {
     }
 
     public int getCountOfChanges(long tableTransactionId) throws IndexOutOfBoundsException {
-        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getTransaction(tableTransactionId);
+        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getChangesMap(tableTransactionId);
         if (changesMap == null || changesMap.isEmpty()) {
             return 0;
         }
@@ -325,7 +325,7 @@ public class MyTable implements Table, AutoCloseable {
     }
 
     public void addChanges(String key, Storeable value, long tableTransactionId) {
-        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getTransaction(tableTransactionId);
+        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getChangesMap(tableTransactionId);
         changesMap.put(key, value);
     }
 
@@ -339,7 +339,7 @@ public class MyTable implements Table, AutoCloseable {
         if (key == null || key.trim().isEmpty() || containsWhitespace(key)) {
             throw new IllegalArgumentException("wrong type (key " + key + " is not valid)");
         }
-        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getTransaction(tableTransactionId);
+        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getChangesMap(tableTransactionId);
         if (changesMap.containsKey(key)) {            // если он был изменен
             return changesMap.get(key);
         } else {
@@ -447,7 +447,7 @@ public class MyTable implements Table, AutoCloseable {
     public int commit(long tableTransactionId) throws IndexOutOfBoundsException, IOException {
         checkTableIsClosed();
         writeLock.lock();
-        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getTransaction(tableTransactionId);
+        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getChangesMap(tableTransactionId);
         int count;
         try {
             count = getCountOfChanges(tableTransactionId);
@@ -466,7 +466,7 @@ public class MyTable implements Table, AutoCloseable {
 
 
     public void modifyFileMap(long transactionId) throws IndexOutOfBoundsException {
-        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getTransaction(transactionId);
+        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getChangesMap(transactionId);
         if (changesMap == null || changesMap.isEmpty()) {
             return;
         }
@@ -484,7 +484,7 @@ public class MyTable implements Table, AutoCloseable {
     }
 
     public int countSize(long tableTransactionId) throws IndexOutOfBoundsException {
-        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getTransaction(tableTransactionId);
+        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getChangesMap(tableTransactionId);
         if (changesMap == null || changesMap.isEmpty()) {
             return 0;
         }
@@ -516,7 +516,7 @@ public class MyTable implements Table, AutoCloseable {
         } finally {
             readLock.unlock();
         }
-        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getTransaction(tableTransactionId);
+        HashMap<String, Storeable> changesMap = TransactionChanges.getInstance().getChangesMap(tableTransactionId);
         changesMap.clear();
         return count;
     }
