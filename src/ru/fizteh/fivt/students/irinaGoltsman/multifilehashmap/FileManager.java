@@ -129,6 +129,7 @@ public class FileManager {
         if (length == 0) {
             return;
         }
+        datFile.seek(0);
         while (length > 0) {
             LineOfDB line = readLineOfDatFile(datFile, length, dirIndex, fileIndex);
             length -= line.length;
@@ -260,6 +261,7 @@ public class FileManager {
             try (RandomAccessFile datFile = new RandomAccessFile(dat, "rw")) {
                 try (RandomAccessFile file = new RandomAccessFile(tmpFile, "rw")) {
                     long length = datFile.length();
+                    datFile.seek(0);
                     while (length > 0) {
                         LineOfDB line = readLineOfDatFile(datFile, length, dirIndex, datIndex);
                         length -= line.length;
@@ -533,6 +535,7 @@ public class FileManager {
         RandomAccessFile fileIndexDat = new RandomAccessFile(datFile, "rw");
         long length = datFile.length();
         int countOfKeys = 0;
+        fileIndexDat.seek(0);
         while (length > 0) {
             //Внутри readLineOfDatFile вызывается метод checkKeyOnRightHashCode
             LineOfDB line = readLineOfDatFile(fileIndexDat, length,
@@ -557,6 +560,7 @@ public class FileManager {
             if (length == 0) {
                 return null;
             }
+            datFile.seek(0);
             while (length > 0) {
                 LineOfDB line = readLineOfDatFile(datFile, length, indexDir, indexDat);
                 length -= line.length;
