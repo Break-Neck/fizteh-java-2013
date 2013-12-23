@@ -21,7 +21,6 @@ public class MyTable implements Table, AutoCloseable {
     private File tableFile;
     private MyTableProvider tableProvider;
     private HashMap<String, Storeable> fileMap;
-    //private ThreadLocal<HashMap<String, Storeable>> changesMap;  ---> it is in Transaction class
     private ThreadLocal<Long> transactionId;        // transaction number of table
     private List<Class<?>> type;                   // types in this table
     private Lock readLock;
@@ -34,12 +33,6 @@ public class MyTable implements Table, AutoCloseable {
         tableFile = dirTable;
         tableName = dirTable.getName();
         fileMap = new HashMap<>();
-        /*changesMap = new ThreadLocal<HashMap<String, Storeable>>() {
-            @Override
-            public HashMap<String, Storeable> initialValue() {
-                return new HashMap<>();
-            }
-        }; */
         transactionId = new ThreadLocal<Long>() {
             @Override
             public Long initialValue() {
