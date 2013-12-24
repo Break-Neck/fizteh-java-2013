@@ -211,6 +211,33 @@ public class DBTable implements Table, AutoCloseable {
     @Override
     public int size() {
         checkIsClosed();
+        writeLock.lock();
+        try {
+            for (String key : removedKeys.get()) {
+                Storeable originalValue = loadRowByKey(key);
+                if (originalValue == null) {
+                    removedKeys.get().remove(key);
+                    continue;
+                }
+                Storeable value = tableOfChanges.get().get(key);
+                if (value != null) {
+                    if (checkStoreableForEquality(value, originalValue)) {
+                        tableOfChanges.get().remove(key);
+                        removedKeys.get().remove(key);
+                    }
+                }
+            }
+            for (String key : tableOfChanges.get().keySet()) {
+                Storeable originalValue = loadRowByKey(key);
+                Storeable value = tableOfChanges.get().get(key);
+                if (originalValue != null && value != null
+                        && checkStoreableForEquality(value, originalValue)) {
+                    tableOfChanges.get().remove(key);
+                }
+            }
+        } finally {
+            writeLock.unlock();
+        }
         return size - removedKeys.get().size() + tableOfChanges.get().size();
     }
 
@@ -266,6 +293,7 @@ public class DBTable implements Table, AutoCloseable {
 
     public int countTheNumberOfChanges() {
         checkIsClosed();
+        int countOfChanges = tableOfChanges.get().size();
         writeLock.lock();
         try {
             for (String key : removedKeys.get()) {
@@ -275,9 +303,14 @@ public class DBTable implements Table, AutoCloseable {
                     continue;
                 }
                 Storeable value = tableOfChanges.get().get(key);
-                if (value != null && checkStoreableForEquality(value, originalValue)) {
-                    tableOfChanges.get().remove(key);
-                    removedKeys.get().remove(key);
+                if (value != null) {
+                    if (checkStoreableForEquality(value, originalValue)) {
+                        tableOfChanges.get().remove(key);
+                        removedKeys.get().remove(key);
+                        countOfChanges--;
+                    }
+                } else {
+                    countOfChanges++;
                 }
             }
             for (String key : tableOfChanges.get().keySet()) {
@@ -286,16 +319,11 @@ public class DBTable implements Table, AutoCloseable {
                 if (originalValue != null && value != null
                         && checkStoreableForEquality(value, originalValue)) {
                     tableOfChanges.get().remove(key);
+                    countOfChanges--;
                 }
             }
         } finally {
             writeLock.unlock();
-        }
-        int countOfChanges = tableOfChanges.get().size();
-        for (String key : removedKeys.get()) {
-            if (!tableOfChanges.get().containsKey(key)) {
-                countOfChanges++;
-            }
         }
         return countOfChanges;
     }
