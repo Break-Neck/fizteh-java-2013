@@ -121,7 +121,7 @@ public class StorableTable extends AbstractTable<String, Storeable> implements E
 
     @Override
     public boolean isClosed() {
-        return isClosed;
+        return isClosed.get();
     }
 
     @Override
