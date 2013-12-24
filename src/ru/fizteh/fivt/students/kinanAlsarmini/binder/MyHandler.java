@@ -67,12 +67,15 @@ public class MyHandler extends DefaultHandler {
 
             if (counter % 2 == 0) {
                 Field field = getField(objectStack.peek().getClass(), qName);
+                if (field == null) {
+                    throw new IllegalArgumentException("Invalid xml: no such field");
+                }
+
+                field.setAccessible(true);
                 fieldStack.push(field);
                 if (isNull) {
-                    field.setAccessible(true);
                     field.set(objectStack.peek(), null);
                 } else if (isEmpty) {
-                    field.setAccessible(true);
                     field.set(objectStack.peek(), "");
                 }
             } else {
