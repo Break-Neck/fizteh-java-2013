@@ -133,7 +133,6 @@ public class DatabaseTableProvider implements TableProvider {
 
 	
 	public Storeable deserialize(Table table, String val) throws ParseException {
-		val = val.trim();
         if (val == null || val.isEmpty()) {
             throw new IllegalArgumentException("value cannot be null or empty");
         }
@@ -144,6 +143,7 @@ public class DatabaseTableProvider implements TableProvider {
             try {
                 Class<?> expectedType = table.getColumnType(index);
                 Object columnValue = deserializer.getNext(expectedType);
+                LocalUtils.checkValue(columnValue, expectedType);
                 values.add(columnValue);
             } catch (ColumnFormatException e) {
                 throw new ParseException("incompatible type: " + e.getMessage(), index);

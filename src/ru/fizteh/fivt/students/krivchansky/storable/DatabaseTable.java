@@ -1,10 +1,10 @@
 package ru.fizteh.fivt.students.krivchansky.storable;
 
 import java.io.BufferedWriter;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
 
@@ -53,6 +53,7 @@ public class DatabaseTable extends SomeStorage<String, Storeable> implements Tab
         if (!checkAlienStoreable(value)) {
             throw new ColumnFormatException("alien storeable");
         }
+        isStoreableCorrect(value);
         return putIntoStorage(key, value);
     }
 	
@@ -143,5 +144,15 @@ public class DatabaseTable extends SomeStorage<String, Storeable> implements Tab
 
 	    Set<String> rawGetKeys() {
 	        return unchangedOldData.keySet();
+	    }
+	    
+	    public void isStoreableCorrect(Storeable storeable) {
+	        for (int index = 0; index < getColumnsCount(); ++index) {
+	            try {
+	                LocalUtils.checkValue(storeable.getColumnAt(index), columnTypes.get(index));
+	            } catch (ParseException e) {
+	                throw new IllegalArgumentException(e);
+	            }
+	        }
 	    }
 }

@@ -3,17 +3,18 @@ import java.io.IOException;
 
 import ru.fizteh.fivt.students.krivchansky.filemap.FileMapShellState;
 import ru.fizteh.fivt.students.krivchansky.filemap.MyTable;
+import ru.fizteh.fivt.storage.strings.TableProvider;
 
 public class MultiFileMapShellState extends FileMapShellState implements MultifileMapShellStateInterface<MyTable, String, String> {
-	    public MyTableProvider tableProvider;
+	    public TableProvider tableProvider;
 
 		public MyTable useTable(String name) {
-			table = tableProvider.getTable(name);
+			table = (MyTable) tableProvider.getTable(name);
 			return table;
 		}
 
 		public MyTable createTable(String args) {
-			return tableProvider.createTable(args);
+			return (MyTable) tableProvider.createTable(args);
 		}
 
 		public void dropTable(String name) throws IOException {

@@ -68,9 +68,9 @@ public class LocalUtils {
         if (value == null) {
             return;
         }
-
+        //String t = StoreableTypes.getSimpleName(type);
         switch (StoreableTypes.getSimpleName(type)) {
-            case "String":
+            case "string":
                 String stringValue = (String) value;
                 if (checkStringCorrect(stringValue)) 
                     throw new ParseException("value cannot be null", 0);   
@@ -79,7 +79,9 @@ public class LocalUtils {
     }
 
     public static boolean checkStringCorrect(String string) {
-        return string.matches("\\s*") || string.split("\\s+").length != 1;
+    	//String t[] = string.split("\\s+");
+    	
+        return (string.matches("\\s*") || string.split("\\s+").length != 1);
     }
 
 }
