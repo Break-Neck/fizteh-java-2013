@@ -213,7 +213,6 @@ public class DBTable implements Table, AutoCloseable {
     }
 
     @Override
-    //TODO: Check it!
     public int size() {
         checkIsClosed();
         return size - removedKeys.get().size() + tableOfChanges.get().size();
@@ -270,7 +269,6 @@ public class DBTable implements Table, AutoCloseable {
         return columnTypes.get(columnIndex);
     }
 
-    //Перед вызовом этой функции нужно блокировать запись в originalTable
     public int countTheNumberOfChanges() {
         checkIsClosed();
         return countOfChanges.get();

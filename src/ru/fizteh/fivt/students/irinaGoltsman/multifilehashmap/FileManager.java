@@ -232,7 +232,6 @@ public class FileManager {
         }
     }
 
-    //TODO: проверить!!!
     public static SizeOfTable writeToDatFile(File dir, int dirIndex, File dat, int datIndex,
                                              HashMap<String, String> tableOfChanges) throws IOException {
         int countOfChanges = 0;
@@ -268,25 +267,28 @@ public class FileManager {
                         if (tableOfChanges.containsKey(line.key)) {
                             String value = tableOfChanges.get(line.key);
                             tableOfChanges.remove(line.key);
-                            countOfChanges++;
                             if (value == null) {
+                                countOfChanges++;
                                 countOfRemovedKeys++;
                                 continue;
                             }
-                            byte[] bytesOfKey = line.key.getBytes("UTF-8");
-                            byte[] bytesOfValue = value.getBytes("UTF-8");
-                            newDatFile.writeInt(bytesOfKey.length);
-                            newDatFile.writeInt(bytesOfValue.length);
-                            newDatFile.write(bytesOfKey);
-                            newDatFile.write(bytesOfValue);
-                        } else {
-                            byte[] bytesOfKey = line.key.getBytes("UTF-8");
-                            byte[] bytesOfValue = line.value.getBytes("UTF-8");
-                            newDatFile.writeInt(bytesOfKey.length);
-                            newDatFile.writeInt(bytesOfValue.length);
-                            newDatFile.write(bytesOfKey);
-                            newDatFile.write(bytesOfValue);
+                            if (!value.equals(line.value)) {
+                                countOfChanges++;
+                                byte[] bytesOfKey = line.key.getBytes("UTF-8");
+                                byte[] bytesOfValue = value.getBytes("UTF-8");
+                                newDatFile.writeInt(bytesOfKey.length);
+                                newDatFile.writeInt(bytesOfValue.length);
+                                newDatFile.write(bytesOfKey);
+                                newDatFile.write(bytesOfValue);
+                                continue;
+                            }
                         }
+                        byte[] bytesOfKey = line.key.getBytes("UTF-8");
+                        byte[] bytesOfValue = line.value.getBytes("UTF-8");
+                        newDatFile.writeInt(bytesOfKey.length);
+                        newDatFile.writeInt(bytesOfValue.length);
+                        newDatFile.write(bytesOfKey);
+                        newDatFile.write(bytesOfValue);
                     }
                     for (String key : tableOfChanges.keySet()) {
                         String value = tableOfChanges.get(key);
@@ -497,7 +499,6 @@ public class FileManager {
         return size;
     }
 
-    //TODO: проверить
     private static void checkTableSize(File tableDirectory, int realSize) throws IOException {
         File sizeFile = new File(tableDirectory, "size.tsv");
         if (!sizeFile.exists()) {
@@ -526,7 +527,6 @@ public class FileManager {
         }
     }
 
-    //TODO: проверить это
     //Возвращает количество ключей в dat файле
     private static int checkKeysInDatFileOnRightHashCode(File dirFile, File datFile) throws IOException {
         String dirIndex = dirFile.getName();

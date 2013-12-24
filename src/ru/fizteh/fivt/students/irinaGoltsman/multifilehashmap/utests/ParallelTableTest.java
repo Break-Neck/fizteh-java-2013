@@ -32,7 +32,6 @@ public class ParallelTableTest {
         table = tableProvider.createTable("testTable", columnTypes);
     }
 
-    /*
     @Test
     public void concurrentPutAndCommit() throws IOException {
         flagOfThread1 = true;
@@ -77,7 +76,6 @@ public class ParallelTableTest {
         Assert.assertEquals(0, table.size());
         Assert.assertEquals(1, table.commit());
     }
-    */
 
     @Test
     public void commitRollback() throws IOException {
