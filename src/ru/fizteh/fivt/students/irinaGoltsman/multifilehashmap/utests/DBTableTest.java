@@ -234,7 +234,7 @@ public class DBTableTest {
     }
 
     @Test
-    public void countTheNumberOfChanges() throws IOException{
+    public void countTheNumberOfChanges() throws IOException {
         Storeable row1 = new DBStoreable(columnTypes);
         Storeable row2 = new DBStoreable(columnTypes);
         row1.setColumnAt(0, 1);
