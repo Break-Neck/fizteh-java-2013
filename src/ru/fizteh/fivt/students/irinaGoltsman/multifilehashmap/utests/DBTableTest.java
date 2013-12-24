@@ -211,6 +211,59 @@ public class DBTableTest {
         table.commit();
     }
 
+    @Test
+    public void putRemoveRollback() throws IOException {
+        Storeable row1 = new DBStoreable(columnTypes);
+        Storeable row2 = new DBStoreable(columnTypes);
+        row1.setColumnAt(0, 524);
+        row2.setColumnAt(0, 110);
+        table.put("key110", row1);
+        table.remove("key110");
+        Assert.assertEquals(0, table.rollback());
+
+        table.put("key110", row1);
+        Assert.assertEquals(1, table.commit());
+        Assert.assertEquals(0, table.rollback());
+
+        table.put("key110", row2);
+        Assert.assertEquals(1, table.rollback());
+
+        table.put("key110", row2);
+        table.remove("key110");
+        Assert.assertEquals(1, table.rollback());
+    }
+
+    @Test
+    public void countTheNumberOfChanges() throws IOException{
+        Storeable row1 = new DBStoreable(columnTypes);
+        Storeable row2 = new DBStoreable(columnTypes);
+        row1.setColumnAt(0, 1);
+        row2.setColumnAt(0, 2);
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        table.put("key01", row1);
+        Assert.assertEquals(1, ((DBTable) table).countTheNumberOfChanges());
+        table.remove("key01");
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+
+        table.put("key01", row1);
+        Assert.assertEquals(1, ((DBTable) table).countTheNumberOfChanges());
+        Assert.assertEquals(1, table.commit());
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        table.put("key01", row1);
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        table.put("key01", row2);
+        Assert.assertEquals(1, ((DBTable) table).countTheNumberOfChanges());
+        Assert.assertEquals(1, table.commit());
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        table.remove("key01");
+        Assert.assertEquals(1, ((DBTable) table).countTheNumberOfChanges());
+        table.put("key01", row2);
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        Assert.assertEquals(0, table.commit());
+        table.remove("key01");
+        Assert.assertEquals(1, table.commit());
+    }
+
     @Test(expected = IllegalStateException.class)
     public void getNameAfterCloseTableShouldFail() throws IOException {
         Table newTable = tableProvider.createTable("tableWhichWillClosed", columnTypes);

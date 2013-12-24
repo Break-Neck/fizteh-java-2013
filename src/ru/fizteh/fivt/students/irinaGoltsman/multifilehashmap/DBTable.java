@@ -157,6 +157,21 @@ public class DBTable implements Table, AutoCloseable {
             }
         }
         Storeable oldValue = tableOfChanges.get().put(key, newValue);
+        if (originalValue != null && checkStoreableForEquality(newValue, originalValue)) {
+            boolean needDecreaseCountOfChanges = false;
+            tableOfChanges.get().remove(key);
+            if (oldValue != null) {
+                needDecreaseCountOfChanges = true;
+            }
+            if (removedKeys.get().contains(key)) {
+                removedKeys.get().remove(key);
+                needDecreaseCountOfChanges = true;
+            }
+            if (needDecreaseCountOfChanges) {
+                countOfChanges.set(countOfChanges.get() - 1);
+            }
+            return oldValue;
+        }
         //Значит здесь впервые происходит перезаписывание старого значения.
         if (!removedKeys.get().contains(key) && oldValue == null) {
             oldValue = originalValue;
