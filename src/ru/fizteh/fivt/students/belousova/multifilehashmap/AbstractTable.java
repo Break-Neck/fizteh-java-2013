@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,7 +19,7 @@ public abstract class AbstractTable<KeyType, ValueType> implements AutoCloseable
 
     protected File dataDirectory = null;
 
-    protected boolean isClosed = false;
+    protected AtomicBoolean isClosed = new AtomicBoolean(false);
 
     public String getName() {
         checkIfClosed();
@@ -180,14 +181,14 @@ public abstract class AbstractTable<KeyType, ValueType> implements AutoCloseable
 
     @Override
     public void close() throws Exception {
-        if (!isClosed) {
+        if (!isClosed.get()) {
             rollback();
-            isClosed = true;
+            isClosed.set(true);
         }
     }
 
     public void checkIfClosed() {
-        if (isClosed) {
+        if (isClosed.get()) {
             throw new IllegalStateException("Table is closed");
         }
     }
