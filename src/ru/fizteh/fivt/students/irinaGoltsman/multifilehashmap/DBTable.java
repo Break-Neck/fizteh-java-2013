@@ -230,6 +230,31 @@ public class DBTable implements Table, AutoCloseable {
     @Override
     public int size() {
         checkIsClosed();
+        writeLock.lock();
+        try {
+            for (String key : removedKeys.get()) {
+                Storeable originalValue = loadRowByKey(key);
+                if (originalValue == null) {
+                    removedKeys.get().remove(key);
+                    continue;
+                }
+                Storeable value = tableOfChanges.get().get(key);
+                if (value != null && checkStoreableForEquality(value, originalValue)) {
+                    tableOfChanges.get().remove(key);
+                    removedKeys.get().remove(key);
+                }
+            }
+            for (String key : tableOfChanges.get().keySet()) {
+                Storeable originalValue = loadRowByKey(key);
+                Storeable value = tableOfChanges.get().get(key);
+                if (originalValue != null && value != null
+                        && checkStoreableForEquality(value, originalValue)) {
+                    tableOfChanges.get().remove(key);
+                }
+            }
+        } finally {
+            writeLock.unlock();
+        }
         return size - removedKeys.get().size() + tableOfChanges.get().size();
     }
 
