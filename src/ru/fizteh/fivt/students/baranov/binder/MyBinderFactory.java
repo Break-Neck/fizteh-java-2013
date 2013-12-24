@@ -30,7 +30,7 @@ public class MyBinderFactory implements BinderFactory {
             }
             Annotation[] annotationsOfField = field.getAnnotations();
             for (Annotation a : annotationsOfField) {
-                if (a.equals(DoNotBind.class)) {
+                if (a.annotationType().equals(DoNotBind.class)) {
                     countOfUselessFields++;
                     break;
                 }

@@ -8,18 +8,12 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
-        class User {
-            User() {
-            }
 
-            private int id;
-            public String name;
-        }
 
         MyClass c = new MyClass();
         c.ololo = new MyClass2();
         c.first = 1;
-        c.second = "anton";
+        //c.second = "anton";
         c.fourth = 42;
         c.xyu = null;
         c.ololo.age = 19;
@@ -40,7 +34,7 @@ public class Main {
             System.out.println(d.first);
             System.out.println(d.second);
             System.out.println(d.ololo.age);
-        } catch (IllegalArgumentException | IOException e) {
+        } catch (Exception e) {
             System.err.println(e.getMessage());
             return;
         }

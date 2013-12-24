@@ -11,11 +11,10 @@ import ru.fizteh.fivt.binder.Name;
  * To change this template use File | Settings | File Templates.
  */
 public class MyClass {
-    public int first;
-    public String second;
+    int first;
+    char second;
     @Name("third")
-    public int fourth;
-    @DoNotBind
-    public String xyu;
-    public MyClass2 ololo;
+    int fourth;
+    String xyu;
+    MyClass2 ololo;
 }

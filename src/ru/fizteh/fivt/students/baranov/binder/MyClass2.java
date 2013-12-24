@@ -8,5 +8,5 @@ package ru.fizteh.fivt.students.baranov.binder;
  * To change this template use File | Settings | File Templates.
  */
 public class MyClass2 {
-    public int age;
+    int age;
 }

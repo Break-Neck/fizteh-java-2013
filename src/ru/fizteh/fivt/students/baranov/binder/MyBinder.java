@@ -9,20 +9,17 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
-import java.util.Map;
-
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Element;
 
 public class MyBinder<T> implements Binder<T> {
     private String ls = System.lineSeparator();
@@ -57,24 +54,23 @@ public class MyBinder<T> implements Binder<T> {
                     String nodeName = node.getNodeName();
                     Field field = fieldMap.get(nodeName);
                     NodeList childNodes = node.getChildNodes();
-                    for (int j = 0; j < childNodes.getLength(); ++j) {
-                        Node innerNode = childNodes.item(j);
-                        String nodeValue = innerNode.getTextContent();
-                        if (innerNode.hasChildNodes()) {
-                            goThroughNode(node, field, result);
-                        } else {
-                            field.set(result, casting(field, nodeValue));
-                        }
+                    Class nodeClass = field.getType();
+                    if (nodeClass.isPrimitive() || nodeClass.equals(String.class)) {
+                        String nodeValue = childNodes.item(0).getTextContent();
+                        field.setAccessible(true);
+                        field.set(result, casting(field, nodeValue));
+                    } else {
+                        goThroughNode(node, nodeClass, field, result);
                     }
                 }
             }
             return result;
         } catch (Exception e) {
-            throw new IOException("XML parsing error");
+            throw new IOException("XML parsing error: " + e.getMessage());
         }
     }
 
-    private Object casting(Field field, String value) {
+    private Object casting(Field field, String value) throws IOException {
         Class type = field.getType();
         if (type.equals(byte.class)) {
             return Byte.parseByte(value);
@@ -91,7 +87,17 @@ public class MyBinder<T> implements Binder<T> {
         } else if (type.equals(boolean.class)) {
             return Boolean.parseBoolean(value);
         } else if (type.equals(char.class)) {
-            return value.charAt(0);
+            if (value.length() == 1) {
+                return value.charAt(0);
+            } else {
+                throw new IOException("char is longer that 1");
+            }
+        } else if (type.isEnum()) {
+            for (Object object : type.getEnumConstants()) {
+                if (value.equals(object.toString())) {
+                    return object;
+                }
+            }
         }
         return value;
     }
@@ -103,25 +109,21 @@ public class MyBinder<T> implements Binder<T> {
         if (output == null) {
             throw new IllegalArgumentException("output is null");
         }
-
-        if (clazz.isPrimitive()) {
+        try {
+            if (circularLinks(valueOfClass, mapOfObjects)) {
+                throw new IllegalStateException("class has circular links");
+            }
+        } catch (IllegalAccessException e) {
+            //
+        }
+        if (clazz.isPrimitive() || clazz.equals(String.class) || clazz.isEnum()) {
             output.write(("<" + clazz.getName() + ">").getBytes());
             output.write((valueOfClass.toString()).getBytes());
             output.write(("</" + clazz.getName() + ">" + ls).getBytes());
             return;
         }
-
-        mapOfObjects.put(valueOfClass, true);
-
         output.write(("<" + clazz.getName() + ">" + ls).getBytes());
         for (Field field : fields) {
-            if (!(field.getType().isPrimitive() || field.getType().equals(String.class))) {
-                if (!mapOfObjects.containsKey(field)) {
-                    mapOfObjects.put(field, true);
-                } else {
-                    throw new IllegalStateException("circular reference");
-                }
-            }
             String fieldName = field.getName();
             boolean needPrintField = true;
             Annotation[] annotations = field.getAnnotations();
@@ -139,7 +141,6 @@ public class MyBinder<T> implements Binder<T> {
             }
         }
         output.write(("</" + clazz.getName() + ">" + ls).getBytes());
-
     }
 
     private HashMap<String, Field> getMap(Field[] fields) {
@@ -150,30 +151,25 @@ public class MyBinder<T> implements Binder<T> {
         return result;
     }
 
-    private void goThroughNode(Node parent, Field field, Object result) throws IllegalAccessException {
-        Object innerObj = field.get(result);
-        HashMap<String, Field> innerFieldMap = getMap(innerObj.getClass().getDeclaredFields());
-
-        NodeList nodes = parent.getChildNodes();
-        for (int i = 0; i < nodes.getLength(); ++i) {
-            Node node = nodes.item(i);
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                NodeList childNodes = node.getChildNodes();
-                String nodeName = node.getNodeName();
-                Field innerField = innerFieldMap.get(nodeName);
-                for (int j = 0; j < childNodes.getLength(); ++j) {
-                    Node innerNode = childNodes.item(j);
-                    String nodeValue = innerNode.getTextContent();
-                    if (innerNode.hasChildNodes()) {
-                        goThroughNode(innerNode, innerField, innerObj);
-                    } else {
-                        innerField.set((T)innerObj, casting(innerField, nodeValue));
-                    }
+    private void goThroughNode(Node node, Class nodeClass, Field field, Object result) throws Exception {
+        NodeList list = node.getChildNodes();
+        Object obj = nodeClass.newInstance();
+        HashMap<String, Field> map = getMap(nodeClass.getDeclaredFields());
+        for (int i = 0; i < list.getLength(); ++i) {
+            Node n = list.item(i);
+            if (n.hasChildNodes()) {
+                Node child = n.getFirstChild();
+                Field f = map.get(child.getNodeName());
+                Class fClass = f.getType();
+                if (fClass.isPrimitive() || fClass.equals(String.class)) {
+                    String value = child.getTextContent();
+                    f.set(obj, casting(f, value));
+                } else {
+                    goThroughNode(child, fClass, f, obj);
                 }
             }
         }
-
-        field.set(result, innerObj);
+        field.set(result, obj);
     }
 
     private void printField(T valueOfClass, Field field, String fieldName, OutputStream output) throws IOException {
@@ -194,12 +190,15 @@ public class MyBinder<T> implements Binder<T> {
         if (needPrintField) {
             output.write(("<" + fieldName + ">").getBytes());
             Class typeOfField = field.getType();
-            if (typeOfField.isPrimitive() || typeOfField.equals(String.class)) {
+            if (typeOfField.isPrimitive() || typeOfField.equals(String.class) || typeOfField.isEnum()) {
                 field.setAccessible(true);
                 try {
                     output.write(field.get(valueOfClass).toString().getBytes());
-                } catch (Exception e) {
+                } catch (IllegalAccessException e) {
                     //
+                } catch (NullPointerException e) {
+                    output.write("'value = null'".getBytes());
+                    //throw new IllegalArgumentException("field is null");
                 }
                 output.write(("</" + fieldName + ">" + ls).getBytes());
             } else {
@@ -217,5 +216,49 @@ public class MyBinder<T> implements Binder<T> {
                 output.write(("</" + fieldName + ">" + ls).getBytes());
             }
         }
+    }
+
+    private boolean circularLinks(Object obj, IdentityHashMap<Object, Boolean> map) throws IllegalAccessException {
+        if (obj != null) {
+            Class classOfObject = obj.getClass();
+            if (map.containsKey(obj)) {
+                return map.get(obj);
+            }
+            if (classOfObject.isPrimitive() || isWrapperType(classOfObject) || classOfObject.equals(String.class) || classOfObject.isEnum()) {
+                return false;
+            }
+            map.put(obj, true);
+            Field[] fieldsOfObject = classOfObject.getDeclaredFields();
+            for (Field field : fieldsOfObject) {
+                field.setAccessible(true);
+                if (circularLinks(field.get(obj), map)) {
+                    return true;
+                }
+            }
+            map.put(obj, false);
+            return false;
+        } else {
+            return false;
+        }
+    }
+
+    private static final Set<Class<?>> WRAPPER_TYPES = getWrapperTypes();
+
+    private static boolean isWrapperType(Class<?> clazz) {
+        return WRAPPER_TYPES.contains(clazz);
+    }
+
+    private static Set<Class<?>> getWrapperTypes() {
+        Set<Class<?>> ret = new HashSet<Class<?>>();
+        ret.add(Boolean.class);
+        ret.add(Character.class);
+        ret.add(Byte.class);
+        ret.add(Short.class);
+        ret.add(Integer.class);
+        ret.add(Long.class);
+        ret.add(Float.class);
+        ret.add(Double.class);
+        ret.add(Void.class);
+        return ret;
     }
 }
