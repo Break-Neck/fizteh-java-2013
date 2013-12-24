@@ -14,10 +14,25 @@ public class ServletCommit extends HttpServlet {
         manager = transactionManager;
     }
 
+    private boolean isValid(String id) {
+        if (id.length() >= 6) {
+            return false;
+        }
+        for (int i = 0; i < id.length(); ++i) {
+            if (!id.matches("\\d")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String transactionId = request.getParameter("tid");
+        if (!isValid(transactionId)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid transaction id");
+        }
         if (transactionId == null) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "transaction id not found");
             return;

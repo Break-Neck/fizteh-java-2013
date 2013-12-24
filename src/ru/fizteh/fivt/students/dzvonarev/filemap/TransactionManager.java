@@ -19,15 +19,20 @@ public class TransactionManager {
     }
 
     public String getTransactionId() {
-        String numTrans = (new Integer(numberOfTransactions)).toString();
-        int transLen = numTrans.length();
         StringBuilder builder = new StringBuilder();
-        while (transLen < 5) {
-            builder.append(0);
-            ++transLen;
+        lock.writeLock().lock();
+        try {
+            String numTrans = (new Integer(numberOfTransactions)).toString();
+            int transLen = numTrans.length();
+            while (transLen < 5) {
+                builder.append(0);
+                ++transLen;
+            }
+            builder.append(numTrans);
+            ++numberOfTransactions;
+        } finally {
+            lock.writeLock().unlock();
         }
-        builder.append(numTrans);
-        ++numberOfTransactions;
         return builder.toString();
     }
 
