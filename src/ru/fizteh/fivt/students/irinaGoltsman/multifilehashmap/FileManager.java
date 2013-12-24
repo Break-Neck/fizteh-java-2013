@@ -445,9 +445,7 @@ public class FileManager {
                                     datFiles.getName(), dirFile.getName(), tableDir.getName()));
                         } else {
                             if (datFiles.length() == 0) {
-                                if (!datFiles.delete()) {
-                                    throw new IOException("fail deleting empty file " + datFiles.getName());
-                                }
+                                throw new IOException("empty file " + datFiles.getName());
                             }
                             realSize += checkKeysInDatFileOnRightHashCode(dirFile, datFiles);
                         }
