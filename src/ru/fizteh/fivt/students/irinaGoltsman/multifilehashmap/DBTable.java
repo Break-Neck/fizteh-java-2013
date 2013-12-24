@@ -232,6 +232,7 @@ public class DBTable implements Table, AutoCloseable {
         int count;
         writeLock.lock();
         try {
+            originalTable.clear();
             count = FileManager.writeTableOnDisk(tableDirectory, serializedTableOfChanges,
                     removedKeys.get());
             size = FileManager.readSize(tableDirectory);
