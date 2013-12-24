@@ -19,7 +19,7 @@ public class ServletGet extends HttpServlet {
             return false;
         }
         for (int i = 0; i < id.length(); ++i) {
-            if (!id.matches("\\d")) {
+            if (!(id.charAt(i) >= '0' && id.charAt(i) <= '9')) {
                 return false;
             }
         }
