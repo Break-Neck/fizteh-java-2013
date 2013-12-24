@@ -55,7 +55,7 @@ public class MyBinder<T> implements Binder<T> {
                     Field field = fieldMap.get(nodeName);
                     NodeList childNodes = node.getChildNodes();
                     Class nodeClass = field.getType();
-                    if (nodeClass.isPrimitive() || nodeClass.equals(String.class)) {
+                    if (nodeClass.isPrimitive() || nodeClass.equals(String.class) || nodeClass.isEnum()) {
                         String nodeValue = childNodes.item(0).getTextContent();
                         field.setAccessible(true);
                         field.set(result, casting(field, nodeValue));
@@ -161,7 +161,7 @@ public class MyBinder<T> implements Binder<T> {
                 Node child = n.getFirstChild();
                 Field f = map.get(child.getNodeName());
                 Class fClass = f.getType();
-                if (fClass.isPrimitive() || fClass.equals(String.class)) {
+                if (fClass.isPrimitive() || fClass.equals(String.class) || fClass.isEnum()) {
                     String value = child.getTextContent();
                     f.set(obj, casting(f, value));
                 } else {
@@ -224,7 +224,8 @@ public class MyBinder<T> implements Binder<T> {
             if (map.containsKey(obj)) {
                 return map.get(obj);
             }
-            if (classOfObject.isPrimitive() || isWrapperType(classOfObject) || classOfObject.equals(String.class) || classOfObject.isEnum()) {
+            if (classOfObject.isPrimitive() || isWrapperType(classOfObject) || classOfObject.equals(String.class) ||
+                    classOfObject.isEnum()) {
                 return false;
             }
             map.put(obj, true);
