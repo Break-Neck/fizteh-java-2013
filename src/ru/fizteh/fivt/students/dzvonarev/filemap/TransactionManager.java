@@ -22,7 +22,12 @@ public class TransactionManager {
         StringBuilder builder = new StringBuilder();
         lock.writeLock().lock();
         try {
-            String numTrans = (new Integer(numberOfTransactions)).toString();
+            String numTrans;
+            if (numberOfTransactions == 99999) {
+                numTrans = "00000";
+            } else {
+                numTrans = (new Integer(numberOfTransactions)).toString();
+            }
             int transLen = numTrans.length();
             while (transLen < 5) {
                 builder.append(0);
