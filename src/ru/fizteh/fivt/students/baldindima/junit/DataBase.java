@@ -251,7 +251,7 @@ public class DataBase implements Table, AutoCloseable {
         checkClosed();
         checkString(keyString);
         String valueString = JSONClass.serialize(this, storeable);
-        checkString(valueString);
+        //checkString(valueString);
         Storeable result = get(keyString);
         changes.get().put(keyString, valueString);
         return result;
