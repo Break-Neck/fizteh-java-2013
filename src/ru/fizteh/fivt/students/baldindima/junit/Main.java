@@ -54,7 +54,7 @@ public class Main {
             }
             makeShell();
            
-                   
+            System.out.println("aaa");       
             if (args.length > 0) {
                 shell.nonInteractiveMode(args);
 

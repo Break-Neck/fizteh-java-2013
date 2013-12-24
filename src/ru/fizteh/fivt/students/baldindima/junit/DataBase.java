@@ -205,6 +205,9 @@ public class DataBase implements Table, AutoCloseable {
         if (!new File(dataBaseDirectory, "signature.tsv").delete()) {
             throw new IOException("Cannot delete a file!");
         }
+        if (!new File(dataBaseDirectory, "size.tsv").delete()) {
+        	throw new IOException("Cannot delete a file!");
+        }
     }
 
 
