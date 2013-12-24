@@ -63,6 +63,17 @@ public class DBTableTest {
         table.remove("newTestKey");
     }
 
+    @Test
+    public void putWork() {
+        Storeable row1 = new DBStoreable(columnTypes);
+        Storeable row2 = new DBStoreable(columnTypes);
+        row1.setColumnAt(0, 1);
+        row2.setColumnAt(0, 2);
+        Assert.assertNull(table.put("key", row1));
+        Assert.assertEquals(row1, table.put("key", row2));
+        table.rollback();
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void putNullKey() {
         List<Class<?>> types = new ArrayList<>();
