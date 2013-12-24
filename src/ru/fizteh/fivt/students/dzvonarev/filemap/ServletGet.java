@@ -30,12 +30,12 @@ public class ServletGet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String transactionId = request.getParameter("tid");
-        if (!isValid(transactionId)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid transaction id");
-        }
         if (transactionId == null) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "transaction id not found");
             return;
+        }
+        if (!isValid(transactionId)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid transaction id");
         }
         String key = request.getParameter("key");
         if (key == null) {
