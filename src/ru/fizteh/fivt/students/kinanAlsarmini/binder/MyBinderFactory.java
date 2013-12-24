@@ -4,15 +4,19 @@ import ru.fizteh.fivt.binder.Binder;
 import ru.fizteh.fivt.binder.BinderFactory;
 import ru.fizteh.fivt.students.kinanAlsarmini.binder.MyBinder;
 
+import ru.fizteh.fivt.binder.Name;
+import ru.fizteh.fivt.binder.DoNotBind;
+
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.lang.reflect.Field;
 
 public class MyBinderFactory implements BinderFactory {
     private HashMap<Class<?>,Boolean> isSerializable;
     private HashMap<Class<?>,MyBinder> cache;
 
-    MyBinderFactory() {
-        isSerializable = new HashMap<Class<?>,Boolean>();
+    public MyBinderFactory() {
         cache = new HashMap<Class<?>,MyBinder>();
     }
 
@@ -38,7 +42,7 @@ public class MyBinderFactory implements BinderFactory {
 
         if (clazz.isArray()) {
             isSerializable.put(clazz, false);
-            return false;
+            throw new IllegalArgumentException("Not serializable: contains array");
         }
 
         Field[] fields = clazz.getDeclaredFields();
@@ -49,11 +53,30 @@ public class MyBinderFactory implements BinderFactory {
 
         if (!checkDefaultConstructor(clazz)) {
             isSerializable.put(clazz, false);
-            return false;
+            throw new IllegalArgumentException("Not serializable: no default constructor");
         }
 
         isSerializable.put(clazz, true);
+
+        Set<String> fieldNames = new HashSet<String>();
+
         for (Field field : fields) {
+            if (field.getAnnotation(DoNotBind.class) != null) {
+                continue;
+            }
+
+            String fieldName = field.getName();
+            Name name = field.getAnnotation(Name.class);
+            if (name != null) {
+                fieldName = name.value();
+            }
+
+            if (fieldNames.contains(fieldName)) {
+                throw new IllegalArgumentException("Not serializable: Duplicate field name");
+            }
+
+            fieldNames.add(fieldName);
+
             if (!checkSerializability(field.getType())) {
                 isSerializable.put(clazz, false);
             }
@@ -72,6 +95,7 @@ public class MyBinderFactory implements BinderFactory {
             throw new IllegalArgumentException("Invalid class: null");
         }
 
+        isSerializable = new HashMap<Class<?>,Boolean>();
         if (!checkSerializability(clazz)) {
             throw new IllegalArgumentException("Invalid class: not serializable");
         }

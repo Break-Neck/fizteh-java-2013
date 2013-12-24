@@ -1,5 +1,8 @@
 package ru.fizteh.fivt.students.kinanAlsarmini.binder;
 
+import ru.fizteh.fivt.binder.Name;
+import ru.fizteh.fivt.binder.DoNotBind;
+
 import java.util.Stack;
 import org.xml.sax.Attributes;
 
@@ -26,6 +29,26 @@ public class MyHandler extends DefaultHandler {
         return deserializedObject;
     }
 
+    public static Field getField(Class<?> clazz, String fieldName) {
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.getAnnotation(DoNotBind.class) != null) {
+                continue;
+            }
+
+            String currentFieldName = field.getName();
+            Name name = field.getAnnotation(Name.class);
+            if (name != null) {
+                currentFieldName = name.value();
+            }
+
+            if (fieldName.equals(currentFieldName)) {
+                return field;
+            }
+        }
+
+        return null;
+    }
+
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         boolean isNull = false, isEmpty = false;
 
@@ -43,7 +66,7 @@ public class MyHandler extends DefaultHandler {
             counter++;
 
             if (counter % 2 == 0) {
-                Field field = objectStack.peek().getClass().getDeclaredField(qName);
+                Field field = getField(objectStack.peek().getClass(), qName);
                 fieldStack.push(field);
                 if (isNull) {
                     field.setAccessible(true);
@@ -59,7 +82,7 @@ public class MyHandler extends DefaultHandler {
                     objectStack.push(fieldStack.peek().getType().newInstance());
                 }
             }
-        } catch (IllegalAccessException | InstantiationException | NoSuchFieldException e)  {
+        } catch (IllegalAccessException | InstantiationException e)  {
             throw new IllegalArgumentException("Invalid object for deserialization");
         }
     }

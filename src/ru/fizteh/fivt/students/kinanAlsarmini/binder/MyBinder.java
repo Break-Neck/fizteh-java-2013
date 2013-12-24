@@ -27,7 +27,7 @@ import org.xml.sax.SAXException;
 public class MyBinder<T> implements Binder<T> {
     private static final Set<Class<?>> WRAPPER_TYPES = getWrapperTypes();
 
-    int counter;
+    private int counter;
     private Class<T> baseClass;
 
     public MyBinder(Class<T> clazz) {
@@ -95,7 +95,7 @@ public class MyBinder<T> implements Binder<T> {
         
         for (Field field : fields) {
             field.setAccessible(true);
-            if (checkCircularReference(field.get(object), objectState)) {
+            if (field.getAnnotation(DoNotBind.class) == null && checkCircularReference(field.get(object), objectState)) {
                 return true;
             }
         }
@@ -117,8 +117,7 @@ public class MyBinder<T> implements Binder<T> {
             for (Field field : fields) {
                 field.setAccessible(true);
 
-                DoNotBind doNotBind = field.getAnnotation(DoNotBind.class);
-                if (doNotBind != null) {
+                if (field.getAnnotation(DoNotBind.class) != null) {
                     continue;
                 }
 
