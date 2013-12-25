@@ -54,7 +54,7 @@ public class BinderTester {
     public void successfulSerializationTest() throws IOException {
         output = new ByteArrayOutputStream();
 
-        SerializableOuter test = new SerializableOuter(Day.SATURDAY, new Long((long)5), "abc", true, 5);
+        SerializableOuter test = new SerializableOuter(Day.SATURDAY, (long)5, "abc", true, 5);
 
         MyBinder<SerializableOuter> binder = factory.create(SerializableOuter.class);
 
@@ -73,7 +73,7 @@ public class BinderTester {
 
     @Test
     public void successfulDeserializationTest() throws IOException {
-        SerializableOuter test = new SerializableOuter(Day.SATURDAY, new Long((long)5), "abc", true, 0);
+        SerializableOuter test = new SerializableOuter(Day.SATURDAY, (long)5, "abc", true, 0);
 
         MyBinder<SerializableOuter> binder = factory.create(SerializableOuter.class);
 
