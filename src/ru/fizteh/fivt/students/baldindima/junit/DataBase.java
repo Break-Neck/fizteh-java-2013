@@ -349,15 +349,18 @@ public class DataBase implements Table, AutoCloseable {
                 }
                 newDataBase.get().get(nFileInMap).put(change.getKey(), change.getValue());
             }
-            writeLock.lock();
-            try {
+            
             	for (Integer nfile : update.get()) {
                     DataBaseFile updateFile = putNewValues(nfile, newDataBase.get().get(nfile));
-                    updateFile.write();
+                    writeLock.lock();
+                    try {
+                    	updateFile.write();
+                    } finally {
+                    	writeLock.unlock();
+                    }
+                    
                 }
-            } finally {
-            	writeLock.unlock();
-            }
+            
             
             changes.get().clear();
             return count;
