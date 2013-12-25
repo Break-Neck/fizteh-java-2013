@@ -10,7 +10,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
-import java.util.concurrent.locks.Lock;
 
 public class ProxyInvocationHandler implements InvocationHandler {
     private final Writer writer;
