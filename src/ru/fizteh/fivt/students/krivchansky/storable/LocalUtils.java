@@ -65,15 +65,15 @@ public class LocalUtils {
     }
 
     public static void checkValue(Object value, Class<?> type) throws ParseException {
-        if (value == null || value == "") {
+        if (value == null) {
             return;
         }
         //String t = StoreableTypes.getSimpleName(type);
         switch (StoreableTypes.getSimpleName(type)) {
             case "string":
                 String stringValue = (String) value;
-                if (checkStringCorrect(stringValue)) 
-                    throw new ParseException("value cannot be null", 0);   
+                /*if (checkStringCorrect(stringValue)) 
+                    throw new ParseException("value cannot be null", 0);*/   
                 break;
         }
     }

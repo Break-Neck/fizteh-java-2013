@@ -26,15 +26,6 @@ public class DatabaseRowTest {
         storeable = null;
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void putNlValueShouldFail() {
-        storeable.setColumnAt(1, "    ");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void putEmptyValueShouldFail() {
-        storeable.setColumnAt(1, "");
-    }
 
     @Test(expected = IndexOutOfBoundsException.class)
     public void putValueOutOfBound() {
