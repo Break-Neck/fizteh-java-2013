@@ -28,7 +28,6 @@ public class DataBase implements Table, AutoCloseable {
     private Map<Integer, DataBaseFile> files = new WeakHashMap<>();
     private File sizeFile;
     private int sizeTable;
-    private Map<String, Storeable> getMap = new HashMap<>();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
     public Lock readLock = readWriteLock.readLock();
     public Lock writeLock = readWriteLock.writeLock();
@@ -238,16 +237,11 @@ public class DataBase implements Table, AutoCloseable {
         checkClosed();
         checkString(keyString);
         String result;
-        if (getMap.containsKey(keyString)) {
-        	return getMap.get(keyString);
-        }
         if (changes.get().containsKey(keyString)) {
             result = changes.get().get(keyString);
-            getMap.put(keyString, JSONClass.deserialize(this, result));
             
         } else {
             result = getFromOld(keyString);
-            getMap.put(keyString, JSONClass.deserialize(this, result));
             
         }
 
