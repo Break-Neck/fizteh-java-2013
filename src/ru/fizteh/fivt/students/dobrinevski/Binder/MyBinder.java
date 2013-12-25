@@ -12,7 +12,11 @@ import java.util.IdentityHashMap;
 
 public class MyBinder<T> implements Binder<T> {
     Class<T> tClass;
+    public final Integer grey;
+    public final Integer black;
     public MyBinder(Class<T> clazz) {
+        grey = -1;
+        black = 1;
         tClass = clazz;
     }
 
@@ -123,16 +127,14 @@ public class MyBinder<T> implements Binder<T> {
         for (Field one : obj.getClass().getDeclaredFields()) {
             one.setAccessible(true);
             try {
-                if (one.get(obj) != null) {
-                    if (idHashMap.get(one.get(obj)) != null && idHashMap.get(one.get(obj)) != 1) {
+                Object objBuf = one.get(obj);
+                if (objBuf != null) {
+                    if (grey.equals(idHashMap.get(objBuf))) {
                         throw new IllegalStateException("Cycle reference");
                     }
-                    idHashMap.put(one.get(obj), -1);
+                    idHashMap.put(objBuf, grey);
                 }
-            } catch (IllegalAccessException e) {
-                throw new IllegalArgumentException("Very unusual situation, IAE after setAccess");
-            }
-            try {
+
                 if (one.isAnnotationPresent(DoNotBind.class)) {
                     continue;
                 }
@@ -147,32 +149,31 @@ public class MyBinder<T> implements Binder<T> {
                 }
                 jsonWriter.key(name);
 
-                if (one.get(obj) == null) {
+                if (objBuf == null) {
                     jsonWriter.value(null);
                     continue;
                 }
 
                 if (one.getType().isPrimitive()) {
-                    jsonWriter.value(one.get(obj).toString());
+                    jsonWriter.value(objBuf.toString());
                     continue;
                 }
 
                 if (one.getType().getSimpleName().equals("String")) {
-                    jsonWriter.value(one.get(obj).toString());
+                    jsonWriter.value(objBuf.toString());
                     continue;
                 }
 
                 if (one.isEnumConstant()) {
-                    jsonWriter.value(Enum.valueOf(Enum.class, one.get(obj).toString()).name());
+                    jsonWriter.value(Enum.valueOf(Enum.class, objBuf.toString()).name());
                     continue;
                 }
 
-                recDraw(one.get(obj), idHashMap, jsonWriter);
-                idHashMap.put(one.get(obj), 1);
+                recDraw(objBuf, idHashMap, jsonWriter);
+                idHashMap.put(objBuf, black);
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
             }
-        }
         jsonWriter.endObject();
     }
 }

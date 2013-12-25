@@ -22,8 +22,8 @@ public class MyBinderFactory implements BinderFactory {
             throw new IllegalArgumentException("incorrect class");
         }
 
-        if (clazz.isArray()) {
-            throw new IllegalArgumentException(clazz.getName() + " is array");
+        if (clazz.isArray() || clazz.isInterface()) {
+            throw new IllegalArgumentException(clazz.getName() + " is incorrect");
         }
 
         try {
