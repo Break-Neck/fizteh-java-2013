@@ -237,17 +237,19 @@ public class DataBase implements Table, AutoCloseable {
         String result;
         if (changes.get().containsKey(keyString)) {
             result = changes.get().get(keyString);
+            return JSONClass.deserialize(this, result);
         } else {
         	readLock.lock();
         	try {
         		result = getFromOld(keyString);
+        		return JSONClass.deserialize(this, result);
         	} finally {
         		readLock.unlock();
         	}
             
         }
 
-        return JSONClass.deserialize(this, result);
+        
     }
 
     public Storeable put(String keyString, Storeable storeable) {
