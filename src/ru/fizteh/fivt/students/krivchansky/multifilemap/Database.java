@@ -69,12 +69,12 @@ public class Database implements TableProvider {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException ("Table's name cannot be null");
         }
-        if (currentTable.getName() == name) {
-        	currentTable = null;
-        }
         if (!content.containsKey(name)) {
             throw new IllegalStateException(name + " not exists");
         }
+        if (currentTable.getName().equals(name)) {
+			currentTable = null;
+		}
         content.remove(name);
         File tableFile = new File(databaseDirectoryPath, name);
         GlobalUtils.deleteFile(tableFile);
