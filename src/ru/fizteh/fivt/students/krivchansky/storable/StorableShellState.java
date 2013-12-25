@@ -87,6 +87,9 @@ public class StorableShellState implements  MultifileMapShellStateInterface<Tabl
 
 	public void dropTable(String name) throws IOException {
 		tableProvider.removeTable(name);
+		if (table.getName().equals(name)) {
+			table = null;
+		}
 		
 	}
 

@@ -103,6 +103,11 @@ public class DatabaseTableProvider implements TableProvider {
 			if (!tables.containsKey(name)) {
 				throw new IllegalStateException(name + " not exists");
 			}
+			if (currentTable != null) {
+	        	if (currentTable.getName().equals(name)) {
+	        		currentTable = null;
+	        	}
+	        }
 			tables.remove(name);
 			File tableFile = new File(databaseDirPath, name);
 			GlobalUtils.deleteFile(tableFile);
