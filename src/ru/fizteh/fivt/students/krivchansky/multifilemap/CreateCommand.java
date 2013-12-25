@@ -20,7 +20,7 @@ public class CreateCommand<Table, Key, Value, State extends MultifileMapShellSta
 			if (newOne != null) {
 				System.out.println("created");
 			} else {
-				System.out.println(tableName + "exists");
+				System.out.println(tableName + " exists");
 			}
 		} catch (IllegalArgumentException e) {
 			throw new SomethingIsWrongException (e.getMessage());
