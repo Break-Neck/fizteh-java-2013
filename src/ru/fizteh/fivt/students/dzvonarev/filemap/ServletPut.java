@@ -14,18 +14,6 @@ public class ServletPut extends HttpServlet {
         manager = transactionManager;
     }
 
-    private boolean isValid(String id) {
-        if (id.length() != 5) {
-            return false;
-        }
-        for (int i = 0; i < id.length(); ++i) {
-            if (!(Character.isDigit(id.charAt(i)))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -34,7 +22,7 @@ public class ServletPut extends HttpServlet {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "transaction id not found");
             return;
         }
-        if (!isValid(transactionId)) {
+        if (!Transaction.isValid(transactionId)) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "invalid transaction id");
         }
         String key = request.getParameter("key");

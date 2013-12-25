@@ -27,6 +27,18 @@ public class Transaction {
         return transactionId;
     }
 
+    public static boolean isValid(String id) {
+        if (id.length() != 5) {
+            return false;
+        }
+        for (int i = 0; i < id.length(); ++i) {
+            if (!(Character.isDigit(id.charAt(i)))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public int commit() throws IOException {
         int cntOfChanges = table.commit(tableTransactionId);
         manager.stopTransaction(transactionId);
