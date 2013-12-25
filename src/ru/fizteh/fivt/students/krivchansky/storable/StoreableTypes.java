@@ -72,7 +72,7 @@ public enum StoreableTypes {
 	public static Class<?> getTypeByName(String name) {
 		StoreableTypes formatter = typesByName.get(name);
 		if (formatter == null) {
-			throw new IllegalArgumentException("unknown type");
+			throw new IllegalArgumentException("wrong type (" + name + ')');
 		}
 		return formatter.type;
 	}
@@ -90,7 +90,7 @@ public enum StoreableTypes {
 	public static Object parseByClass(String string, Class<?> type) {
 		StoreableTypes formatter = typesByClass.get(type);
 		if (formatter == null) {
-			throw new IllegalArgumentException ("unknown type");
+			throw new IllegalArgumentException ("wrong type (" + type + ')');
 		}
 		return formatter.ParseValue(string);
 	}
