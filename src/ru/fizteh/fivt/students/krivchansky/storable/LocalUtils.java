@@ -65,7 +65,7 @@ public class LocalUtils {
     }
 
     public static void checkValue(Object value, Class<?> type) throws ParseException {
-        if (value == null) {
+        if (value == null || value == "") {
             return;
         }
         //String t = StoreableTypes.getSimpleName(type);
@@ -79,7 +79,6 @@ public class LocalUtils {
     }
 
     public static boolean checkStringCorrect(String string) {
-    	//String t[] = string.split("\\s+");
     	
         return (string.matches("\\s*") || string.split("\\s+").length != 1);
     }
