@@ -30,126 +30,47 @@ public class BaseStoreable implements Storeable {
         }
 
         for (int i = 0; i < nValues.size(); ++i) {
-            Object value = cast(types.get(i), nValues.get(i));
-            if (value != null && value.getClass() != (types.get(i))) {
-                throw new ColumnFormatException(nValues.get(i).toString() + " must be " + types.get(i)
-                        + " but it is " + nValues.get(i).getClass());
-            }
-
+        	Object value;
+        	if (nValues.get(i).getClass() == JSONObject.NULL.getClass() ||
+        			JSONObject.NULL == nValues.get(i)){
+        		value = null;
+        	} else {
+        		value  = parseObject(nValues.get(i).toString(), types.get(i).getSimpleName());
+        	}
+            
+        	
             values.set(i,value);
         }
 
     }
-
-    Object cast(Class<?> type, Object value) {
-        if (value == null) {
-            return null;
-        }
-
-        Class<?> valueType = value.getClass();
-        if (valueType == JSONObject.NULL.getClass() || JSONObject.NULL == value) {
-            return null;
-        }
+    
+    public static Object parseObject(String string, String expectedClassName) throws ColumnFormatException {
         
-
-        if (type == Float.class) {
-            if (valueType == Integer.class) {
-                return new Float((int) value);
-            }
-            if (valueType == Byte.class) {
-                return new Float((byte) value);
-            }
-            if (valueType == Long.class) {
-                return new Float((long) value);
-            }
-            if (valueType == Double.class) {
-                return new Float((double) value);
-            }
-            if (value == Float.class) {
-                return value;
-            }
-            throw new ColumnFormatException("Wrong type");
-        }
-
-        if (type == Byte.class) {
-            if (valueType == Byte.class) {
-                return value;
-            }
-            if (valueType == Long.class || valueType == Integer.class) {
-                long tmp;
-                if (valueType == Long.class) {
-                    tmp = (long) value;
-                } else {
-                    tmp = (int) value;
+    	try {
+                switch (expectedClassName) {
+                case "Boolean":
+                        return Boolean.parseBoolean(string);
+                case "Byte":
+                        return Byte.parseByte(string);
+                case "Float":
+                        return Float.parseFloat(string);
+                case "Double":
+                        return Double.parseDouble(string);
+                case "Integer":
+                        return Integer.parseInt(string);
+                case "Long":
+                        return Long.parseLong(string);
+                case "String":
+                        return string;
+                default:
+                        throw new ColumnFormatException("wrong type");                                         
                 }
-                if (tmp <= Byte.MAX_VALUE && tmp >= Byte.MIN_VALUE) {
-                    return (byte) tmp;
-                } else {
-                    throw new ColumnFormatException("Too big number for byte type: " + value.toString());
-                }
-            }
-            throw new ColumnFormatException("Wrong type");
+        } catch (NumberFormatException catchedException) {
+                throw new ColumnFormatException("wrong type");
         }
+}
 
-        if (type == Integer.class) {
-            if (valueType == Integer.class) {
-                return value;
-            }
-            if (valueType == Byte.class) {
-                return new Integer((byte) value);
-            }
-            if (valueType == Long.class) {
-                long tmp = (long) value;
-                if (tmp <= Integer.MAX_VALUE && tmp >= Integer.MIN_VALUE) {
-                    return (int) tmp;
-                } else {
-                    throw new ColumnFormatException("Too big number for integer type");
-                }
-            }
-            throw new ColumnFormatException("Wrong type");
-        }
-
-
-        if (type == Long.class) {
-            if (valueType == Long.class) {
-                return value;
-            }
-            if (valueType == Byte.class) {
-                return new Long((byte) value);
-            }
-            if (valueType == Integer.class) {
-                return new Long((int) value);
-            }
-            throw new ColumnFormatException("Wrong type");
-        }
-
-        if (type == Double.class) {
-            if (valueType == Integer.class) {
-                return new Double((int) value);
-            }
-            if (valueType == Byte.class) {
-                return new Double((byte) value);
-            }
-            if (valueType == Long.class) {
-                return new Double((long) value);
-            }
-            if (valueType == Float.class) {
-                return new Double((float) value);
-            }
-            if (valueType == Double.class) {
-                return value;
-            }
-            throw new ColumnFormatException("Wrong type");
-        }
-
-
-        if (type == String.class) {
-            return value.toString();
-        }
-
-        return value;
-    }
-
+    
     public static boolean isCorrectStoreable(Storeable storeable, Table table) {
         if (storeable == null) {
             throw new IllegalArgumentException("Storeable must be not null");
@@ -192,17 +113,18 @@ public class BaseStoreable implements Storeable {
             throw new IndexOutOfBoundsException("wrong index");
         }
     }
+   
+
 
     public void setColumnAt(int columnIndex, Object value)
             throws ColumnFormatException, IndexOutOfBoundsException {
         checkIndex(columnIndex);
         if (value == null || value == JSONObject.NULL) {
             value = null;
+        } else {
+        	value  = parseObject(value.toString(), types.get(columnIndex).getSimpleName());
         }
-        value = cast(types.get(columnIndex), value);
-        if (value != null && (value.getClass() != (types.get(columnIndex)))) {
-            throw new ColumnFormatException(columnIndex + " column has incorrect format");
-        }
+        
         values.set(columnIndex, value);
     }
 
