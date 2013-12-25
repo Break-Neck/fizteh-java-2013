@@ -199,6 +199,16 @@ public class DatabaseTable implements Table, AutoCloseable {
             TableBuilder tableBuilder = new TableBuilder(provider, this);
             save(tableBuilder);
             transaction.uncommittedChanges = 0;
+            for (String name : provider.indexMap.keySet()) {
+                if ((provider.indexMap.get(name).indexTable.getName().equals(this.getName()))
+                        && (recordsCommitted != 0)) {
+                    provider.indexMap.get(name).updateIndex();
+                }
+            }
+            if (!indexSave()) {
+                throw new IllegalArgumentException("Wrong type of the database");
+            }
+
         } finally {
             transactionLock.writeLock().unlock();
         }
@@ -242,6 +252,62 @@ public class DatabaseTable implements Table, AutoCloseable {
         } finally {
             transactionLock.writeLock().unlock();
         }
+    }
+
+    public boolean indexSave() {
+        File indexDir = new File(provider.getDatabaseDirectory(), "indexes");
+        if (indexDir.exists()) {
+            try {
+                DatabaseTableProvider.recRemove(indexDir);
+            } catch (IOException e) {
+                return false;
+            }
+        }
+        if (!indexDir.mkdir()) {
+            System.err.println("Error making directory");
+            return false;
+        }
+
+        for (String key : provider.indexMap.keySet()) {
+            if (provider.indexMap.get(key).indexTable.getName().equals(this.getName())) {
+                File indexTable = new File(indexDir, key);
+                if (!indexTable.mkdir()) {
+                    System.err.println("Error making directory");
+                    return false;
+                }
+                File tableInfo = new File(indexTable, "indexInfo.tsv");
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableInfo))) {
+                    tableInfo.createNewFile();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(key);
+                    sb.append(" ");
+                    sb.append(provider.indexMap.get(key).column);
+                    String index = sb.toString();
+                    writer.write(index);
+                } catch (IOException e) {
+                    System.err.println("error writing table info file");
+                    return false;
+                }
+                File tableIndex = new File(indexTable, "tableIndex.tsv");
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableIndex))) {
+                    tableIndex.createNewFile();
+                    StringBuilder sb = new StringBuilder();
+                    for (Object secondaryKey : provider.indexMap.get(key).indexes.keySet()) {
+                        sb.append(secondaryKey);
+                        sb.append(" ");
+                        sb.append(provider.indexMap.get(key).indexes.get(secondaryKey));
+                        String index = sb.toString();
+                        writer.write(index);
+                        writer.newLine();
+                        sb.delete(0, sb.capacity());
+                    }
+                } catch (IOException e) {
+                    System.err.println("error writing index info file");
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public boolean save(TableBuilder tableBuilder) {

@@ -1,9 +1,6 @@
 package ru.fizteh.fivt.students.yaninaAnastasia.filemap;
 
-import ru.fizteh.fivt.storage.structured.ColumnFormatException;
-import ru.fizteh.fivt.storage.structured.Storeable;
-import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.storage.structured.TableProvider;
+import ru.fizteh.fivt.storage.structured.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -14,12 +11,13 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class DatabaseTableProvider implements TableProvider, AutoCloseable {
+public class DatabaseTableProvider implements AutoCloseable, IndexProvider {
     public DatabaseTable curTable = null;
     HashMap<String, DatabaseTable> tables = new HashMap<String, DatabaseTable>();
     String curDir;
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
     volatile boolean isClosed;
+    HashMap<String, DatabaseIndex> indexMap = new HashMap<String, DatabaseIndex>();
 
     public DatabaseTableProvider(String directory) {
         isClosed = false;
@@ -290,99 +288,186 @@ public class DatabaseTableProvider implements TableProvider, AutoCloseable {
         return new File(res, fileName);
     }
 
+    public static Object typesParser(String value, Class type) {
+        if (type.equals(Long.class)) {
+            return Long.parseLong(value);
+        }
+        if (type.equals(Integer.class)) {
+            return Integer.parseInt(value);
+        }
+        if (type.equals(Double.class)) {
+            return Double.parseDouble(value);
+        }
+        if (type.equals(Float.class)) {
+            return Float.parseFloat(value);
+        }
+        if (type.equals(Boolean.class)) {
+            return Boolean.parseBoolean(value);
+        }
+        if (type.equals(Byte.class)) {
+            return Byte.parseByte(value);
+        }
+        if (type.equals(Short.class)) {
+            return Short.parseShort(value);
+        }
+        return null;
+    }
+
     public boolean open() {
         File databaseDirectory = new File(curDir);
         String curTableName;
         DatabaseTable loadingTable;
         for (File table : databaseDirectory.listFiles()) {
             curTableName = table.getName();
-            List<Class<?>> zeroList = new ArrayList<Class<?>>();
-            curTable = new DatabaseTable(curTableName, zeroList, this);
-            loadingTable = new DatabaseTable(curTableName, zeroList, this);
-            File preSignature = new File(curDir, curTableName);
-            if (preSignature.listFiles().length == 0) {
-                throw new IllegalArgumentException("Invalid database");
-            }
-            File signatureFile = new File(preSignature, "signature.tsv");
-            String signature = null;
-            if (!signatureFile.exists()) {
-                throw new IllegalArgumentException("Invalid database");
-            }
-            if (signatureFile.length() == 0) {
-                throw new IllegalArgumentException("Invalid database");
-            }
-            try (BufferedReader reader = new BufferedReader(new FileReader(signatureFile))) {
-                signature = reader.readLine();
-            } catch (IOException e) {
-                System.err.println("error loading signature file");
-                throw new IllegalArgumentException("Invalid database");
-            }
-            List<Class<?>> columnTypes = new ArrayList<Class<?>>();
-            for (final String columnType : signature.split("\\s")) {
-                Class<?> type = ColumnTypes.fromNameToType(columnType);
-                if (type == null) {
-                    throw new IllegalArgumentException("unknown type");
+            if (curTableName.equals("indexes")) {
+                File indexDir = new File(databaseDirectory, "indexes");
+                if (indexDir.listFiles().length == 0) {
+                    throw new IllegalArgumentException("Invalid index database");
                 }
-                columnTypes.add(type);
-            }
-            loadingTable.columnTypes = columnTypes;
-            File[] files = new File(curDir, curTableName).listFiles();
-            for (File step : files) {
-                if (step.isFile()) {
+                for (File indexTable : indexDir.listFiles()) {
+                    if (indexTable.listFiles().length == 0) {
+                        throw new IllegalArgumentException("Invalid index database");
+                    }
+                    File indexInfoFile = new File(indexTable, "indexInfo.tsv");
+                    String indexInfo = null;
+                    if (!indexInfoFile.exists()) {
+                        throw new IllegalArgumentException("Invalid index database");
+                    }
+                    if (indexInfoFile.length() == 0) {
+                        throw new IllegalArgumentException("Invalid index database");
+                    }
+                    try (BufferedReader reader = new BufferedReader(new FileReader(indexInfoFile))) {
+                        indexInfo = reader.readLine();
+                    } catch (IOException e) {
+                        System.err.println("error loading index info file");
+                        throw new IllegalArgumentException("Invalid index database");
+                    }
+                    String[] indexArgs = indexInfo.split("\\s");
+
+
+                    Class type = tables.get(indexArgs[0]).getColumnType(Integer.parseInt(indexArgs[1]));
+                    File indexTableFile = new File(indexTable, "indexTable.tsv");
+                    String indexStorage = "";
+                    if (!indexTableFile.exists()) {
+                        throw new IllegalArgumentException("Invalid index database");
+                    }
+                    try (BufferedReader reader = new BufferedReader(new FileReader(indexTableFile))) {
+                        String value = reader.readLine();
+                        while (value != null) {
+                            indexStorage += value + " ";
+                            value = reader.readLine();
+                        }
+                    } catch (IOException e) {
+                        System.err.println("error loading index info file");
+                        throw new IllegalArgumentException("Invalid index database");
+                    }
+                    HashMap<Object, String> indexes = new HashMap<Object, String>();
+                    String[] indTemp = indexStorage.trim().split("\\s");
+                    for (int i = 0; i < indTemp.length; i++) {
+                        if (indTemp[i + 1] == null) {
+                            throw new IllegalArgumentException("Index has wrong type");
+                        }
+                        Object val = null;
+                        if (type == String.class) {
+                            val = indTemp[i];
+                        } else {
+                            val = typesParser(indTemp[i], type);
+                        }
+                        indexes.put(val, indTemp[i + 1]);
+                        i++;
+                    }
+                    indexMap.put(indexTable.toString(), new DatabaseIndex(tables.get(indexArgs[0]),
+                            Integer.getInteger(indexArgs[1]), indexTable.toString(), indexes));
+                }
+            } else {
+                List<Class<?>> zeroList = new ArrayList<Class<?>>();
+                curTable = new DatabaseTable(curTableName, zeroList, this);
+                loadingTable = new DatabaseTable(curTableName, zeroList, this);
+                File preSignature = new File(curDir, curTableName);
+                if (preSignature.listFiles().length == 0) {
+                    throw new IllegalArgumentException("Invalid database");
+                }
+                File signatureFile = new File(preSignature, "signature.tsv");
+                String signature = null;
+                if (!signatureFile.exists()) {
+                    throw new IllegalArgumentException("Invalid database");
+                }
+                if (signatureFile.length() == 0) {
+                    throw new IllegalArgumentException("Invalid database");
+                }
+                try (BufferedReader reader = new BufferedReader(new FileReader(signatureFile))) {
+                    signature = reader.readLine();
+                } catch (IOException e) {
+                    System.err.println("error loading signature file");
+                    throw new IllegalArgumentException("Invalid database");
+                }
+                List<Class<?>> columnTypes = new ArrayList<Class<?>>();
+                for (final String columnType : signature.split("\\s")) {
+                    Class<?> type = ColumnTypes.fromNameToType(columnType);
+                    if (type == null) {
+                        throw new IllegalArgumentException("unknown type");
+                    }
+                    columnTypes.add(type);
+                }
+                loadingTable.columnTypes = columnTypes;
+                File[] files = new File(curDir, curTableName).listFiles();
+                for (File step : files) {
+                    if (step.isFile()) {
+                        continue;
+                    }
+                    if ((step.getName() == null) || (step.getName().isEmpty())) {
+                        throw new IllegalArgumentException("Error with the property");
+                    }
+                }
+                if (files.length == 0) {
+                    tables.put(curTableName, loadingTable);
                     continue;
                 }
-                if ((step.getName() == null) || (step.getName().isEmpty())) {
-                    throw new IllegalArgumentException("Error with the property");
-                }
-            }
-            if (files.length == 0) {
-                tables.put(curTableName, loadingTable);
-                continue;
-            }
-            for (int i = 0; i < 16; i++) {
-                File currentDir = getDirWithNum(i);
-                if (currentDir.isFile()) {
-                    throw new IllegalArgumentException("Illegal argument: it is not a directory");
-                }
-                if (currentDir.exists() && currentDir.listFiles().length == 0) {
-                    throw new IllegalArgumentException("Illegal database: the directory is empty");
-                }
-                if (!currentDir.exists()) {
-                    continue;
-                } else {
-                    for (int j = 0; j < 16; ++j) {
-                        File currentFile = getFileWithNum(j, i);
-                        if (currentFile.exists()) {
-                            try {
-                                if (currentFile.length() == 0) {
-                                    throw new IllegalArgumentException("Illegal database: empty file");
-                                }
-                                File tmpFile = new File(currentFile.toString());
-                                RandomAccessFile temp = new RandomAccessFile(tmpFile, "r");
+                for (int i = 0; i < 16; i++) {
+                    File currentDir = getDirWithNum(i);
+                    if (currentDir.isFile()) {
+                        throw new IllegalArgumentException("Illegal argument: it is not a directory");
+                    }
+                    if (currentDir.exists() && currentDir.listFiles().length == 0) {
+                        throw new IllegalArgumentException("Illegal database: the directory is empty");
+                    }
+                    if (!currentDir.exists()) {
+                        continue;
+                    } else {
+                        for (int j = 0; j < 16; ++j) {
+                            File currentFile = getFileWithNum(j, i);
+                            if (currentFile.exists()) {
                                 try {
-                                    TableBuilder tableBuilder = new TableBuilder(this, loadingTable);
-                                    loadTable(temp, loadingTable, i, j, tableBuilder);
-                                } catch (EOFException e) {
-                                    System.err.println("Wrong format");
-                                    return false;
+                                    if (currentFile.length() == 0) {
+                                        throw new IllegalArgumentException("Illegal database: empty file");
+                                    }
+                                    File tmpFile = new File(currentFile.toString());
+                                    RandomAccessFile temp = new RandomAccessFile(tmpFile, "r");
+                                    try {
+                                        TableBuilder tableBuilder = new TableBuilder(this, loadingTable);
+                                        loadTable(temp, loadingTable, i, j, tableBuilder);
+                                    } catch (EOFException e) {
+                                        System.err.println("Wrong format");
+                                        return false;
+                                    } catch (IOException e) {
+                                        System.err.println("IO exception");
+                                        return false;
+                                    } catch (IllegalArgumentException e) {
+                                        System.err.println("Wrong file format");
+                                        return false;
+                                    } finally {
+                                        temp.close();
+                                    }
                                 } catch (IOException e) {
-                                    System.err.println("IO exception");
+                                    System.err.println("Cannot create new file");
                                     return false;
-                                } catch (IllegalArgumentException e) {
-                                    System.err.println("Wrong file format");
-                                    return false;
-                                } finally {
-                                    temp.close();
                                 }
-                            } catch (IOException e) {
-                                System.err.println("Cannot create new file");
-                                return false;
                             }
                         }
                     }
                 }
+                tables.put(curTableName, loadingTable);
             }
-            tables.put(curTableName, loadingTable);
         }
         curTable = null;
         return true;
@@ -469,5 +554,59 @@ public class DatabaseTableProvider implements TableProvider, AutoCloseable {
             tables.get(tableName).close();
         }
         isClosed = true;
+    }
+
+
+    public DatabaseIndex createIndex(Table table, int column, String name) {
+        if (table == null) {
+            throw new IllegalArgumentException("The table is null");
+        }
+        if ((name == null) || (name.isEmpty())) {
+            throw new IllegalArgumentException("The name of future index is illegal");
+        }
+        if ((column < 0) || (column > table.getColumnsCount())) {
+            throw new IllegalArgumentException("The number of the column is illegal");
+        }
+        if (indexMap.containsKey(name)) {
+            return null;
+        }
+        DatabaseTable myTable = DatabaseTable.class.cast(table);
+        ArrayList elements = new ArrayList();
+        synchronized (table) {
+            for (String key : myTable.oldData.keySet()) {
+                if (myTable.get(key).getColumnAt(column) == null) {
+                    throw new IllegalStateException("The column contains null elements");
+                }
+                if (elements.contains(myTable.get(key).getColumnAt(column))) {
+                    throw new IllegalStateException("The column contains equal elements");
+                } else {
+                    elements.add(myTable.get(key).getColumnAt(column));
+                }
+            }
+
+            if (name.equals(myTable.getName())) {
+                throw new IllegalStateException("The index name equals the table name");
+            }
+        }
+
+        HashMap<Object, String> newIndex = new HashMap<Object, String>();
+        DatabaseIndex index = null;
+        synchronized (table) {
+            for (String key : tables.get(table.getName()).oldData.keySet()) {
+                Object value = tables.get(table.getName()).oldData.get(key).getColumnAt(column);
+                newIndex.put(value, key);
+            }
+
+        index = new DatabaseIndex(myTable, column, name, newIndex);
+        indexMap.put(name, index);
+        }
+        return index;
+    }
+
+    public DatabaseIndex getIndex(String name) {
+        if ((name == null) || name.isEmpty()) {
+            throw new IllegalArgumentException("Illegal index name");
+        }
+        return indexMap.get(name);
     }
 }
