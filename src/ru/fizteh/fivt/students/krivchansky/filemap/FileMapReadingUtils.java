@@ -21,9 +21,9 @@ public class FileMapReadingUtils implements Closeable{
             valueShift = 0;
             return;
         }
-        //if (tempFile.length() == 0) {
-          //  throw new IllegalArgumentException("empty file: " + pathToFile);
-        //}
+        if (tempFile.length() == 0) {
+            throw new IOException("empty file");
+        }
         skipKey();
         valueShift = readOffset();
         tempFile.seek(0);

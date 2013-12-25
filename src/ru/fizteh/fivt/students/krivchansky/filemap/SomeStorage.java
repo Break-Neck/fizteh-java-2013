@@ -138,8 +138,8 @@ public abstract class SomeStorage<Key, Value> {
         try {
             load();
         } catch (IOException e) {
-        	if (e.getMessage() != "didn't exist" && e.getMessage() != "null") {
-        	    throw new IllegalArgumentException("invalid file format" + e.getMessage());
+        	if (e.getMessage() != "didn't exist" && e.getMessage() != "empty file") {
+        	    throw new IllegalArgumentException("invalid file format " + e.getMessage());
         	}
         }
         

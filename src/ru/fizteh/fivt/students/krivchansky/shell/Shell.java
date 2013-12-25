@@ -80,9 +80,9 @@ public class Shell<State> {
                 } else {
                     System.err.println(exc.getMessage());
                 }
-            } //catch (IllegalArgumentException | IllegalStateException e) {
-            //	System.err.println(e.getMessage());
-            //}
+            } catch (IllegalArgumentException | IllegalStateException e) {
+            	System.err.println(e.getMessage());
+            }
         }
         forInput.close();
     }
