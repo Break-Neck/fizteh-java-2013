@@ -226,7 +226,12 @@ public class DataBase implements Table, AutoCloseable {
             } else {
                 try {
                     files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
-                    result = files.get(nFileInMap).mapFromFile.get(keyString);
+                    if (files.get(nFileInMap) != null) {
+                    	result = files.get(nFileInMap).mapFromFile.get(keyString);
+                    } else {
+                    	result = null;
+                    }
+                    
                 } catch (IOException e) {
                     throw new IllegalArgumentException(e);
                 }
