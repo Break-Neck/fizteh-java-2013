@@ -175,5 +175,6 @@ public class MyBinder<T> implements Binder<T> {
                 throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
             }
         jsonWriter.endObject();
+        }
     }
 }
