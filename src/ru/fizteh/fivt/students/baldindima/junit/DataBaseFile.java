@@ -31,7 +31,7 @@ public class DataBaseFile {
         mapFromFile = new HashMap<>();
 
         read();
-        //check();
+        check();
 
     }
 
@@ -88,23 +88,6 @@ public class DataBaseFile {
             randomDataBaseFile.read(value);
             String keyString = new String(key, "UTF-8");
             String valueString = new String(value, "UTF-8");
-            try {
-            	if (!(((Math.abs(keyString.getBytes("UTF-8")[0]) % 16) == directoryNumber)
-                        && ((Math.abs(keyString.getBytes("UTF-8")[0] / 16) % 16 == fileNumber)))) {
-                    throw new IOException("Wrong file format key[0] =  "
-                            + String.valueOf(Math.abs(keyString.getBytes("UTF-8")[0]))
-                            + " in file " + fileName);
-                   
-                }
-            	try {
-                    provider.deserialize(table, (valueString));
-                } catch (ParseException e) {
-                    throw new IOException("Invalid file format! (parse exception error!)");
-                }
-            } finally {
-            	randomDataBaseFile.close();
-            }
-            
             mapFromFile.put(keyString, valueString);
         }
         randomDataBaseFile.close();
