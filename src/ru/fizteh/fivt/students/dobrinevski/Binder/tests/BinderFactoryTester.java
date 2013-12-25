@@ -32,7 +32,7 @@ public class BinderFactoryTester {
 
     @Test(expected = IllegalArgumentException.class)
     public void classWithoutConstructorGiven() {
-        bf.create(C.class);
+        bf.create(WithoutConstructor.class);
     }
 
     @Test
@@ -65,7 +65,7 @@ class A {
         add = new B();
     }
 }
-class C {
+class WithoutConstructor {
     int f;
     char g;
 }

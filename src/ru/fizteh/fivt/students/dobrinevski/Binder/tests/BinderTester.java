@@ -12,6 +12,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import static org.junit.Assert.assertEquals;
+
 public class BinderTester {
     byte[] buf;
     public static BinderFactory bf;
@@ -40,12 +42,11 @@ public class BinderTester {
     }
 
     @Test
-    public void mainTestSerialisation() throws IOException {
+    public void mainTestSerDeser() throws IOException {
         bind = bf.create(D.class);
         bind.serialize(new D(), outStream);
-        outStream.flush();
-        System.out.println(new String(buf));
-      //  assertEquals(buf , new String("").getBytes());
+        assertEquals(outStream.toString() , "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}})");
+        buf = "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}})".getBytes();
     }
 }
 class IntAndDouble {
@@ -63,7 +64,6 @@ class C {
     double h;
     public C() {
         f = 1;
-        g = 'A';
         h = 0.69;
     }
 }
