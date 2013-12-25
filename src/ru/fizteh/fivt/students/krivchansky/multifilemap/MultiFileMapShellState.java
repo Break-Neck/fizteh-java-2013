@@ -21,6 +21,9 @@ public class MultiFileMapShellState extends FileMapShellState implements Multifi
 		}
 
 		public void dropTable(String name) throws IOException {
+			if (table.getName() == name) {
+				table = null;
+			}
 			tableProvider.removeTable(name);
 		}
 
