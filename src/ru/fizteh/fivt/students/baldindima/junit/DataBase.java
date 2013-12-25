@@ -409,14 +409,15 @@ public class DataBase implements Table, AutoCloseable {
 
     private void checkString(String str) {
         
-        for (int i = 0; i < str.length(); ++i) {
+    	if ((str == null) || (str.trim().length() == 0)) {
+            throw new IllegalArgumentException("Wrong key!");
+        }
+    	for (int i = 0; i < str.length(); ++i) {
             if (Character.isWhitespace(str.charAt(i))) {
                 throw new IllegalArgumentException("Wrong key!");
             }
         }
-        if ((str == null) || (str.trim().length() == 0)) {
-            throw new IllegalArgumentException("Wrong key!");
-        }
+        
 
 
     }
