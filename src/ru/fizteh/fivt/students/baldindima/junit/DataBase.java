@@ -3,7 +3,6 @@ package ru.fizteh.fivt.students.baldindima.junit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
-import java.io.RandomAccessFile;
 
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
@@ -282,10 +281,11 @@ public class DataBase implements Table, AutoCloseable {
                     ++count;
                 }
             }
+            return count;
         } finally {
             readLock.unlock();
         }
-        return count;
+        
     }
 
     public int size() {

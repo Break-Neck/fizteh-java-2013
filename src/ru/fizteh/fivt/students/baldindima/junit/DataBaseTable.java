@@ -50,7 +50,7 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
         }
     }
 
-    public Table createTable(String name, List<Class<?>> types) throws IOException {
+    public synchronized Table createTable(String name, List<Class<?>> types) throws IOException {
         checkClosed();
     	if (types == null || types.size() == 0) {
             throw new IllegalArgumentException("wrong list of types");
@@ -59,7 +59,22 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
         String path = tableDirectory + File.separator + name;
 
         File file = new File(path);
-        writeLock.lock();
+        
+        if (file.exists()) {
+            return null;
+        }
+
+        if (!file.mkdir()) {
+            throw new RuntimeException("Cannot create table " + name);
+        }
+
+
+        DataBase table = new DataBase(path, this, types);
+
+        tables.put(name, table);
+        return table;
+
+        /*writeLock.lock();
         try {
             if (file.exists()) {
                 return null;
@@ -76,12 +91,12 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             return table;
         } finally {
             writeLock.unlock();
-        }
+        }*/
 
 
     }
 
-    public Table getTable(String name) {
+    public synchronized  Table getTable(String name) {
         checkClosed();
     	checkName(name);
         String path = tableDirectory + File.separator + name;
@@ -91,7 +106,27 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             return null;
         }
         
-        readLock.lock();
+        
+        
+       /* try {
+            DataBase table = new DataBase(path, this, null);
+            tables.put(name, table);
+            return table;
+        } catch (IOException e) {
+            throw new DataBaseException(e.getMessage());
+        }*/
+        
+        try {
+        	if (tables.containsKey(name)) {
+                return tables.get(name);
+            }
+            DataBase table = new DataBase(path, this);
+            tables.put(name, table);
+            return table;
+        } catch (IOException e) {
+            throw new DataBaseException(e.getMessage());
+        }
+        /*readLock.lock();
         try {
             if (tables.containsKey(name)) {
                 return tables.get(name);
@@ -109,28 +144,15 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             throw new DataBaseException(e.getMessage());
         } finally {
             writeLock.unlock();
-        }
-        
-        
-        
-       /* writeLock.lock();
-        try {
-        	if (tables.containsKey(name)) {
-                return tables.get(name);
-            }
-            DataBase table = new DataBase(path, this);
-            tables.put(name, table);
-            return table;
-        } catch (IOException e) {
-            throw new DataBaseException(e.getMessage());
-        } finally {
-            writeLock.unlock();
         }*/
-
+        
+        
+        
+   
 
     }
 
-    public void removeTable(String name) throws IOException {
+    public synchronized void removeTable(String name) throws IOException {
         checkClosed();
     	checkName(name);
         String path = tableDirectory + File.separator + name;
@@ -140,7 +162,23 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
         if (!file.exists()) {
             throw new IllegalStateException("Table not exist");
         }
-        writeLock.lock();
+        
+        if (tables.containsKey(name)) {
+            tables.get(name).drop();
+            tables.remove(name);
+
+        } else {
+            DataBase base = new DataBase(name, this);
+            base.drop();
+
+        }
+
+
+        if (!file.delete()) {
+            throw new RuntimeException("Cannot delete a table" + name);
+        }
+
+        /*writeLock.lock();
         try {
             if (tables.containsKey(name)) {
                 tables.get(name).drop();
@@ -158,7 +196,7 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             }
         } finally {
             writeLock.unlock();
-        }
+        }*/
 
     }
 
