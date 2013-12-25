@@ -52,7 +52,7 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
 
     public Table createTable(String name, List<Class<?>> types) throws IOException {
         checkClosed();
-    	if (types == null || types.size() == 0) {
+            if (types == null || types.size() == 0) {
             throw new IllegalArgumentException("wrong list of types");
         }
         checkName(name);
@@ -83,7 +83,7 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
 
     public Table getTable(String name) {
         checkClosed();
-    	checkName(name);
+            checkName(name);
         String path = tableDirectory + File.separator + name;
 
         File file = new File(path);
@@ -91,31 +91,11 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             return null;
         }
         
-        readLock.lock();
-        try {
-            if (tables.containsKey(name)) {
-                return tables.get(name);
-            }
-        } finally {
-            readLock.unlock();
-        }
-
+        
+        
         writeLock.lock();
         try {
-            DataBase table = new DataBase(path, this, null);
-            tables.put(name, table);
-            return table;
-        } catch (IOException e) {
-            throw new DataBaseException(e.getMessage());
-        } finally {
-            writeLock.unlock();
-        }
-        
-        
-        
-       /* writeLock.lock();
-        try {
-        	if (tables.containsKey(name)) {
+                if (tables.containsKey(name)) {
                 return tables.get(name);
             }
             DataBase table = new DataBase(path, this);
@@ -125,14 +105,14 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             throw new DataBaseException(e.getMessage());
         } finally {
             writeLock.unlock();
-        }*/
+        }
 
 
     }
 
     public void removeTable(String name) throws IOException {
         checkClosed();
-    	checkName(name);
+            checkName(name);
         String path = tableDirectory + File.separator + name;
 
         File file = new File(path);
@@ -165,7 +145,7 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
 
     public Storeable deserialize(Table table, String value) throws ParseException {
         checkClosed();
-    	Storeable storeable;
+            Storeable storeable;
         try {
             JSONArray jsonValue = new JSONArray(value);
             List<Object> values = new ArrayList<>();
@@ -189,20 +169,20 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
     public String serialize(Table table, Storeable value)
             throws ColumnFormatException {
         checkClosed();
-    	return JSONClass.serialize(table, value);
+            return JSONClass.serialize(table, value);
     }
 
 
     public Storeable createFor(Table table) {
         checkClosed();
-    	return new BaseStoreable(table);
+            return new BaseStoreable(table);
     }
 
 
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
         checkClosed();
-    	BaseStoreable storeable = new BaseStoreable(table);
+            BaseStoreable storeable = new BaseStoreable(table);
         storeable.setValues(values);
         return storeable;
     }
@@ -212,15 +192,15 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             throw new IllegalStateException("object is closed");
         }
     }
-	public void close() {
-		
-		if (!isClosed) {
+        public void close() {
+                
+                if (!isClosed) {
             for (DataBase table: tables.values()) {
                 table.close();
             }
             isClosed = true;
         }
-	}
+        }
 
 
 }

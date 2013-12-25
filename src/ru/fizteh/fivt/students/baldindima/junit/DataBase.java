@@ -3,6 +3,7 @@ package ru.fizteh.fivt.students.baldindima.junit;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.io.RandomAccessFile;
 
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
@@ -205,7 +206,7 @@ public class DataBase implements Table, AutoCloseable {
             throw new IOException("Cannot delete a file!");
         }
         if (!new File(dataBaseDirectory, "size.tsv").delete()) {
-        	throw new IOException("Cannot delete a file!");
+                throw new IOException("Cannot delete a file!");
         }
     }
 
@@ -215,10 +216,11 @@ public class DataBase implements Table, AutoCloseable {
         int nDir = getnDir(keyString);
         int nFile = getnFile(keyString);
         int nFileInMap = getnFileInMap(keyString);
-        
-        if (files.containsKey(nFileInMap)) {
-        	result = files.get(nFileInMap).mapFromFile.get(keyString);
-        } else {
+        readLock.lock();
+        try {
+            if (files.containsKey(nFileInMap)) {
+                result = files.get(nFileInMap).mapFromFile.get(keyString);
+            } else {
                 try {
                     files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
                     result = files.get(nFileInMap).mapFromFile.get(keyString);
@@ -226,7 +228,9 @@ public class DataBase implements Table, AutoCloseable {
                     throw new IllegalArgumentException(e);
                 }
             }
-         
+        } finally {
+            readLock.unlock();
+        }
         return result;
     }
 
@@ -236,19 +240,11 @@ public class DataBase implements Table, AutoCloseable {
         String result;
         if (changes.get().containsKey(keyString)) {
             result = changes.get().get(keyString);
-            return JSONClass.deserialize(this, result);
         } else {
-        	readLock.lock();
-        	try {
-        		result = getFromOld(keyString);
-        		return JSONClass.deserialize(this, result);
-        	} finally {
-        		readLock.unlock();
-        	}
-            
+            result = getFromOld(keyString);
         }
 
-        
+        return JSONClass.deserialize(this, result);
     }
 
     public Storeable put(String keyString, Storeable storeable) {
@@ -281,11 +277,10 @@ public class DataBase implements Table, AutoCloseable {
                     ++count;
                 }
             }
-            return count;
         } finally {
             readLock.unlock();
         }
-        
+        return count;
     }
 
     public int size() {
@@ -340,7 +335,8 @@ public class DataBase implements Table, AutoCloseable {
         try (PrintStream printStream = new PrintStream(sizeFile)) {
             printStream.print(sizeTable);
         }
-        
+        writeLock.lock();
+        try {
             for (Map.Entry<String, String> change : changes.get().entrySet()) {
                 int nFileInMap = getnFileInMap(change.getKey());
                 update.get().add(nFileInMap);
@@ -349,23 +345,16 @@ public class DataBase implements Table, AutoCloseable {
                 }
                 newDataBase.get().get(nFileInMap).put(change.getKey(), change.getValue());
             }
-            writeLock.lock();
-            try {
-            	for (Integer nfile : update.get()) {
-                    DataBaseFile updateFile = putNewValues(nfile, newDataBase.get().get(nfile));
-                    updateFile.write();
-                }
-            } finally {
-            	writeLock.unlock();
+            for (Integer nfile : update.get()) {
+                DataBaseFile updateFile = putNewValues(nfile, newDataBase.get().get(nfile));
+                updateFile.write();
             }
-            	
-            
-            
-            changes.get().clear();
-            return count;
-        
+        } finally {
+            writeLock.unlock();
+        }
 
-        
+        changes.get().clear();
+        return count;
     }
 
     private DataBaseFile getOldMap(int nFileInMap) throws IOException {
