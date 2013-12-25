@@ -221,7 +221,7 @@ public class DataBase implements Table, AutoCloseable {
         readLock.lock();
         try {
         	
-            if ((files.containsKey(nFileInMap)) && (files.get(nFileInMap).mapFromFile != null)) {
+            if ((files.containsKey(nFileInMap)) && (files.get(nFileInMap) != null) && (files.get(nFileInMap).mapFromFile != null)) {
                	result = files.get(nFileInMap).mapFromFile.get(keyString);
             } else {
                 try {
