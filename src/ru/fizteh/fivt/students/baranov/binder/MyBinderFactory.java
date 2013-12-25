@@ -38,9 +38,6 @@ public class MyBinderFactory implements BinderFactory {
         Field[] fields = clazz.getDeclaredFields();
         int countOfUselessFields = 0;
         for (Field field : fields) {
-            //if (field == null) {
-            //    throw new IllegalArgumentException("field is null");
-            //}
             if (field.getType().isArray()) {
                 throw new IllegalArgumentException("arrays not supported");
             }

@@ -257,8 +257,8 @@ public class MyBinder<T> implements Binder<T> {
             if (map.containsKey(obj)) {
                 return map.get(obj);
             }
-            if (classOfObject.isPrimitive() || isWrapperType(classOfObject) || classOfObject.equals(String.class) ||
-                    classOfObject.isEnum()) {
+            if (classOfObject.isPrimitive() || isWrapperType(classOfObject) || classOfObject.equals(String.class)
+                    || classOfObject.isEnum()) {
                 return false;
             }
             map.put(obj, true);
