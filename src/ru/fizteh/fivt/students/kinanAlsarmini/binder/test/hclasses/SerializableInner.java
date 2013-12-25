@@ -6,12 +6,12 @@ public class SerializableInner {
     @DoNotBind
     public int a;
     private String test;
-    protected Long g;
+    protected long g;
 
     public SerializableInner() {
     }
 
-    public SerializableInner(int a, String test, Long g) {
+    public SerializableInner(int a, String test, long g) {
         this.a = 0;
         this.test = test;
         this.g = g;
