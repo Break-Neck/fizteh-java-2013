@@ -113,7 +113,7 @@ public class DataBase implements Table, AutoCloseable {
         BaseSignature.setBaseSignature(dataBaseDirectory, types);
 
 
-        checkCorrection();
+        //checkCorrection();
         loadDataBase();
     }
 
@@ -125,7 +125,7 @@ public class DataBase implements Table, AutoCloseable {
         types = BaseSignature.getBaseSignature(dataBaseDirectory);
 
 
-        checkCorrection();
+        //checkCorrection();
         loadDataBase();
     }
 
