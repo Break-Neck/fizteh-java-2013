@@ -79,7 +79,7 @@ public class DatabaseTableProvider implements TableProvider {
 			}
 			checkTableName(name);
 			if (columnTypes == null || columnTypes.isEmpty()) {
-				throw new IllegalArgumentException("column types cannot be null");
+				throw new IllegalArgumentException("wrong type ()");
 			}
 			checkColumnTypes(columnTypes);
 			if (tables.containsKey(name)) {
@@ -220,7 +220,7 @@ public class DatabaseTableProvider implements TableProvider {
 	private void checkColumnTypes(List<Class<?>> columnTypes) {
         for (final Class<?> columnType : columnTypes) {
             if (columnType == null) {
-                throw new IllegalArgumentException("unknown column type");
+                throw new IllegalArgumentException("wrong type ()");
             }
             StoreableTypes.getSimpleName(columnType);
         }
