@@ -174,7 +174,7 @@ public class MyBinder<T> implements Binder<T> {
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
             }
-        jsonWriter.endObject();
         }
+        jsonWriter.endObject();
     }
 }
