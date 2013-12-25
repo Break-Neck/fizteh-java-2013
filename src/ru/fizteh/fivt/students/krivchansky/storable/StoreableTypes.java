@@ -30,7 +30,7 @@ public enum StoreableTypes {
 		}
 	},
 	
-	STRING("string", String.class) {
+	STRING("String", String.class) {
 		public Object ParseValue(String arg) {
 			return arg;
 		}
