@@ -61,7 +61,8 @@ public class MyBinder<T> implements Binder<T> {
                         field = f;
                         break;
                     }
-                    if (f.getAnnotation(Name.class).value().equals(i.toString()) && !f.isAnnotationPresent(DoNotBind.class)) {
+                    if (f.getAnnotation(Name.class).value().equals(i.toString())
+                            && !f.isAnnotationPresent(DoNotBind.class)) {
                         field = f;
                         break;
                     }
