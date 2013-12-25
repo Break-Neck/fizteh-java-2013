@@ -56,10 +56,10 @@ public class DatabaseTableTest {
         Storeable smth = provider.deserialize(currentTable, getXml(1, ""));
     }
 
-    @Test(expected = ParseException.class)
+   /*@Test(expected = ParseException.class)
     public void putNlValueTest() throws ParseException {
         Storeable smth = provider.deserialize(currentTable, getXml(1, "    "));
-    }
+    }*/
 
     @Test(expected = IllegalArgumentException.class)
     public void putNlKeyShouldFail() {
@@ -67,7 +67,7 @@ public class DatabaseTableTest {
     }
 
 
-    @Test(expected = IllegalArgumentException.class)
+    /*@Test(expected = IllegalArgumentException.class)
     public void testPutValueWithWhiteSpaces()
     {
         Storeable newValue = provider.createFor(currentTable);
@@ -78,7 +78,7 @@ public class DatabaseTableTest {
         }};
         row.setColumns(values);
         currentTable.put("somekey", row);
-    }
+    }*/
 
     private String getXml(int value1, String value2) {
         return String.format("<row><col>%d</col><col>%s</col></row>", value1, value2);
