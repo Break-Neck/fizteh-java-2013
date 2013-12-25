@@ -10,6 +10,9 @@ public class MultiFileMapShellState extends FileMapShellState implements Multifi
 
 		public MyTable useTable(String name) {
 			MyTable tempTable = (MyTable) tableProvider.getTable(name);
+			if (tempTable != null) {
+				table = tempTable;
+			}
 			return tempTable;
 		}
 
