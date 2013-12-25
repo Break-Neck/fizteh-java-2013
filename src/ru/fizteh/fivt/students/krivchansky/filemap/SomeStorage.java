@@ -134,7 +134,7 @@ public abstract class SomeStorage<Key, Value> {
         this.parentDirectory = dir;
         this.name = name;
         unchangedOldData = new HashMap<Key, Value>();
-        setAutoCommit(false);               //change here to change autocommit status
+        setAutoCommit(true);               //change here to change autocommit status
         try {
             load();
         } catch (IOException e) {

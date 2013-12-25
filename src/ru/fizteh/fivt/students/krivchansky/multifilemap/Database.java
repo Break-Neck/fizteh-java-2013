@@ -42,7 +42,7 @@ public class Database implements TableProvider {
         	    currentTable.commit();
             }
         }
-        table.setAutoCommit(false); //here if you want to start with autocommit option
+        table.setAutoCommit(true); //here if you want to start with autocommit option
         currentTable = table;
         return table;
     }
@@ -60,7 +60,7 @@ public class Database implements TableProvider {
         	tableDirectory.mkdir();
         }
         MultifileTable table = new MultifileTable(databaseDirectoryPath, name);
-        table.setAutoCommit(false);  //here you can change if you need autocommit on use/exit or not 
+        table.setAutoCommit(true);  //here you can change if you need autocommit on use/exit or not 
         content.put(name, table);
         return table;
     }
