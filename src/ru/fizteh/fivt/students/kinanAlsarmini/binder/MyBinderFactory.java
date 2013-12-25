@@ -35,7 +35,12 @@ public class MyBinderFactory implements BinderFactory {
         if (isSerializable.containsKey(clazz)) {
             return isSerializable.get(clazz);
         }
-
+        
+        if (MyBinder.isWrapperType(clazz)) {
+            isSerializable.put(clazz, false);
+            return false;
+        }
+        
         if (clazz.isEnum() || clazz.isPrimitive() || MyBinder.isWrapperType(clazz) || clazz.equals(String.class)) {
             isSerializable.put(clazz, true);
             return true;
