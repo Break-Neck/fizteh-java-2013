@@ -38,7 +38,7 @@ public class FileMapWritingUtils implements Closeable {
         for (String key : keys) {
         	write.writeKey(key);
         	write.writeOffset(shift);
-        	shift = GlobalUtils.countBytes(builder.get(key), GlobalUtils.ENCODING);
+        	shift += GlobalUtils.countBytes(builder.get(key), GlobalUtils.ENCODING);
         }
         for (String key : keys) {
         	write.writeValue(builder.get(key));
