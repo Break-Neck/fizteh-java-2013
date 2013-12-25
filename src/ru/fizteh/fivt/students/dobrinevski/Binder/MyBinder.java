@@ -128,14 +128,6 @@ public class MyBinder<T> implements Binder<T> {
         for (Field one : obj.getClass().getDeclaredFields()) {
             one.setAccessible(true);
             try {
-                Object objBuf = one.get(obj);
-                if (objBuf != null) {
-                    if (grey.equals(idHashMap.get(objBuf))) {
-                        throw new IllegalStateException("Cycle reference");
-                    }
-                    idHashMap.put(objBuf, grey);
-                }
-
                 if (one.isAnnotationPresent(DoNotBind.class)) {
                     continue;
                 }
@@ -150,6 +142,7 @@ public class MyBinder<T> implements Binder<T> {
                 }
                 jsonWriter.key(name);
 
+                Object objBuf = one.get(obj);
                 if (objBuf == null) {
                     jsonWriter.value(null);
                     continue;
@@ -169,6 +162,11 @@ public class MyBinder<T> implements Binder<T> {
                     jsonWriter.value(Enum.valueOf(Enum.class, objBuf.toString()).name());
                     continue;
                 }
+
+                if (grey.equals(idHashMap.get(objBuf))) {
+                    throw new IllegalStateException("Cycle reference");
+                }
+                idHashMap.put(objBuf, grey);
 
                 recDraw(objBuf, idHashMap, jsonWriter);
                 idHashMap.put(objBuf, black);
