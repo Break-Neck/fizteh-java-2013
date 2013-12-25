@@ -155,12 +155,7 @@ public class DBTable implements Table, AutoCloseable {
             oldValue = originalValue;
         }
         if (originalValue != null) {
-            if (checkStoreableForEquality(newValue, originalValue)) {
-                tableOfChanges.get().remove(key);
-                removedKeys.get().remove(key);
-            } else {
-                removedKeys.get().add(key);
-            }
+            removedKeys.get().add(key);
         }
         return oldValue;
     }
