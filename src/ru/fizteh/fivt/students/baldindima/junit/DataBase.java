@@ -340,8 +340,7 @@ public class DataBase implements Table, AutoCloseable {
         try (PrintStream printStream = new PrintStream(sizeFile)) {
             printStream.print(sizeTable);
         }
-        writeLock.lock();
-        try {
+        
             for (Map.Entry<String, String> change : changes.get().entrySet()) {
                 int nFileInMap = getnFileInMap(change.getKey());
                 update.get().add(nFileInMap);
@@ -350,15 +349,19 @@ public class DataBase implements Table, AutoCloseable {
                 }
                 newDataBase.get().get(nFileInMap).put(change.getKey(), change.getValue());
             }
-            for (Integer nfile : update.get()) {
-                DataBaseFile updateFile = putNewValues(nfile, newDataBase.get().get(nfile));
-                updateFile.write();
+            writeLock.lock();
+            try {
+            	for (Integer nfile : update.get()) {
+                    DataBaseFile updateFile = putNewValues(nfile, newDataBase.get().get(nfile));
+                    updateFile.write();
+                }
+            } finally {
+            	writeLock.unlock();
             }
+            
             changes.get().clear();
             return count;
-        } finally {
-            writeLock.unlock();
-        }
+        
 
         
     }
