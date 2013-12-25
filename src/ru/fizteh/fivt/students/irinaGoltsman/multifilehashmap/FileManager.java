@@ -335,6 +335,11 @@ public class FileManager {
             for (int indexOfDatFile = 0; indexOfDatFile < 16; indexOfDatFile++) {
                 File datFile = new File(dir, indexOfDatFile + ".dat");
                 if (parsedStorage[indexOfDir][indexOfDatFile] == null) {
+                    if (datFile.exists() && datFile.length() == 0) {
+                        if (!datFile.delete()) {
+                            throw new IOException("File: " + datFile.toString() + " can't be deleted");
+                        }
+                    }
                     continue;
                 }
                 if (!dir.exists()) {
