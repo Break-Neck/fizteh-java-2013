@@ -41,7 +41,7 @@ public class MyBinderFactory implements BinderFactory {
             return false;
         }
         
-        if (clazz.isEnum() || clazz.isPrimitive() || MyBinder.isWrapperType(clazz) || clazz.equals(String.class)) {
+        if (clazz.isEnum() || clazz.isPrimitive() || clazz.equals(String.class)) {
             isSerializable.put(clazz, true);
             return true;
         }
