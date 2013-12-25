@@ -28,7 +28,7 @@ public class DataBase implements Table, AutoCloseable {
     private Map<Integer, DataBaseFile> files = new WeakHashMap<>();
     private File sizeFile;
     private int sizeTable;
-    
+    private Map<String, Storeable> getMap = new HashMap<>();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
     public Lock readLock = readWriteLock.readLock();
     public Lock writeLock = readWriteLock.writeLock();
@@ -114,7 +114,7 @@ public class DataBase implements Table, AutoCloseable {
         BaseSignature.setBaseSignature(dataBaseDirectory, types);
 
 
-       checkCorrection();
+        checkCorrection();
         loadDataBase();
     }
 
@@ -216,7 +216,7 @@ public class DataBase implements Table, AutoCloseable {
         int nDir = getnDir(keyString);
         int nFile = getnFile(keyString);
         int nFileInMap = getnFileInMap(keyString);
-        writeLock.lock();
+        readLock.lock();
         try {
             if (files.containsKey(nFileInMap)) {
                 result = files.get(nFileInMap).mapFromFile.get(keyString);
@@ -229,7 +229,7 @@ public class DataBase implements Table, AutoCloseable {
                 }
             }
         } finally {
-            writeLock.unlock();
+            readLock.unlock();
         }
         return result;
     }
@@ -238,11 +238,16 @@ public class DataBase implements Table, AutoCloseable {
         checkClosed();
         checkString(keyString);
         String result;
+        if (getMap.containsKey(keyString)) {
+        	return getMap.get(keyString);
+        }
         if (changes.get().containsKey(keyString)) {
             result = changes.get().get(keyString);
+            getMap.put(keyString, JSONClass.deserialize(this, result));
             
         } else {
             result = getFromOld(keyString);
+            getMap.put(keyString, JSONClass.deserialize(this, result));
             
         }
 
