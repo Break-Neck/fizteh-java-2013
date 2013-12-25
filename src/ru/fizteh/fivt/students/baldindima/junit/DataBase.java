@@ -219,8 +219,7 @@ public class DataBase implements Table, AutoCloseable {
         int nDir = getnDir(keyString);
         int nFile = getnFile(keyString);
         int nFileInMap = getnFileInMap(keyString);
-        writeLock.lock();
-        try {
+        
         	
             if ((files.containsKey(nFileInMap)) && (files != null) && (files.get(nFileInMap) != null) && (files.get(nFileInMap).mapFromFile != null)) {
                	
@@ -238,9 +237,7 @@ public class DataBase implements Table, AutoCloseable {
                     throw new IllegalArgumentException(e);
                 }
             }
-        } finally {
-            writeLock.unlock();
-        }
+        
         return result;
     }
 
@@ -251,7 +248,13 @@ public class DataBase implements Table, AutoCloseable {
         if (changes.get().containsKey(keyString)) {
             result = changes.get().get(keyString);
         } else {
-            result = getFromOld(keyString);
+        	writeLock.lock();
+        	try {
+        		result = getFromOld(keyString);
+        	} finally {
+        		writeLock.unlock();
+        	}
+            
         }
 
         return JSONClass.deserialize(this, result);
@@ -277,7 +280,7 @@ public class DataBase implements Table, AutoCloseable {
 
     public int countCommits() {
         int count = 0;
-        readLock.lock();
+        writeLock.lock();
         try {
             for (String change : changes.get().keySet()) {
                 checkString(change);
@@ -289,14 +292,14 @@ public class DataBase implements Table, AutoCloseable {
                 }
             }
         } finally {
-            readLock.unlock();
+            writeLock.unlock();
         }
         return count;
     }
 
     public int size() {
         checkClosed();
-        readLock.lock();
+        writeLock.lock();
         try {
             int count = 0;
             for (Map.Entry<String, String> change : changes.get().entrySet()) {
@@ -308,7 +311,7 @@ public class DataBase implements Table, AutoCloseable {
             }
             return sizeTable + count;
         } finally {
-            readLock.unlock();
+            writeLock.unlock();
         }
     }
 
