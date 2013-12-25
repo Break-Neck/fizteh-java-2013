@@ -25,7 +25,7 @@ public class Main {
         MyBinderFactory factory = new MyBinderFactory();
         try {
             MyBinder binder = factory.create(User.class);
-            User user = (User)binder.deserialize(input);
+            User user = (User) binder.deserialize(input);
             System.err.println(user.name);
         } catch (Exception e) {
             System.err.println(e.getMessage());

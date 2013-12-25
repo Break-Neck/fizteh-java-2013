@@ -22,22 +22,22 @@ public class BinderTests {
 
     } */
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void createBinderWithNullClass() {
         factory.create(null);
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void createAllFieldsDoNotBind() {
         factory.create(UselessClass.class);
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void createNoConstructor() {
         factory.create(MyClassWithoutConstructor.class);
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void serializeValueNull() throws IOException {
         MyBinder binder = factory.create(User.class);
         User object = null;
@@ -45,7 +45,7 @@ public class BinderTests {
         binder.serialize(object, output);
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void serializeOutputNull() throws IOException {
         MyBinder binder = factory.create(User.class);
         User object = new User();
@@ -56,7 +56,7 @@ public class BinderTests {
         binder.serialize(object, output);
     }
 
-    @Test (expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void serializeCircularLink() throws IOException {
         MyBinder binder = factory.create(User.class);
         User object = new User();
@@ -66,7 +66,7 @@ public class BinderTests {
         binder.serialize(object, output);
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void deserializeInputNull() throws IOException {
         MyBinder binder = factory.create(User.class);
         input = null;
@@ -135,13 +135,13 @@ public class BinderTests {
 
         input = new ByteArrayInputStream(before.getBytes());
         output = new ByteArrayOutputStream();
-        User user = (User)binder.deserialize(input);
+        User user = (User) binder.deserialize(input);
         binder.serialize(user, output);
 
         assertEquals("results: ", before, output.toString());
     }
 
-    @Test (expected = IOException.class)
+    @Test(expected = IOException.class)
     public void parsingXMLError() throws IOException {
         MyBinder binder = factory.create(User.class);
         String before = "<ru.fizteh.fivt.students.baranov.binder.User>" +
@@ -165,8 +165,9 @@ class UselessClass {
 }
 
 class User {
-    public User () {
+    public User() {
     }
+
     String name;
     @DoNotBind
     int id;

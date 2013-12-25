@@ -1,5 +1,6 @@
 package ru.fizteh.fivt.students.baranov.binder;
 
+import org.xml.sax.SAXException;
 import ru.fizteh.fivt.binder.Binder;
 import ru.fizteh.fivt.binder.DoNotBind;
 import ru.fizteh.fivt.binder.Name;
@@ -16,6 +17,7 @@ import java.util.HashSet;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -61,9 +63,14 @@ public class MyBinder<T> implements Binder<T> {
                 }
             }
             return result;
-        } catch (Exception e) {
-            throw new IOException("XML parsing error");
+        } catch (InstantiationException e) {
+            throw new IOException("can't create new instance in deserializer");
+        } catch (ParserConfigurationException | SAXException e) {
+            throw new IOException("XML parser error");
+        } catch (IllegalAccessException e) {
+            //
         }
+        return null;
     }
 
     private Object casting(Field field, String value) throws IOException {
@@ -155,7 +162,7 @@ public class MyBinder<T> implements Binder<T> {
         for (int i = 0; i < fields.length; ++i) {
             String fieldName = fields[i].getName();
             Annotation[] annotations = fields[i].getAnnotations();
-            for (Annotation annotation : annotations){
+            for (Annotation annotation : annotations) {
                 if (annotation.annotationType().equals(Name.class)) {
                     Name nameAnnotation = fields[i].getAnnotation(Name.class);
                     fieldName = nameAnnotation.value();
@@ -166,25 +173,35 @@ public class MyBinder<T> implements Binder<T> {
         return result;
     }
 
-    private void goThroughNode(Node node, Class nodeClass, Field field, Object result) throws Exception {
+    private void goThroughNode(Node node, Class nodeClass, Field field, Object result) throws IOException {
         NodeList list = node.getChildNodes();
-        Object obj = nodeClass.newInstance();
-        HashMap<String, Field> map = getMap(nodeClass.getDeclaredFields());
-        for (int i = 0; i < list.getLength(); ++i) {
-            Node n = list.item(i);
-            if (n.hasChildNodes()) {
-                Node child = n.getFirstChild();
-                Field f = map.get(child.getNodeName());
-                Class fClass = f.getType();
-                if (fClass.isPrimitive() || fClass.equals(String.class) || fClass.isEnum()) {
-                    String value = child.getTextContent();
-                    f.set(obj, casting(f, value));
-                } else {
-                    goThroughNode(child, fClass, f, obj);
+        try {
+            Object obj = nodeClass.newInstance();
+            HashMap<String, Field> map = getMap(nodeClass.getDeclaredFields());
+            for (int i = 0; i < list.getLength(); ++i) {
+                Node n = list.item(i);
+                if (n.hasChildNodes()) {
+                    Node child = n.getFirstChild();
+                    Field f = map.get(child.getNodeName());
+                    Class fClass = f.getType();
+                    if (fClass.isPrimitive() || fClass.equals(String.class) || fClass.isEnum()) {
+                        String value = child.getTextContent();
+                        f.setAccessible(true);
+                        f.set(obj, casting(f, value));
+                    } else {
+                        goThroughNode(child, fClass, f, obj);
+                    }
                 }
             }
+            field.setAccessible(true);
+            field.set(result, obj);
+
+        } catch (IllegalAccessException e) {
+            //
+        } catch (InstantiationException e) {
+            throw new IOException("can't create new instance");
         }
-        field.set(result, obj);
+
     }
 
     private void printField(T valueOfClass, Field field, String fieldName, OutputStream output) throws IOException {
