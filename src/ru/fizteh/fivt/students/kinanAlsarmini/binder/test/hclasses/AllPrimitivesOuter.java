@@ -2,7 +2,7 @@ package ru.fizteh.fivt.students.kinanAlsarmini.binder.test.hclasses;
 
 public class AllPrimitivesOuter {
     int a;
-    public Long b;
+    public long b;
     private String c;
     protected Day d;
     AllPrimitivesInner inner;
