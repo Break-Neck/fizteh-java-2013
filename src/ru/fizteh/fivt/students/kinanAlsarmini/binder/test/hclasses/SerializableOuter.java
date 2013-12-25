@@ -8,7 +8,7 @@ import ru.fizteh.fivt.students.kinanAlsarmini.binder.test.hclasses.Day;
 
 public class SerializableOuter {
     public Day day;
-    private Long a;
+    private long a;
     public String b;
     protected boolean c;
     public String empty;
@@ -24,7 +24,7 @@ public class SerializableOuter {
         rename = "ABC";
     }
 
-    public SerializableOuter(Day day, Long a, String b, boolean c, int d) {
+    public SerializableOuter(Day day, long a, String b, boolean c, int d) {
         this();
         this.day = day;
         this.a = a;
