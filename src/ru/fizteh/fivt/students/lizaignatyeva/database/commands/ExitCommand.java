@@ -19,7 +19,7 @@ public class ExitCommand extends Command {
                 database.currentTable.write();
             }
         } catch (Exception e) {
-            System.err.println("Ooops! Error: " + e.getMessage());
+            // do nothing
         }
         System.exit(0);
     }

@@ -510,4 +510,12 @@ public class MyTable implements Table {
         }
         throw new ColumnFormatException("value contains more columns");
     }
+
+    public HashMap<String, Storeable> getLocalChanges() {
+        return uncommitedData.get();
+    }
+
+    public void setLocalChanges(HashMap<String, Storeable> changes) {
+        uncommitedData.set(changes);
+    }
 }
