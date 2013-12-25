@@ -1,11 +1,11 @@
-package ru.fizteh.fivt.students.dobrinevski.binder.tests;
+package ru.fizteh.fivt.students.dobrinevski.Binder.tests;
 
 import org.junit.Before;
 import org.junit.Test;
 import ru.fizteh.fivt.binder.BinderFactory;
 import ru.fizteh.fivt.binder.DoNotBind;
 import ru.fizteh.fivt.binder.Name;
-import ru.fizteh.fivt.students.dobrinevski.binder.MyBinderFactory;
+import ru.fizteh.fivt.students.dobrinevski.Binder.MyBinderFactory;
 
 public class BinderFactoryTester {
     public static BinderFactory bf;

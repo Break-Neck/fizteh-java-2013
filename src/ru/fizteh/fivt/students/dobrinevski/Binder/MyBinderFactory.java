@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.dobrinevski.binder;
+package ru.fizteh.fivt.students.dobrinevski.Binder;
 
 import ru.fizteh.fivt.binder.Binder;
 import ru.fizteh.fivt.binder.BinderFactory;
