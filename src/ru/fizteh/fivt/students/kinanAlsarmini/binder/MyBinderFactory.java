@@ -101,6 +101,10 @@ public class MyBinderFactory implements BinderFactory {
         if (clazz == null) {
             throw new IllegalArgumentException("Invalid class: null");
         }
+        
+        if (clazz.isPrimitive()) {
+            throw new IllegalArgumentException("Invalid class: primitive type");
+        }
 
         isSerializable = new HashMap<Class<?>,Boolean>();
         if (!checkSerializability(clazz)) {
