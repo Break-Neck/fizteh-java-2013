@@ -219,8 +219,8 @@ public class DataBase implements Table, AutoCloseable {
         readLock.lock();
         try {
         	
-            if (files.containsKey(nFileInMap)) {
-                if (keyString == null){
+            if ((files.containsKey(nFileInMap)) && (files.get(nFileInMap) != null) ) {
+                /*if (keyString == null){
                 	throw new NullPointerException("111111111111111111111111111111111111");
                 }
                 if (files == null){
@@ -231,7 +231,7 @@ public class DataBase implements Table, AutoCloseable {
                 }
                 if (files.get(nFileInMap).mapFromFile == null){
                 	throw new NullPointerException("444444444444444444444444444444444444");
-                }
+                }*/
             	result = files.get(nFileInMap).mapFromFile.get(keyString);
             } else {
                 try {
