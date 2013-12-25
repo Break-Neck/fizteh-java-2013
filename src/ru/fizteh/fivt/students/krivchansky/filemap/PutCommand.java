@@ -19,6 +19,7 @@ public class PutCommand<Table, Key, Value, State extends FileMapShellStateInterf
             throws SomethingIsWrongException {
     	if (state.getTable() == null) {
     		System.err.println("no table");
+    		return;
     	}
     	ArrayList<String> parameters = Parser.parseCommandArgs(args);
         if (parameters.size() != 2) {
