@@ -153,10 +153,10 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public Value putIntoStorage(Key key, Value value) {
-    	//if (key == null || value == null)
-			//throw new IllegalArgumentException("wrong value or key");
-		//if (key.toString().trim().isEmpty() || value.toString().trim().isEmpty())
-			//throw new IllegalArgumentException("wrong value or key");
+    	if (key == null || value == null)
+			throw new IllegalArgumentException("wrong value or key");
+		if (key.toString().trim().isEmpty() || value.toString().trim().isEmpty())
+			throw new IllegalArgumentException("wrong value or key");
         Value oldVal =  transaction.get().getVal(key);
         transaction.get().newModification(key, value);
         return oldVal;
