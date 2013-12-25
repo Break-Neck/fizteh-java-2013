@@ -151,12 +151,12 @@ public class BinderTests {
     public void parsingXMLError() throws IOException {
         try {
             MyBinder binder = factory.create(User.class);
-        String before = "<User>" +
-                "<name>Vasya</name>" +
-                "<age>1</age>" +
-                "<parent>";
-        input = new ByteArrayInputStream(before.getBytes());
-        binder.deserialize(input);
+            String before = "<User>" +
+                    "<name>Vasya</name>" +
+                    "<age>1</age>" +
+                    "<parent>";
+            input = new ByteArrayInputStream(before.getBytes());
+            binder.deserialize(input);
         } catch (Exception e) {
             throw new IOException(e.getMessage());
         }
@@ -207,7 +207,9 @@ class WithArray {
 }
 
 class WithInterface {
-    public WithInterface() {}
+    public WithInterface() {
+    }
+
     InterFace lol;
 }
 
