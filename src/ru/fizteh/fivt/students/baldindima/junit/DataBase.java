@@ -216,11 +216,10 @@ public class DataBase implements Table, AutoCloseable {
         int nDir = getnDir(keyString);
         int nFile = getnFile(keyString);
         int nFileInMap = getnFileInMap(keyString);
-        readLock.lock();
-        try {
-            if (files.containsKey(nFileInMap)) {
-                result = files.get(nFileInMap).mapFromFile.get(keyString);
-            } else {
+        
+        if (files.containsKey(nFileInMap)) {
+        	result = files.get(nFileInMap).mapFromFile.get(keyString);
+        } else {
                 try {
                     files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
                     result = files.get(nFileInMap).mapFromFile.get(keyString);
@@ -228,9 +227,7 @@ public class DataBase implements Table, AutoCloseable {
                     throw new IllegalArgumentException(e);
                 }
             }
-        } finally {
-            readLock.unlock();
-        }
+         
         return result;
     }
 
@@ -241,7 +238,13 @@ public class DataBase implements Table, AutoCloseable {
         if (changes.get().containsKey(keyString)) {
             result = changes.get().get(keyString);
         } else {
-            result = getFromOld(keyString);
+        	readLock.lock();
+        	try {
+        		result = getFromOld(keyString);
+        	} finally {
+        		readLock.unlock();
+        	}
+            
         }
 
         return JSONClass.deserialize(this, result);
