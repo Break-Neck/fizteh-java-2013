@@ -46,10 +46,6 @@ public class DatabaseTable extends SomeStorage<String, Storeable> implements Tab
             }
         }
 
-        if (value == null) {
-            throw new IllegalArgumentException("value cannot be null");
-        }
-
         if (!checkAlienStoreable(value)) {
             throw new ColumnFormatException("alien storeable");
         }
