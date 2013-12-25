@@ -17,7 +17,7 @@ public class Database implements TableProvider {
         this.databaseDirectoryPath = databaseDirectoryPath;
         File databaseDirectory = new File(databaseDirectoryPath);
         for(File tableFile : databaseDirectory.listFiles()) {
-            	if (tableFile == null || tableFile.isFile()) {
+            	if (tableFile.isFile()) {
                 	continue;
             	}
             	MultifileTable table = new MultifileTable(databaseDirectoryPath, tableFile.getName());
@@ -48,7 +48,7 @@ public class Database implements TableProvider {
     }
 
     public MultifileTable createTable(String name) {
-        if (name == null) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Table's name cannot be null");
         }
         checkName(name);

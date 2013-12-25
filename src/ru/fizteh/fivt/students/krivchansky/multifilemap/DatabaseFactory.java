@@ -9,7 +9,7 @@ import ru.fizteh.fivt.storage.strings.TableProviderFactory;
 
 public class DatabaseFactory implements TableProviderFactory {
     public TableProvider create(String directory) {
-    	if (directory.isEmpty() || directory == null) {
+    	if (directory == null || directory.isEmpty() ) {
     		throw new IllegalArgumentException ("directory name cannot be null");
     	}
     	File databaseDirectory = new File(directory);

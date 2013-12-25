@@ -146,17 +146,17 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public Value getFromStorage(Key key) {
-        if (key == null) {
+        if (key == null || key.toString().isEmpty()) {
         	throw new IllegalArgumentException ("key cannot be null");
         }
         return transaction.get().getVal(key);
     }
     
     public Value putIntoStorage(Key key, Value value) {
-        if (key == null) {
+        if (key == null || key.toString().isEmpty()) {
         	throw new IllegalArgumentException("key cannot be null");
         }
-        if (value == null) {
+        if (value == null || value.toString().isEmpty()) {
         	throw new IllegalArgumentException("value cannot be null");
         }
         Value oldVal =  transaction.get().getVal(key);
@@ -165,7 +165,7 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public Value removeFromStorage(Key key) {
-    	if (key == null) {
+    	if (key == null ) {
         	throw new IllegalArgumentException("key cannot be null");
         }
     	if (getFromStorage(key) == null) {
