@@ -138,7 +138,7 @@ public abstract class SomeStorage<Key, Value> {
         try {
             load();
         } catch (IOException e) {
-        	if (e.getMessage() != "didn't exist" || e.getMessage() != "null") {
+        	if (e.getMessage() != "didn't exist" && e.getMessage() != "null") {
         	    throw new IllegalArgumentException("invalid file format" + e.getMessage());
         	}
         }
@@ -153,12 +153,10 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public Value putIntoStorage(Key key, Value value) {
-        if (key == null /*|| key.toString().isEmpty()*/) {
-        	throw new IllegalArgumentException("key cannot be null");
-        }
-        if (value == null/* || value.toString().isEmpty()*/) {
-        	throw new IllegalArgumentException("value cannot be null");
-        }
+    	if (key == null || value == null)
+			throw new IllegalArgumentException("wrong value or key");
+		if (key.toString().trim().isEmpty() || value.toString().trim().isEmpty())
+			throw new IllegalArgumentException("wrong value or key");
         Value oldVal =  transaction.get().getVal(key);
         transaction.get().newModification(key, value);
         return oldVal;
