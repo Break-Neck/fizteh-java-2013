@@ -45,6 +45,10 @@ public class DatabaseTable extends SomeStorage<String, Storeable> implements Tab
                 throw new IllegalArgumentException("key cannot be empty");
             }
         }
+        
+        if (value == null) {
+            throw new IllegalArgumentException("value cannot be null");
+        }
 
         if (!checkAlienStoreable(value)) {
             throw new ColumnFormatException("alien storeable");
