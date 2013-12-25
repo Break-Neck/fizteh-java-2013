@@ -215,6 +215,7 @@ public class DataBase implements Table, AutoCloseable {
 
     private String getFromOld(String keyString) {
         String result;
+        checkString(keyString);
         int nDir = getnDir(keyString);
         int nFile = getnFile(keyString);
         int nFileInMap = getnFileInMap(keyString);
@@ -278,7 +279,8 @@ public class DataBase implements Table, AutoCloseable {
         readLock.lock();
         try {
             for (String change : changes.get().keySet()) {
-                String s = getFromOld(change);
+                checkString(change);
+            	String s = getFromOld(change);
                 if (!((s == null) && (changes.get().get(change) == null) ||
                         ((s != null) && (changes.get().get(change) != null) &&
                                 s.equals(changes.get().get(change))))) {
