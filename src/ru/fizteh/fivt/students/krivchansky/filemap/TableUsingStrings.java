@@ -18,6 +18,8 @@ public abstract class TableUsingStrings extends SomeStorage<String, String> impl
 	}
 	
 	public String put(String key, String value) {
+		if (key == null || value == null)
+			throw new IllegalArgumentException("wrong value or key");
 		if (key.trim().isEmpty() || value.trim().isEmpty())
 			throw new IllegalArgumentException("wrong value or key");
 		return putIntoStorage(key, value);
