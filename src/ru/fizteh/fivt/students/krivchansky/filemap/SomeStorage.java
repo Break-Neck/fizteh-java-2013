@@ -153,10 +153,10 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public Value putIntoStorage(Key key, Value value) {
-        if (key == null || key.toString().isEmpty() || key.toString().equals("/n")) {
+        if (key == null || key.toString().isEmpty()) {
         	throw new IllegalArgumentException("key cannot be null");
         }
-        if (value == null || value.toString().isEmpty() || value.toString().equals("/n")) {
+        if (value == null || value.toString().isEmpty()) {
         	throw new IllegalArgumentException("value cannot be null");
         }
         Value oldVal =  transaction.get().getVal(key);
@@ -184,9 +184,9 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public int commitStorage() {
+    	transactionLock.lock();
         int commitCount = transaction.get().saveModifications();
         transaction.get().clear();
-        transactionLock.lock();
         try {
         	save();
         } catch (IOException e) {

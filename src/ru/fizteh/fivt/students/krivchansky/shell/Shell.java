@@ -80,7 +80,7 @@ public class Shell<State> {
                 } else {
                     System.err.println(exc.getMessage());
                 }
-            }// catch (IllegalArgumentException | IllegalStateException e) {
+            } //catch (IllegalArgumentException | IllegalStateException e) {
             //	System.err.println(e.getMessage());
             //}
         }
