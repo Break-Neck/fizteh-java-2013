@@ -205,7 +205,7 @@ public class DatabaseTableProvider implements TableProvider {
         for (final String columnType : signature.split("\\s+")) {
             Class<?> type = StoreableTypes.getTypeByName(columnType);
             if (type == null) {
-                throw new IllegalArgumentException("unknown type");
+                throw new IllegalArgumentException("wrong type (" + columnType + ')');
             }
             columnTypes.add(type);
         }
