@@ -22,10 +22,7 @@ public class BinderTests {
 
     @Before
     public void init() {
-        HashSet<String> set = new HashSet<>();
-        set.add("#");
         factory = new MyBinderFactory();
-        factory.setOfClasses = set;
     }
 
     @Test(expected = IllegalArgumentException.class)

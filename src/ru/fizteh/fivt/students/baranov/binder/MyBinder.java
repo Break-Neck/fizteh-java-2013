@@ -27,7 +27,6 @@ public class MyBinder<T> implements Binder<T> {
     private Class clazz;
     private Field[] fields;
     private HashMap<String, Field> fieldMap;
-    public HashSet<String> setOfClasses;
 
     MyBinder(Class<T> newClazz) {
         this.clazz = newClazz;
@@ -242,7 +241,6 @@ public class MyBinder<T> implements Binder<T> {
                     //
                 }
                 MyBinderFactory factory = new MyBinderFactory();
-                factory.setOfClasses = setOfClasses;
                 MyBinder binder = factory.create(typeOfField);
                 binder.serialize(objectOfField, output);
                 output.write(("</" + fieldName + ">").getBytes());

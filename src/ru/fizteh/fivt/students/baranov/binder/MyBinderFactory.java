@@ -11,9 +11,12 @@ import java.util.Set;
 
 
 public class MyBinderFactory implements BinderFactory {
-    public HashSet<String> setOfClasses = new HashSet<>();
+    private HashSet<String> setOfClasses = new HashSet<>();
 
     public MyBinderFactory() {
+        HashSet<String> set = new HashSet<>();
+        set.add("#");
+        this.setOfClasses = set;
     }
 
     public <T> MyBinder<T> create(Class<T> clazz) {
@@ -30,44 +33,43 @@ public class MyBinderFactory implements BinderFactory {
             throw new IllegalArgumentException("interfaces not supported");
         }
 
-        if (!setOfClasses.contains(clazz.getName())) {
-            setOfClasses.add(clazz.getSimpleName());
+        setOfClasses.add(clazz.getSimpleName());
 
-            Field[] fields = clazz.getDeclaredFields();
-            int countOfUselessFields = 0;
-            for (Field field : fields) {
-                if (field.getType().isArray()) {
-                    throw new IllegalArgumentException("arrays not supported");
-                }
-                if (field.getType().isInterface()) {
-                    throw new IllegalArgumentException("interfaces not supported");
-                }
-                Annotation[] annotationsOfField = field.getAnnotations();
-                for (Annotation a : annotationsOfField) {
-                    if (a.annotationType().equals(DoNotBind.class)) {
-                        countOfUselessFields++;
-                        break;
-                    }
-                }
-                if (field.getType().isPrimitive() || field.getType().equals(String.class) || field.getType().isEnum()) {
-                    continue;
-                } else if (!field.getType().equals(clazz)) {
-                    MyBinderFactory f = new MyBinderFactory();
-                    f.setOfClasses = setOfClasses;
-                    f.create(field.getType());
+        Field[] fields = clazz.getDeclaredFields();
+        int countOfUselessFields = 0;
+        for (Field field : fields) {
+            //if (field == null) {
+            //    throw new IllegalArgumentException("field is null");
+            //}
+            if (field.getType().isArray()) {
+                throw new IllegalArgumentException("arrays not supported");
+            }
+            if (field.getType().isInterface()) {
+                throw new IllegalArgumentException("interfaces not supported");
+            }
+            Annotation[] annotationsOfField = field.getAnnotations();
+            for (Annotation a : annotationsOfField) {
+                if (a.annotationType().equals(DoNotBind.class)) {
+                    countOfUselessFields++;
+                    break;
                 }
             }
-            if (countOfUselessFields == fields.length) {
-                throw new IllegalArgumentException("in class " + clazz.getSimpleName() + " nothing to serialize");
-            }
-            try {
-                clazz.getConstructor();
-            } catch (NoSuchMethodException e) {
-                throw new IllegalArgumentException("class " + clazz.getSimpleName() + " don't have constructor");
+            if (field.getType().isPrimitive() || field.getType().equals(String.class) || field.getType().isEnum()) {
+                continue;
+            } else {
+                goThroughField(field);
             }
         }
+        if (countOfUselessFields == fields.length) {
+            throw new IllegalArgumentException("in class " + clazz.getSimpleName() + " nothing to serialize");
+        }
+        try {
+            clazz.getConstructor();
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("class " + clazz.getSimpleName() + " don't have constructor");
+        }
+
         MyBinder binder = new MyBinder(clazz);
-        binder.setOfClasses = setOfClasses;
         return binder;
     }
 
@@ -89,5 +91,31 @@ public class MyBinderFactory implements BinderFactory {
         ret.add(Double.class);
         ret.add(Void.class);
         return ret;
+    }
+
+    private void goThroughField(Field field) {
+        Class fieldType = field.getType();
+        if (!setOfClasses.contains(fieldType.getSimpleName())) {
+            setOfClasses.add(fieldType.getSimpleName());
+            Field[] fields = fieldType.getDeclaredFields();
+            for (Field f : fields) {
+                if (f.getType().isArray()) {
+                    throw new IllegalArgumentException("arrays not supported");
+                }
+                if (f.getType().isInterface()) {
+                    throw new IllegalArgumentException("interfaces not supported");
+                }
+                if (f.getType().isPrimitive() || f.getType().equals(String.class) || f.getType().isEnum()) {
+                    continue;
+                } else {
+                    goThroughField(field);
+                }
+            }
+            try {
+                fieldType.getConstructor();
+            } catch (NoSuchMethodException e) {
+                throw new IllegalArgumentException("class " + fieldType.getSimpleName() + " don't have constructor");
+            }
+        }
     }
 }

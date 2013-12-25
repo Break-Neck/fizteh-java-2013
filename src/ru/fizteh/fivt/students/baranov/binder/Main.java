@@ -12,10 +12,7 @@ import java.util.Set;
 public class Main {
     public static void main(String[] args) {
 
-        HashSet<String> set = new HashSet<>();
-        set.add("#");
         MyBinderFactory factory = new MyBinderFactory();
-        factory.setOfClasses = set;
         try {
             MyBinder binder = factory.create(User.class);
             User user = new User();
