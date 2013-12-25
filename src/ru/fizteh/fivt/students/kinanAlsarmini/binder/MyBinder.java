@@ -67,7 +67,7 @@ public class MyBinder<T> implements Binder<T> {
             SAXParser SAX = SAXFactory.newSAXParser();
             SAX.parse(input, handler);
         } catch (ParserConfigurationException | SAXException e) {
-            System.err.println(e.getMessage());
+            throw new IOException("Error creating XML Parser");
         }
 
         return (T)handler.getDeserialization();
@@ -111,7 +111,7 @@ public class MyBinder<T> implements Binder<T> {
         if (currentClass.isEnum() || isWrapperType(currentClass) || currentClass.equals(String.class)) {
             XMLWriter.writeCharacters(object.toString());
         } else {
-            XMLWriter.writeStartElement(currentClass.getName());
+            XMLWriter.writeStartElement(currentClass.getSimpleName());
 
             Field[] fields = currentClass.getDeclaredFields();
             for (Field field : fields) {
@@ -128,15 +128,11 @@ public class MyBinder<T> implements Binder<T> {
                 }
 
                 Object currentField = field.get(object);
-                XMLWriter.writeStartElement(fieldName);
-                if (currentField == null) {
-                    XMLWriter.writeAttribute("value", "null");
-                } else if (currentField.equals("")) {
-                    XMLWriter.writeAttribute("value", "empty");
-                } else {
+                if (currentField != null) {
+                    XMLWriter.writeStartElement(fieldName);
                     serialize(currentField, XMLWriter);
+                    XMLWriter.writeEndElement();
                 }
-                XMLWriter.writeEndElement();
             }
 
             XMLWriter.writeEndElement();
@@ -156,6 +152,7 @@ public class MyBinder<T> implements Binder<T> {
             }
             XMLStreamWriter XMLWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(output);
             serialize(value, XMLWriter);
+            output.flush();
         } catch (XMLStreamException e) {
             throw new IOException("Error occured while writing to XMLStream");
         } catch (IllegalAccessException e) {

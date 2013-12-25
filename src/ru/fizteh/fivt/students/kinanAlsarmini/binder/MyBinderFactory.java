@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
 
 public class MyBinderFactory implements BinderFactory {
     private HashMap<Class<?>,Boolean> isSerializable;
@@ -21,13 +22,13 @@ public class MyBinderFactory implements BinderFactory {
     }
 
     private boolean checkDefaultConstructor(Class<?> clazz) {
-        try {
-            clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException | ExceptionInInitializerError e) {
-            return false;
+        for (Constructor constructor : clazz.getDeclaredConstructors()) {
+            if (constructor.getParameterTypes().length == 0) {
+                return true;
+            }
         }
 
-        return true;
+        return false;
     }
 
     private boolean checkSerializability(Class<?> clazz) {
@@ -46,14 +47,15 @@ public class MyBinderFactory implements BinderFactory {
         }
 
         Field[] fields = clazz.getDeclaredFields();
-        if (fields.length == 0) {
-            isSerializable.put(clazz, true);
-            return true;
-        }
 
         if (!checkDefaultConstructor(clazz)) {
             isSerializable.put(clazz, false);
             throw new IllegalArgumentException("Not serializable: no default constructor");
+        }
+
+        if (fields.length == 0) {
+            isSerializable.put(clazz, true);
+            return true;
         }
 
         isSerializable.put(clazz, true);

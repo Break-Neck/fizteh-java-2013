@@ -12,11 +12,12 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 public class MyHandler extends DefaultHandler {
-    int counter;
+    private int counter;
     private Class<?> baseClass;
     private Stack<Object> objectStack;
     private Stack<Field> fieldStack;
     private Object deserializedObject;
+    private StringBuilder tagContent;
 
     public MyHandler(Class<?> clazz) {
         counter = 0;
@@ -49,19 +50,8 @@ public class MyHandler extends DefaultHandler {
         return null;
     }
 
+    @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-        boolean isNull = false, isEmpty = false;
-
-        for (int i = 0; i < attributes.getLength(); i++) {
-            if (attributes.getQName(i).equals("value")) {
-                if (attributes.getValue(i).equals("null")) {
-                    isNull = true;
-                } else if (attributes.getValue(i).equals("empty")) {
-                    isEmpty = true;
-                }
-            }
-        }
-
         try {
             counter++;
 
@@ -73,11 +63,8 @@ public class MyHandler extends DefaultHandler {
 
                 field.setAccessible(true);
                 fieldStack.push(field);
-                if (isNull) {
-                    field.set(objectStack.peek(), null);
-                } else if (isEmpty) {
-                    field.set(objectStack.peek(), "");
-                }
+
+                tagContent = new StringBuilder();
             } else {
                 if (counter == 1) {
                     objectStack.push(baseClass.newInstance());
@@ -90,6 +77,7 @@ public class MyHandler extends DefaultHandler {
         }
     }
 
+    @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
         try {
             counter--;
@@ -103,6 +91,45 @@ public class MyHandler extends DefaultHandler {
                     fieldStack.peek().set(objectStack.peek(), currentObject);
                 }
             } else {
+                Class<?> currentType = fieldStack.peek().getType();
+
+                fieldStack.peek().setAccessible(true);
+
+                if (currentType.isEnum()) {
+                    String name = tagContent.toString();
+                    for (Object object : currentType.getEnumConstants()) {
+                        if (name.equals(object.toString())) {
+                            fieldStack.peek().set(objectStack.peek(), object);
+                        }
+                    }
+                }
+                if (currentType.equals(String.class)) {
+                    fieldStack.peek().set(objectStack.peek(), tagContent.toString());
+                }
+                if (currentType.equals(Boolean.class) || currentType.equals(boolean.class)) {
+                    fieldStack.peek().set(objectStack.peek(), Boolean.parseBoolean(tagContent.toString()));
+                }
+                if (currentType.equals(Character.class) || currentType.equals(char.class)) {
+                    fieldStack.peek().set(objectStack.peek(), tagContent.toString().charAt(0));
+                }
+                if (currentType.equals(Short.class) || currentType.equals(byte.class)) {
+                    fieldStack.peek().set(objectStack.peek(), Short.parseShort(tagContent.toString()));
+                }
+                if (currentType.equals(Integer.class) || currentType.equals(int.class)) {
+                    fieldStack.peek().set(objectStack.peek(), Integer.parseInt(tagContent.toString()));
+                }
+                if (currentType.equals(Long.class) || currentType.equals(long.class)) {
+                    fieldStack.peek().set(objectStack.peek(), Long.parseLong(tagContent.toString()));
+                }
+                if (currentType.equals(Float.class) || currentType.equals(float.class)) {
+                    fieldStack.peek().set(objectStack.peek(), Float.parseFloat(tagContent.toString()));
+                }
+                if (currentType.equals(Double.class) || currentType.equals(double.class)) {
+                    fieldStack.peek().set(objectStack.peek(), Double.parseDouble(tagContent.toString()));
+                }
+
+                tagContent = null;
+
                 fieldStack.pop();
             }
         } catch (IllegalAccessException e) {
@@ -110,46 +137,8 @@ public class MyHandler extends DefaultHandler {
         }
     }
 
+    @Override
     public void characters(char ch[], int start, int length) throws SAXException {
-        try {
-            Class<?> currentType = fieldStack.peek().getType();
-
-            fieldStack.peek().setAccessible(true);
-
-            if (currentType.isEnum()) {
-                String name = new String(ch, start, length);
-                for (Object object : currentType.getEnumConstants()) {
-                    if (name.equals(object.toString())) {
-                        fieldStack.peek().set(objectStack.peek(), object);
-                    }
-                }
-            }
-            if (currentType.equals(String.class)) {
-                fieldStack.peek().set(objectStack.peek(), new String(ch, start, length));
-            }
-            if (currentType.equals(Boolean.class) || currentType.equals(boolean.class)) {
-                fieldStack.peek().set(objectStack.peek(), Boolean.parseBoolean(new String(ch, start, length)));
-            }
-            if (currentType.equals(Character.class) || currentType.equals(char.class)) {
-                fieldStack.peek().set(objectStack.peek(), ch[start]);
-            }
-            if (currentType.equals(Short.class) || currentType.equals(byte.class)) {
-                fieldStack.peek().set(objectStack.peek(), Short.parseShort(new String(ch, start, length)));
-            }
-            if (currentType.equals(Integer.class) || currentType.equals(int.class)) {
-                fieldStack.peek().set(objectStack.peek(), Integer.parseInt(new String(ch, start, length)));
-            }
-            if (currentType.equals(Long.class) || currentType.equals(long.class)) {
-                fieldStack.peek().set(objectStack.peek(), Long.parseLong(new String(ch, start, length)));
-            }
-            if (currentType.equals(Float.class) || currentType.equals(float.class)) {
-                fieldStack.peek().set(objectStack.peek(), Float.parseFloat(new String(ch, start, length)));
-            }
-            if (currentType.equals(Double.class) || currentType.equals(double.class)) {
-                fieldStack.peek().set(objectStack.peek(), Double.parseDouble(new String(ch, start, length)));
-            }
-        } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("Invalid object for deserialization");
-        }
+        tagContent.append(new String(ch, start, length));
     }
 }
