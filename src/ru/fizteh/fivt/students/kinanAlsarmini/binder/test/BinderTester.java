@@ -59,11 +59,10 @@ public class BinderTester {
         MyBinder<SerializableOuter> binder = factory.create(SerializableOuter.class);
 
         binder.serialize(test, output);
-        Assert.assertEquals("<ru.fizteh.fivt.students.kinanAlsarmini.binder.test.hclasses.SerializableOuter>"
-                + "<day>SATURDAY</day><a>5</a><b>abc</b><c>true</c><empty value=\"empty\"></empty>"
-                + "<nullish value=\"null\"></nullish>"
+        Assert.assertEquals("<SerializableOuter>"
+                + "<day>SATURDAY</day><a>5</a><b>abc</b><c>true</c><empty></empty>"
                 + "<New>ABC</New>"
-                + "</ru.fizteh.fivt.students.kinanAlsarmini.binder.test.hclasses.SerializableOuter>", output.toString());
+                + "</SerializableOuter>", output.toString());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -78,11 +77,10 @@ public class BinderTester {
 
         MyBinder<SerializableOuter> binder = factory.create(SerializableOuter.class);
 
-        String serialization = "<ru.fizteh.fivt.students.kinanAlsarmini.binder.test.hclasses.SerializableOuter>"
-                + "<day>SATURDAY</day><a>5</a><b>abc</b><c>true</c><empty value=\"empty\"></empty>"
-                + "<nullish value=\"null\"></nullish>"
+        String serialization = "<SerializableOuter>"
+                + "<day>SATURDAY</day><a>5</a><b>abc</b><c>true</c><empty></empty>"
                 + "<New>ABC"
-                + "</New></ru.fizteh.fivt.students.kinanAlsarmini.binder.test.hclasses.SerializableOuter>";
+                + "</New></SerializableOuter>";
 
         input = new ByteArrayInputStream(serialization.getBytes());
         SerializableOuter get = binder.deserialize(input);
