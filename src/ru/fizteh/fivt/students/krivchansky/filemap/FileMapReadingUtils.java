@@ -21,17 +21,15 @@ public class FileMapReadingUtils implements Closeable{
             valueShift = 0;
             return;
         }
+        if (tempFile.length() == 0) {
+            throw new IllegalArgumentException("empty file: " + pathToFile);
+        }
         skipKey();
         valueShift = readOffset();
-        try {
-            tempFile.seek(0);
-        } catch (IOException e) {
-            throw new IOException("Error aqcuired while seeking through file: " + e.getMessage());
-        }
+        tempFile.seek(0);
     }
     
     public String readKey() throws IOException {
-        byte[] array;
         if (tempFile.getFilePointer() >= valueShift) {
             return null;
         }
@@ -41,10 +39,7 @@ public class FileMapReadingUtils implements Closeable{
             bytes.write(b);
             b = tempFile.readByte();
         }
-        array = GlobalUtils.bytesToArray(bytes);
-        String returnKey;
-        returnKey = new String(array, GlobalUtils.ENCODING);
-        return returnKey;
+        return new String(bytes.toByteArray(), GlobalUtils.ENCODING);
     }
     
     public String readValue() throws IOException {
@@ -78,11 +73,11 @@ public class FileMapReadingUtils implements Closeable{
         if (tempFile == null) {
             return true;
         }
-            boolean result = true;
+        boolean result = true;
         try {
             result = (tempFile.getFilePointer() == valueShift);
-        } catch (EOFException ee) {
-            return true;
+        } catch (EOFException e) {
+            
         }
         return result;
     }
@@ -90,7 +85,7 @@ public class FileMapReadingUtils implements Closeable{
     
     private int readNextOffset() throws IOException {
         int nextOffset = 0;
-        int currentOffset = (int) tempFile.getFilePointer();
+        long currentOffset = tempFile.getFilePointer();
         if (readKey() == null) {
             nextOffset = (int)tempFile.length();
         } else {
