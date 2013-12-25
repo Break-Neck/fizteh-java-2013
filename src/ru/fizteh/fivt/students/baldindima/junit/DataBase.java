@@ -216,7 +216,7 @@ public class DataBase implements Table, AutoCloseable {
         int nDir = getnDir(keyString);
         int nFile = getnFile(keyString);
         int nFileInMap = getnFileInMap(keyString);
-        writeLock.lock();
+        readLock.lock();
         try {
             if (files.containsKey(nFileInMap)) {
                 result = files.get(nFileInMap).mapFromFile.get(keyString);
@@ -229,7 +229,7 @@ public class DataBase implements Table, AutoCloseable {
                 }
             }
         } finally {
-            writeLock.unlock();
+            readLock.unlock();
         }
         return result;
     }
