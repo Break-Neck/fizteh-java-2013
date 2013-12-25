@@ -206,7 +206,11 @@ public class DBTable implements Table, AutoCloseable {
         checkIsClosed();
         writeLock.lock();
         try {
-            for (String key : removedKeys.get()) {
+            Set<String> keys = removedKeys.get();
+            for (String key : keys) {
+                if (!removedKeys.get().contains(key)) {
+                    continue;
+                }
                 Storeable originalValue = loadRowByKey(key);
                 if (originalValue == null) {
                     removedKeys.get().remove(key);
@@ -220,7 +224,11 @@ public class DBTable implements Table, AutoCloseable {
                     }
                 }
             }
-            for (String key : tableOfChanges.get().keySet()) {
+            keys = tableOfChanges.get().keySet();
+            for (String key : keys) {
+                if (!tableOfChanges.get().containsKey(key)) {
+                    continue;
+                }
                 Storeable originalValue = loadRowByKey(key);
                 Storeable value = tableOfChanges.get().get(key);
                 if (originalValue != null && value != null
