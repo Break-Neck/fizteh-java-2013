@@ -91,9 +91,29 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             return null;
         }
         
-        
-        
+        readLock.lock();
+        try {
+            if (tables.containsKey(name)) {
+                return tables.get(name);
+            }
+        } finally {
+            readLock.unlock();
+        }
+
         writeLock.lock();
+        try {
+            DataBase table = new DataBase(path, this, null);
+            tables.put(name, table);
+            return table;
+        } catch (IOException e) {
+            throw new DataBaseException(e.getMessage());
+        } finally {
+            writeLock.unlock();
+        }
+        
+        
+        
+       /* writeLock.lock();
         try {
         	if (tables.containsKey(name)) {
                 return tables.get(name);
@@ -105,7 +125,7 @@ public class DataBaseTable implements TableProvider, AutoCloseable {
             throw new DataBaseException(e.getMessage());
         } finally {
             writeLock.unlock();
-        }
+        }*/
 
 
     }
