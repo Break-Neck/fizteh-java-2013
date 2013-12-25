@@ -64,14 +64,18 @@ public class DBTableTest {
     }
 
     @Test
-    public void putWork() {
+    public void putWork() throws IOException {
         Storeable row1 = new DBStoreable(columnTypes);
         Storeable row2 = new DBStoreable(columnTypes);
         row1.setColumnAt(0, 1);
         row2.setColumnAt(0, 2);
         Assert.assertNull(table.put("key", row1));
-        Assert.assertEquals(row1, table.put("key", row2));
-        table.rollback();
+        Assert.assertTrue(((DBTable) table).checkStoreableForEquality(row1, table.put("key", row2)));
+        Assert.assertTrue(((DBTable) table).checkStoreableForEquality(row2, table.put("key", row2)));
+        Assert.assertEquals(1, table.commit());
+        Assert.assertTrue(((DBTable) table).checkStoreableForEquality(row2, table.put("key", row2)));
+        Assert.assertTrue(((DBTable) table).checkStoreableForEquality(row2, table.remove("key")));
+        Assert.assertEquals(1, table.commit());
     }
 
     @Test(expected = IllegalArgumentException.class)

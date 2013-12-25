@@ -17,7 +17,7 @@ public class DBTable implements Table, AutoCloseable {
     private File tableDirectory;
     private volatile boolean isClosed = false;
     private volatile int size = 0;
-    private HashMap<String, Storeable> originalTable = new HashMap<>();
+    private WeakHashMap<String, Storeable> originalTable = new WeakHashMap<>();
     private List<Class<?>> columnTypes;
     private TableProvider tableProvider;
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
@@ -150,19 +150,17 @@ public class DBTable implements Table, AutoCloseable {
             }
         }
         Storeable oldValue = tableOfChanges.get().put(key, newValue);
-        if (originalValue != null && checkStoreableForEquality(newValue, originalValue)) {
-            tableOfChanges.get().remove(key);
-            if (removedKeys.get().contains(key)) {
-                removedKeys.get().remove(key);
-            }
-            return oldValue;
-        }
         //Значит здесь впервые происходит перезаписывание старого значения.
         if (!removedKeys.get().contains(key) && oldValue == null) {
             oldValue = originalValue;
         }
         if (originalValue != null) {
-            removedKeys.get().add(key);
+            if (checkStoreableForEquality(newValue, originalValue)) {
+                tableOfChanges.get().remove(key);
+                removedKeys.get().remove(key);
+            } else {
+                removedKeys.get().add(key);
+            }
         }
         return oldValue;
     }
@@ -328,7 +326,7 @@ public class DBTable implements Table, AutoCloseable {
         return countOfChanges;
     }
 
-    private boolean checkStoreableForEquality(Storeable first, Storeable second) {
+    public boolean checkStoreableForEquality(Storeable first, Storeable second) {
         String string1 = tableProvider.serialize(this, first);
         String string2 = tableProvider.serialize(this, second);
         return string1.equals(string2);
