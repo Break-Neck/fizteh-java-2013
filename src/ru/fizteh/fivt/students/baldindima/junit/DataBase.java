@@ -218,8 +218,21 @@ public class DataBase implements Table, AutoCloseable {
         int nFileInMap = getnFileInMap(keyString);
         readLock.lock();
         try {
+        	
             if (files.containsKey(nFileInMap)) {
-                result = files.get(nFileInMap).mapFromFile.get(keyString);
+                if (keyString == null){
+                	throw new NullPointerException("111111111111111111111111111111111111");
+                }
+                if (files == null){
+                	throw new NullPointerException("222222222222222222222222222222222222");
+                }
+                if (files.get(nFileInMap) == null){
+                	throw new NullPointerException("333333333333333333333333333333333333");
+                }
+                if (files.get(nFileInMap).mapFromFile == null){
+                	throw new NullPointerException("444444444444444444444444444444444444");
+                }
+            	result = files.get(nFileInMap).mapFromFile.get(keyString);
             } else {
                 try {
                     files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
