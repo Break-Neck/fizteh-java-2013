@@ -42,8 +42,8 @@ public class BinderTests {
 
     @Test(expected = IllegalArgumentException.class)
     public void serializeValueNull() throws IOException {
-        MyBinder binder = factory.create(User.class);
-        User object = null;
+        MyBinder binder = factory.create(MyUser.class);
+        MyUser object = null;
         output = new ByteArrayOutputStream();
         binder.serialize(object, output);
     }
@@ -71,7 +71,7 @@ public class BinderTests {
 
     @Test(expected = IllegalArgumentException.class)
     public void deserializeInputNull() throws IOException {
-        MyBinder binder = factory.create(User.class);
+        MyBinder binder = factory.create(MyUser.class);
         input = null;
         binder.deserialize(input);
     }
@@ -85,10 +85,7 @@ public class BinderTests {
         user.howOldAreYou = 19;
         output = new ByteArrayOutputStream();
         binder.serialize(user, output);
-        String expectedResult = "<MyUser>" +
-                "<name>Anton</name>" +
-                "<age>19</age>" +
-                "</MyUser>";
+        String expectedResult = "<MyUser><name>Anton</name><age>19</age></MyUser>";
         assertEquals("serialize: ", expectedResult, output.toString());
     }
 
@@ -103,16 +100,8 @@ public class BinderTests {
         user.parent.name = "mamka";
         output = new ByteArrayOutputStream();
         binder.serialize(user, output);
-        String expectedResult = "<MyUser>" +
-                "<name>Vasya</name>" +
-                "<age>1</age>" +
-                "<parent>" +
-                "<MyUser>" +
-                "<name>mamka</name>" +
-                "<age>0</age>" +
-                "</MyUser>" +
-                "</parent>" +
-                "</MyUser>";
+        String expectedResult = "<MyUser><name>Vasya</name><age>1</age><parent><MyUser>"
+                + "<name>mamka</name><age>0</age></MyUser></parent></MyUser>";
         assertEquals("serialize: ", expectedResult, output.toString());
     }
 
@@ -125,16 +114,8 @@ public class BinderTests {
         expectedUser.howOldAreYou = 1;
         expectedUser.parent = new MyUser();
         expectedUser.parent.name = "mamka";
-        String before = "<MyUser>" +
-                "<name>Vasya</name>" +
-                "<age>1</age>" +
-                "<parent>" +
-                "<MyUser>" +
-                "<name>mamka</name>" +
-                "<age>0</age>" +
-                "</MyUser>" +
-                "</parent>" +
-                "</MyUser>";
+        String before = "<MyUser><name>Vasya</name><age>1</age><parent><MyUser>"
+                + "<name>mamka</name><age>0</age></MyUser></parent></MyUser>";
 
         input = new ByteArrayInputStream(before.getBytes());
         output = new ByteArrayOutputStream();
@@ -148,10 +129,7 @@ public class BinderTests {
     public void parsingXMLError() throws IOException {
         try {
             MyBinder binder = factory.create(MyUser.class);
-            String before = "<MyUser>" +
-                    "<name>Vasya</name>" +
-                    "<age>1</age>" +
-                    "<parent>";
+            String before = "<MyUser><name>Vasya</name><age>1</age><parent>";
             input = new ByteArrayInputStream(before.getBytes());
             binder.deserialize(input);
         } catch (Exception e) {
