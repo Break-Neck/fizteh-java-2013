@@ -153,10 +153,10 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public Value putIntoStorage(Key key, Value value) {
-        if (key == null || key.toString().isEmpty()) {
+        if (key == null /*|| key.toString().isEmpty()*/) {
         	throw new IllegalArgumentException("key cannot be null");
         }
-        if (value == null || value.toString().isEmpty()) {
+        if (value == null/* || value.toString().isEmpty()*/) {
         	throw new IllegalArgumentException("value cannot be null");
         }
         Value oldVal =  transaction.get().getVal(key);
@@ -184,18 +184,20 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public int commitStorage() {
-    	transactionLock.lock();
-        int commitCount = transaction.get().saveModifications();
-        transaction.get().clear();
-        try {
-        	save();
-        } catch (IOException e) {
-        	System.err.println("commit error: " + e.getMessage());
-        	return 0;
+    	try{
+    		transactionLock.lock();
+        	int commitCount = transaction.get().saveModifications();
+        	transaction.get().clear();
+        	try {
+        		save();
+        	} catch (IOException e) {
+        		System.err.println("commit error: " + e.getMessage());
+        		return 0;
+        	}
+        	return commitCount;
         } finally {
         	transactionLock.unlock();
         }
-        return commitCount;
     }
     
     void rawPut(Key key, Value value) {
