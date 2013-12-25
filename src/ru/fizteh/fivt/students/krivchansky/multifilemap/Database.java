@@ -26,7 +26,7 @@ public class Database implements TableProvider {
     }
 
     public MultifileTable getTable(String name) {
-        if (name == null) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("table's name cannot be null");
         }
         checkName(name);

@@ -153,10 +153,10 @@ public abstract class SomeStorage<Key, Value> {
     }
     
     public Value putIntoStorage(Key key, Value value) {
-        if (key == null) {
+        if (key == null || key.toString().isEmpty()) {
         	throw new IllegalArgumentException("key cannot be null");
         }
-        if (value == null) {
+        if (value == null || value.toString().isEmpty()) {
         	throw new IllegalArgumentException("value cannot be null");
         }
         Value oldVal =  transaction.get().getVal(key);
