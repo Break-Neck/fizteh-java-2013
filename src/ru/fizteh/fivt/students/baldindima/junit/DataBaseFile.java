@@ -43,11 +43,11 @@ public class DataBaseFile {
                         + String.valueOf(Math.abs(curPair.getKey().getBytes("UTF-8")[0]))
                         + " in file " + fileName);
             }
-            try {
+            /*try {
                 provider.deserialize(table, (curPair.getValue()));
             } catch (ParseException e) {
                 throw new IOException("Invalid file format! (parse exception error!)");
-            }
+            }*/
         }
         return true;
     }
