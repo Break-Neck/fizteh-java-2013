@@ -354,12 +354,13 @@ public class DataBase implements Table, AutoCloseable {
                 DataBaseFile updateFile = putNewValues(nfile, newDataBase.get().get(nfile));
                 updateFile.write();
             }
+            changes.get().clear();
+            return count;
         } finally {
             writeLock.unlock();
         }
 
-        changes.get().clear();
-        return count;
+        
     }
 
     private DataBaseFile getOldMap(int nFileInMap) throws IOException {
