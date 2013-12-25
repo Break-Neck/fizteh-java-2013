@@ -45,8 +45,8 @@ public class BinderTester {
     public void mainTestSerDeser() throws IOException {
         bind = bf.create(D.class);
         bind.serialize(new D(), outStream);
-        assertEquals(outStream.toString() , "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}})");
-        buf = "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}})".getBytes();
+        assertEquals(outStream.toString() , "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}");
+        buf = "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}".getBytes();
     }
 }
 class IntAndDouble {
@@ -64,6 +64,7 @@ class C {
     double h;
     public C() {
         f = 1;
+        g = 'A';
         h = 0.69;
     }
 }
