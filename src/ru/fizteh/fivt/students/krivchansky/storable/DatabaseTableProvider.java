@@ -52,11 +52,11 @@ public class DatabaseTableProvider implements TableProvider {
 	
 	public Table getTable(String name) {
 		try {
+			tableLock.lock();
 			if (name == null || name.isEmpty()) {
 				throw new IllegalArgumentException("table cannot be null");
 			}
 			checkTableName(name);
-			tableLock.lock();
 			DatabaseTable  table = tables.get(name);
 			if (table == null) {
 				return null;
@@ -73,6 +73,7 @@ public class DatabaseTableProvider implements TableProvider {
 	
 	public Table createTable(String name, List<Class<?>> columnTypes) throws IOException {
 		try {
+			tableLock.lock();
 			if (name == null || name.isEmpty()) {
 				throw new IllegalArgumentException("table's name cannot be null");
 			}
@@ -81,7 +82,6 @@ public class DatabaseTableProvider implements TableProvider {
 				throw new IllegalArgumentException("column types cannot be null");
 			}
 			checkColumnTypes(columnTypes);
-			tableLock.lock();
 			if (tables.containsKey(name)) {
                 return null;
             }
@@ -95,6 +95,7 @@ public class DatabaseTableProvider implements TableProvider {
 	
 	public void removeTable(String name) throws IOException {
 		try {
+			tableLock.lock();
 			if (name == null || name.isEmpty()) {
 				throw new IllegalArgumentException("table's name cannot be null");
 			}
@@ -102,8 +103,6 @@ public class DatabaseTableProvider implements TableProvider {
 			if (!tables.containsKey(name)) {
 				throw new IllegalArgumentException(name + " not exists");
 			}
-			
-			tableLock.lock();
 			tables.remove(name);
 			File tableFile = new File(databaseDirPath, name);
 			GlobalUtils.deleteFile(tableFile);
