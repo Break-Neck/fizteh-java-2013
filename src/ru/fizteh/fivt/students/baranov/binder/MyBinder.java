@@ -27,6 +27,7 @@ public class MyBinder<T> implements Binder<T> {
     private Class clazz;
     private Field[] fields;
     private HashMap<String, Field> fieldMap;
+    public HashSet<String> setOfClasses;
 
     MyBinder(Class<T> newClazz) {
         this.clazz = newClazz;
@@ -121,12 +122,12 @@ public class MyBinder<T> implements Binder<T> {
             //
         }
         if (clazz.isPrimitive() || clazz.equals(String.class) || clazz.isEnum()) {
-            output.write(("<" + clazz.getName() + ">").getBytes());
+            output.write(("<" + clazz.getSimpleName() + ">").getBytes());
             output.write((valueOfClass.toString()).getBytes());
-            output.write(("</" + clazz.getName() + ">").getBytes());
+            output.write(("</" + clazz.getSimpleName() + ">").getBytes());
             return;
         }
-        output.write(("<" + clazz.getName() + ">").getBytes());
+        output.write(("<" + clazz.getSimpleName() + ">").getBytes());
         for (Field field : fields) {
             String fieldName = field.getName();
             boolean needPrintField = true;
@@ -154,7 +155,7 @@ public class MyBinder<T> implements Binder<T> {
                 printField(valueOfClass, field, fieldName, output);
             }
         }
-        output.write(("</" + clazz.getName() + ">").getBytes());
+        output.write(("</" + clazz.getSimpleName() + ">").getBytes());
     }
 
     private HashMap<String, Field> getMap(Field[] fields) {
@@ -241,6 +242,7 @@ public class MyBinder<T> implements Binder<T> {
                     //
                 }
                 MyBinderFactory factory = new MyBinderFactory();
+                factory.setOfClasses = setOfClasses;
                 MyBinder binder = factory.create(typeOfField);
                 binder.serialize(objectOfField, output);
                 output.write(("</" + fieldName + ">").getBytes());

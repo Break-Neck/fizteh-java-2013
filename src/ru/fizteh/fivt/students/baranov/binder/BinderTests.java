@@ -12,15 +12,21 @@ import static org.junit.Assert.assertSame;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class BinderTests {
     private ByteArrayInputStream input;
     private ByteArrayOutputStream output;
-    private MyBinderFactory factory = new MyBinderFactory();
-    /*@Before
-    public void test() {
+    private MyBinderFactory factory;
 
-    } */
+    @Before
+    public void init() {
+        HashSet<String> set = new HashSet<>();
+        set.add("#");
+        factory = new MyBinderFactory();
+        factory.setOfClasses = set;
+    }
 
     @Test(expected = IllegalArgumentException.class)
     public void createBinderWithNullClass() {
@@ -82,10 +88,10 @@ public class BinderTests {
         user.howOldAreYou = 19;
         output = new ByteArrayOutputStream();
         binder.serialize(user, output);
-        String expectedResult = "<ru.fizteh.fivt.students.baranov.binder.User>" +
+        String expectedResult = "<User>" +
                 "<name>Anton</name>" +
                 "<age>19</age>" +
-                "</ru.fizteh.fivt.students.baranov.binder.User>";
+                "</User>";
         assertEquals("serialize: ", expectedResult, output.toString());
     }
 
@@ -100,16 +106,16 @@ public class BinderTests {
         user.parent.name = "mamka";
         output = new ByteArrayOutputStream();
         binder.serialize(user, output);
-        String expectedResult = "<ru.fizteh.fivt.students.baranov.binder.User>" +
+        String expectedResult = "<User>" +
                 "<name>Vasya</name>" +
                 "<age>1</age>" +
                 "<parent>" +
-                "<ru.fizteh.fivt.students.baranov.binder.User>" +
+                "<User>" +
                 "<name>mamka</name>" +
                 "<age>0</age>" +
-                "</ru.fizteh.fivt.students.baranov.binder.User>" +
+                "</User>" +
                 "</parent>" +
-                "</ru.fizteh.fivt.students.baranov.binder.User>";
+                "</User>";
         assertEquals("serialize: ", expectedResult, output.toString());
     }
 
@@ -122,16 +128,16 @@ public class BinderTests {
         expectedUser.howOldAreYou = 1;
         expectedUser.parent = new User();
         expectedUser.parent.name = "mamka";
-        String before = "<ru.fizteh.fivt.students.baranov.binder.User>" +
+        String before = "<User>" +
                 "<name>Vasya</name>" +
                 "<age>1</age>" +
                 "<parent>" +
-                "<ru.fizteh.fivt.students.baranov.binder.User>" +
+                "<User>" +
                 "<name>mamka</name>" +
                 "<age>0</age>" +
-                "</ru.fizteh.fivt.students.baranov.binder.User>" +
+                "</User>" +
                 "</parent>" +
-                "</ru.fizteh.fivt.students.baranov.binder.User>";
+                "</User>";
 
         input = new ByteArrayInputStream(before.getBytes());
         output = new ByteArrayOutputStream();
@@ -143,13 +149,27 @@ public class BinderTests {
 
     @Test(expected = IOException.class)
     public void parsingXMLError() throws IOException {
-        MyBinder binder = factory.create(User.class);
-        String before = "<ru.fizteh.fivt.students.baranov.binder.User>" +
+        try {
+            MyBinder binder = factory.create(User.class);
+        String before = "<User>" +
                 "<name>Vasya</name>" +
                 "<age>1</age>" +
                 "<parent>";
         input = new ByteArrayInputStream(before.getBytes());
         binder.deserialize(input);
+        } catch (Exception e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void createBinderForClassContainsArray() throws IOException {
+        factory.create(WithArray.class);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void createBinderForClassContainsInterface() throws IOException {
+        factory.create(WithInterface.class);
     }
 }
 
@@ -158,6 +178,9 @@ class MyClassWithoutConstructor {
 }
 
 class UselessClass {
+    public UselessClass() {
+    }
+
     @DoNotBind
     boolean foo;
     @DoNotBind
@@ -174,4 +197,20 @@ class User {
     @Name("age")
     int howOldAreYou;
     User parent;
+}
+
+class WithArray {
+    public WithArray() {
+    }
+
+    int[] lol;
+}
+
+class WithInterface {
+    public WithInterface() {}
+    InterFace lol;
+}
+
+interface InterFace {
+
 }
