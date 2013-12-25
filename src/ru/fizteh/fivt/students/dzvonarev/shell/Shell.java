@@ -2,6 +2,7 @@ package ru.fizteh.fivt.students.dzvonarev.shell;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.Vector;
@@ -16,7 +17,7 @@ public class Shell {
             System.err.println("Can't get path of current directory");
             System.exit(1);
         }
-        command = new HashMap<String, CommandInterface>();  // init. map of commands
+        command = new HashMap();  // init. map of commands
         for (int i = 0; i < commandName.size(); ++i) {
             command.put(commandName.elementAt(i), commandObj.elementAt(i));
         }
@@ -65,7 +66,7 @@ public class Shell {
                 }
                 try {
                     Shell.run(value);
-                } catch (IOException e) {
+                } catch (IOException | IllegalArgumentException | IllegalStateException | IndexOutOfBoundsException e) {
                     System.out.println(e.getMessage());
                 }
             }
@@ -78,7 +79,7 @@ public class Shell {
         }
         try {     // exit our programm
             Shell.run(input);
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException | IllegalStateException | IndexOutOfBoundsException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -92,7 +93,7 @@ public class Shell {
             }
             try {
                 Shell.run(value);
-            } catch (IOException e) {
+            } catch (IOException | IllegalArgumentException | IllegalStateException | IndexOutOfBoundsException e) {
                 System.out.println(e.getMessage());
                 System.exit(1);
             }
@@ -103,10 +104,10 @@ public class Shell {
         System.out.print("$ ");
     }
 
-    public static String getAbsPath(final String Path) throws IOException {
-        File newFile = new File(Path);
+    public static String getAbsPath(final String path) throws IOException {
+        File newFile = new File(path);
         if (!newFile.isAbsolute()) {
-            newFile = new File(Shell.getCurrentDirectory(), Path);
+            newFile = new File(Shell.getCurrentDirectory(), path);
         }
         try {
             return newFile.getCanonicalPath();
@@ -115,9 +116,9 @@ public class Shell {
         }
     }
 
-    public static void run(String expression) throws IOException {
+    public static void run(String expression) throws IOException, RuntimeException {
         String newExpression = expression.trim();
-        Vector<String> args = new Vector<String>();
+        ArrayList<String> args = new ArrayList<>();
         args.add(newExpression);
         String cmdName;
         if (newExpression.indexOf(' ', 0) != -1) {

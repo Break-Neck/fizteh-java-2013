@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.commands;
 
-import ru.fizteh.fivt.students.adanilyak.modernfilemap.FileMapState;
+import ru.fizteh.fivt.students.adanilyak.filemap.FileMapGlobalState;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.List;
 public class CmdGet implements Cmd {
     private final String name = "get";
     private final int amArgs = 1;
-    private FileMapState workState;
+    private FileMapGlobalState workState = null;
 
-    public CmdGet(FileMapState dataBaseState) {
+    public CmdGet(FileMapGlobalState dataBaseState) {
         workState = dataBaseState;
     }
 
@@ -31,7 +31,7 @@ public class CmdGet implements Cmd {
 
     @Override
     public void work(List<String> args) throws IOException {
-        if (workState.currentTable != null) {
+        if (workState.getCurrentTable() != null) {
             String key = args.get(1);
             String result = workState.get(key);
             if (result == null) {

@@ -5,13 +5,13 @@ import ru.fizteh.fivt.students.eltyshev.shell.commands.CommandParser;
 
 import java.util.ArrayList;
 
-public class RemoveCommand extends AbstractCommand<FileMapShellState> {
+public class RemoveCommand<Table, Key, Value, State extends BaseFileMapShellState<Table, Key, Value>> extends AbstractCommand<State> {
     public RemoveCommand() {
         super("remove", "remove <key>");
     }
 
-    public void executeCommand(String params, FileMapShellState state) {
-        if (state.table == null) {
+    public void executeCommand(String params, State state) {
+        if (state.getTable() == null) {
             System.err.println("no table");
             return;
         }
@@ -24,7 +24,9 @@ public class RemoveCommand extends AbstractCommand<FileMapShellState> {
             throw new IllegalArgumentException("argument missing");
         }
 
-        String value = state.table.remove(parameters.get(0));
+        Key key = state.parseKey(parameters.get(0));
+        Value value = state.remove(key);
+
         if (value == null) {
             System.out.println("not found");
         } else {

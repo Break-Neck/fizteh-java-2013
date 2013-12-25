@@ -6,7 +6,7 @@ import ru.fizteh.fivt.students.mishatkin.multifilehashmap.MultiFileHashMapExcept
  * Created by Vladimir Mishatkin on 10/26/13
  */
 public interface FileMapReceiverProtocol {
-	public void putCommand(String key, String value) throws MultiFileHashMapException;
-	public void getCommand(String key) throws MultiFileHashMapException;
-	public void removeCommand(String key) throws MultiFileHashMapException;
+	public String putCommand(String key, String value) throws MultiFileHashMapException;
+	public String getCommand(String key) throws MultiFileHashMapException;
+	public String removeCommand(String key) throws MultiFileHashMapException;
 }

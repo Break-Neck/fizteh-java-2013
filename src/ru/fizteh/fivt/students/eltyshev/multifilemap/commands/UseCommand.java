@@ -1,17 +1,16 @@
 package ru.fizteh.fivt.students.eltyshev.multifilemap.commands;
 
-import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.students.eltyshev.shell.commands.AbstractCommand;
 import ru.fizteh.fivt.students.eltyshev.shell.commands.CommandParser;
 
 import java.util.ArrayList;
 
-public class UseCommand extends AbstractCommand<MultifileMapShellState> {
+public class UseCommand<Table, Key, Value, State extends BaseDatabaseShellState<Table, Key, Value>> extends AbstractCommand<State> {
     public UseCommand() {
         super("use", "use <table name>");
     }
 
-    public void executeCommand(String params, MultifileMapShellState shellState) {
+    public void executeCommand(String params, State shellState) {
         ArrayList<String> parameters = CommandParser.parseParams(params);
         if (parameters.size() > 1) {
             throw new IllegalArgumentException("too many arguments!");
@@ -21,8 +20,11 @@ public class UseCommand extends AbstractCommand<MultifileMapShellState> {
         }
         Table newTable = null;
         try {
-            newTable = shellState.tableProvider.getTable(parameters.get(0));
+            newTable = shellState.useTable(parameters.get(0));
         } catch (IllegalArgumentException e) {
+            System.err.println(String.format("wrong type (%s)", e.getMessage()));
+            return;
+        } catch (IllegalStateException e) {
             System.err.println(e.getMessage());
             return;
         }
@@ -32,10 +34,6 @@ public class UseCommand extends AbstractCommand<MultifileMapShellState> {
             return;
         }
 
-        if (shellState.table != null) {
-            shellState.table.commit();
-        }
-        shellState.table = newTable;
-        System.out.println(String.format("using %s", shellState.table.getName()));
+        System.out.println(String.format("using %s", shellState.getActiveTableName()));
     }
 }

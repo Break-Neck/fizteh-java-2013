@@ -18,14 +18,15 @@ public class CommandDrop implements Command {
 
     @Override
     public void execute(String[] args) throws IOException {
-        if (state.getTable(args[1]) == null) {
-            System.out.println(args[1] + " not exists");
+        String key = args[1];
+        if (!state.getTable(key)) {
+            System.out.println(key + " not exists");
         } else {
-            if (state.getCurrentTable() != null && state.getCurrentTable().equals(args[1])) {
+            if (state.getCurrentTable() != null && state.getCurrentTable().equals(key)) {
                 state.resetCurrentTable();
             }
             System.out.println("dropped");
-            state.removeTable(args[1]);
+            state.removeTable(key);
         }
     }
 

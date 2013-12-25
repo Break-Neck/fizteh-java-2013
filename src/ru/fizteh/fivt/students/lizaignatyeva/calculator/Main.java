@@ -86,8 +86,8 @@ class Calculator {
         while (currentToken.equals("+") || currentToken.equals("-")) {
             char buf = currentToken.charAt(0);
             getNextToken();
-            if ((!isDigit(currentToken.charAt(0))) && 
-                    (!currentToken.equals("(") && (!currentToken.equals("-")))) {
+            if ((!isDigit(currentToken.charAt(0)))
+                    && (!currentToken.equals("(") && (!currentToken.equals("-")))) {
                 String mistake = "symbol " + Character.toString(currentToken.charAt(0));
                 if (currentToken.charAt(0) == '.') {
                     mistake = "EOLN";

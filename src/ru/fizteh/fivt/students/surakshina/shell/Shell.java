@@ -1,35 +1,49 @@
 package ru.fizteh.fivt.students.surakshina.shell;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
-public abstract class Shell {
-    public String currentPath = System.getProperty("user.dir");
-    public static boolean isInteractive = false;
+public class Shell {
+    private Map<String, Command> commands = new HashMap<String, Command>();
+    public static final String INCORRECT_INPUT = "Incorrect input";
+    public static final String INCORRECT_NUMBER_OF_ARGUMENTS = "Incorrect number of arguments";
+    State state;
 
     protected void checkInput(String[] args) {
         if (args.length == 0) {
-            isInteractive = true;
+            state.isInteractive = true;
+        } else {
+            state.isInteractive = false;
         }
     }
 
+    public static Set<Command> shellCommands(State state) {
+        Set<Command> shellCommands = new HashSet<Command>();
+        shellCommands.add(new CommandCd(state));
+        shellCommands.add(new CommandCp(state));
+        shellCommands.add(new CommandDir(state));
+        shellCommands.add(new CommandMkdir(state));
+        shellCommands.add(new CommandPwd(state));
+        shellCommands.add(new CommandRm(state));
+        shellCommands.add(new CommandMv(state));
+        shellCommands.add(new CommandExit(state));
+        return shellCommands;
+
+    }
+
+    public Shell(State stateNew, Set<Command> commands) {
+        for (Command cmd : commands) {
+            this.commands.put(cmd.getName(), cmd);
+        }
+        state = stateNew;
+    }
+
     protected String[] extractArgumentsFromInputString(String input) {
-        int index = 0;
-        input = input.replaceAll("[ ]+", " ").replaceAll("[ ]+$", "");
-        Scanner scanner = new Scanner(input);
-        while (scanner.hasNext()) {
-            scanner.next();
-            ++index;
-        }
-        scanner.close();
-        String[] commands = new String[index];
-        scanner = new Scanner(input);
-        int i = 0;
-        while (scanner.hasNext()) {
-            commands[i] = scanner.next();
-            ++i;
-        }
-        scanner.close();
-        return commands;
+        return input.split("[ ]+", 3);
     }
 
     protected String makeNewInputString(String[] str) {
@@ -41,8 +55,6 @@ public abstract class Shell {
         return result.toString();
     }
 
-    protected abstract void executeProcess(String[] input);
-
     protected void doPackageMode(String[] input) {
         String newInput = makeNewInputString(input);
         Scanner scanner = new Scanner(newInput);
@@ -51,16 +63,30 @@ public abstract class Shell {
             String current = scanner.next();
             current = rewriteInput(current);
             if (!current.isEmpty()) {
-                executeProcess(extractArgumentsFromInputString(current));
+                doCommand(extractArgumentsFromInputString(current));
             } else {
-                printError("Incorrect input");
+                printError(INCORRECT_INPUT);
             }
         }
         scanner.close();
     }
 
+    private void doCommand(String[] cmd) {
+        String currentCmd = cmd[0];
+        if (commands.containsKey(currentCmd)) {
+            if (commands.get(currentCmd).numberOfArguments() == (cmd.length - 1)) {
+                commands.get(currentCmd).executeProcess(cmd);
+            } else {
+                printError(INCORRECT_NUMBER_OF_ARGUMENTS);
+            }
+        } else {
+            printError(INCORRECT_INPUT);
+        }
+
+    }
+
     protected void printError(String s) {
-        if (isInteractive) {
+        if (state.isInteractive) {
             System.out.println(s);
         } else {
             System.err.println(s);
@@ -68,8 +94,8 @@ public abstract class Shell {
         }
     }
 
-    protected String rewriteInput(String current) {
-        return current.replaceAll("[ ]+", " ").replaceAll("[ ]+$", "");
+    private String rewriteInput(String current) {
+        return current.trim();
     }
 
     private void parseString() {
@@ -83,14 +109,8 @@ public abstract class Shell {
             while (scanner1.hasNext()) {
                 String current = scanner1.next();
                 current = rewriteInput(current);
-                if (current.equals("exit")) {
-                    scanner.close();
-                    scanner1.close();
-                    return;
-                } else {
-                    if (!current.isEmpty()) {
-                        executeProcess(extractArgumentsFromInputString(current));
-                    }
+                if (!current.isEmpty()) {
+                    doCommand(extractArgumentsFromInputString(current));
                 }
             }
             System.out.print("$ ");
@@ -100,16 +120,23 @@ public abstract class Shell {
     }
 
     protected void doInteractiveMode() {
-        System.out.print("$ ");
+        System.out.print(" $ ");
         parseString();
     }
 
-    public void workWithShell(String[] args) {
+    public static void main(String[] args) {
+        State state = new State(new File(System.getProperty("user.dir")));
+        Shell sh = new Shell(state, shellCommands(state));
+        sh.startWork(args);
+    }
+
+    public void startWork(String[] args) {
         checkInput(args);
-        if (isInteractive) {
+        if (state.isInteractive) {
             doInteractiveMode();
         } else {
             doPackageMode(args);
         }
+
     }
 }

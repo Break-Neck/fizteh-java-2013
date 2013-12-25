@@ -19,7 +19,7 @@ public class PwdCommand implements Command {
         System.out.println(curState.getCurDir().getAbsolutePath());
     }
 
-    public int getArgsCount() {
-        return 0;
+    public boolean compareArgsCount(int inputArgsCount) {
+        return (inputArgsCount == 0);
     }
 }

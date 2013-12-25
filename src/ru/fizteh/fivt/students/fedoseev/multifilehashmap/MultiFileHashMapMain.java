@@ -26,9 +26,9 @@ public class MultiFileHashMapMain {
             AbstractMultiFileHashMap multiFileHashMap = new AbstractMultiFileHashMap(dbDir);
 
             if (args.length != 0) {
-                multiFileHashMap.BatchMode(args);
+                multiFileHashMap.batchMode(args);
             } else {
-                multiFileHashMap.InteractiveMode();
+                multiFileHashMap.interactiveMode();
             }
         } catch (NullPointerException e) {
             System.err.println("ERROR: cannot get property\n");

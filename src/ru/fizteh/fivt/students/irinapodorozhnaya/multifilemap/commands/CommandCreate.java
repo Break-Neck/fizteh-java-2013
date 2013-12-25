@@ -18,7 +18,7 @@ public class CommandCreate extends AbstractCommand{
     
     public void execute(String[] args) throws IOException {
         try {
-            state.create(args[1]);
+            state.create(args[1], null);
         } catch (IllegalArgumentException e) {
             throw new IOException(e.getMessage());
         }

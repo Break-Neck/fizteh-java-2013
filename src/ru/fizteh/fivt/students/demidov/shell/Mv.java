@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
+import ru.fizteh.fivt.students.demidov.basicclasses.BasicCommand;
+
 public class Mv implements BasicCommand {
 	public void executeCommand(String[] arguments, Shell usedShell) throws IOException {	
 		File source = Utils.getFile(arguments[0], usedShell);

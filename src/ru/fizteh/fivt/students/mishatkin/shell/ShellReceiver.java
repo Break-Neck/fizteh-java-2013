@@ -12,11 +12,19 @@ import java.nio.file.Files;
 public class ShellReceiver implements CommandReceiver{
 	protected boolean interactiveMode;
 
-	protected PrintStream out;
+	private ShellPrintStream out;
 
 	private File shellPath;
 
+	public ShellReceiver() {
+		this((ShellPrintStream) null, false);
+	}
+
 	public ShellReceiver(PrintStream out, boolean interactiveMode) {
+		this(new ShellPrintStream(out), interactiveMode);
+	}
+
+	public ShellReceiver(ShellPrintStream out, boolean interactiveMode) {
 		this.out = out;
 		this.interactiveMode = interactiveMode;
 		shellPath = new File(".");
@@ -26,17 +34,20 @@ public class ShellReceiver implements CommandReceiver{
 
 		}
 	}
-
 	public boolean isInteractiveMode() {
 		return interactiveMode;
 	}
 
-	private void print(String s) {
+	protected ShellPrintStream getOut() {
+		return out;
+	}
+
+	public void print(String s) {
 		out.print(s);
 	}
 
-	private void println(String s) {
-	out.println(s);
+	public void println(String s) {
+		out.println(s);
 	}
 
 	public void showPrompt() {

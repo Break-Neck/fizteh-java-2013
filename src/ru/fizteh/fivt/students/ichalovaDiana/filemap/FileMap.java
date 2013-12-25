@@ -1,29 +1,55 @@
 package ru.fizteh.fivt.students.ichalovaDiana.filemap;
 
-import java.util.Hashtable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 import ru.fizteh.fivt.students.ichalovaDiana.shell.Command;
 import ru.fizteh.fivt.students.ichalovaDiana.shell.Interpreter;
 
 public class FileMap {
 
-    private static Hashtable<String, Command> commands = new Hashtable<String, Command>();
+    private static Map<String, Command> commands = new HashMap<String, Command>();
     private static Interpreter interpreter;
     
-    private static TableProvider database;
+    private static TableProviderImplementation database;
     private static TableImplementation table;
     private static String currentTableName; // delete?
-
+    
+    private static JettyServer server;
+    
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                if (server != null && server.isStarted()) {
+                    try {
+                        server.stop();
+                    } catch (Exception e) {
+                    }
+                }
+                
+                try {
+                    database.close();
+                } catch (Exception e) {
+                }
+            }
+        });
+    }
+    
     static {
         try {
-
             String dbDir = System.getProperty("fizteh.db.dir");
 
             TableProviderFactory factory = new TableProviderFactoryImplementation();
-            database = factory.create(dbDir);
+            database = (TableProviderImplementation) factory.create(dbDir);
+            
+            server = new JettyServer(database);
             
         } catch (Exception e) {
             System.out.println(((e.getMessage() != null) ? e.getMessage() : "unknown error"));
@@ -39,6 +65,8 @@ public class FileMap {
         commands.put("commit", new Commit());
         commands.put("rollback", new Rollback());
         commands.put("size", new Size());
+        commands.put("starthttp", new StartHTTP());
+        commands.put("stophttp", new StopHTTP());
         commands.put("exit", new Exit());
 
         interpreter = new Interpreter(commands);
@@ -54,7 +82,8 @@ public class FileMap {
 
     static class Create extends Command {
         static final int ARG_NUM = 2;
-
+        public boolean rawArgumentsNeeded = true;
+        
         @Override
         protected void execute(String... arguments) throws Exception {
             try {
@@ -63,24 +92,56 @@ public class FileMap {
                     throw new IllegalArgumentException("Illegal number of arguments");
                 }
 
-                String tableName = arguments[1];
+                String[] parsedArguments = arguments[1].split("\\s+", 2);
+                if (parsedArguments.length != 2) {
+                    throw new IllegalArgumentException("Illegal number of arguments");
+                }
                 
-                Table newTable = database.createTable(tableName);
+                String tableName = parsedArguments[0];
+                
+                if (!parsedArguments[1].matches("\\(([A-Za-z]+\\s*)*\\)")) {
+                    throw new ColumnFormatException("Invalid column types");
+                }
+                String[] types = parsedArguments[1].substring(1, parsedArguments[1].length() - 1).split("\\s+");
+                
+                List<Class<?>> columnTypes = new ArrayList<Class<?>>();
+                for (int i = 0; i < types.length; ++i) {
+                    columnTypes.add(forName(types[i]));
+                }
+                
+                
+                Table newTable = database.createTable(tableName, columnTypes);
                 
                 if (newTable == null) {
                     System.out.println(tableName + " exists");
                 } else {
                     System.out.println("created");
                 }
-
+            
+            } catch (ColumnFormatException e) {
+                throw new ColumnFormatException("wrong type (" + e.getMessage() + ")", e);
             } catch (Exception e) {
-                throw new Exception(arguments[0] + ": " + e.getMessage());
+                throw new Exception(e.getMessage());
             }
+        }
+        
+        private static Class<?> forName(String className) {
+            Map<String, Class<?>> types = new HashMap<String, Class<?>>();
+            types.put("int", Integer.class);
+            types.put("long", Long.class);
+            types.put("byte", Byte.class);
+            types.put("float", Float.class);
+            types.put("double", Double.class);
+            types.put("boolean", Boolean.class);
+            types.put("String", String.class);
+            
+            return types.get(className);
         }
     }
 
     static class Drop extends Command {
         static final int ARG_NUM = 2;
+        public boolean rawArgumentsNeeded = false;
 
         @Override
         protected void execute(String... arguments) throws Exception {
@@ -96,10 +157,11 @@ public class FileMap {
                     database.removeTable(tableName);
                 } catch (IllegalStateException e) {
                     System.out.println(tableName + " not exists");
+                    return;
                 }
                 System.out.println("dropped");
                 
-                if (FileMap.currentTableName.equals(tableName)) {
+                if (currentTableName != null && FileMap.currentTableName.equals(tableName)) {
                     FileMap.currentTableName = null;
                 }
 
@@ -111,6 +173,7 @@ public class FileMap {
 
     static class Use extends Command {
         static final int ARG_NUM = 2;
+        public boolean rawArgumentsNeeded = false;
 
         @Override
         protected void execute(String... arguments) throws Exception {
@@ -123,7 +186,7 @@ public class FileMap {
                 String tableName = arguments[1];
                 
                 if (FileMap.table != null) {
-                    int changesNumber = FileMap.table.countChanges();
+                    int changesNumber = FileMap.table.countChanges(TableImplementation.NO_TRANSACTION);
                     if (changesNumber > 0) {
                         System.out.println(changesNumber + " unsaved changes");
                         return;
@@ -148,30 +211,38 @@ public class FileMap {
     
 
     static class Put extends Command {
-        static final int ARG_NUM = 3;
+        static final int ARG_NUM = 2;
+        public boolean rawArgumentsNeeded = true;
 
         @Override
         protected void execute(String... arguments) throws Exception {
             try {
 
-                if (arguments.length < ARG_NUM) {
+                if (arguments.length != ARG_NUM) {
                     throw new IllegalArgumentException("Illegal number of arguments");
                 }
-
-                String key = arguments[1];
-
-                StringBuilder concatArgs = new StringBuilder();
-                for (int i = 2; i < arguments.length; ++i) {
-                    concatArgs.append(arguments[i]).append(" ");
+                
+                String[] parsedArguments = arguments[1].trim().split("\\s+", 2);
+                if (parsedArguments.length != 2) {
+                    throw new IllegalArgumentException("Illegal number of arguments");
                 }
-                String value = concatArgs.toString();
+                
+                String key = parsedArguments[0];
+                String value = parsedArguments[1];
                 
                 if (FileMap.currentTableName == null) {
                     System.out.println("no table");
                     return;
                 }
                 
-                String oldValue = table.put(key, value);
+                Storeable oldValueStoreable;
+                try {
+                    oldValueStoreable = table.put(key, FileMap.database.deserialize(table, value));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("wrong type (" + e.getMessage() + ")", e);
+                }
+                
+                String oldValue = FileMap.database.serialize(table, oldValueStoreable);
                 if (oldValue != null) {
                     System.out.println("overwrite");
                     System.out.println(oldValue);
@@ -180,13 +251,14 @@ public class FileMap {
                 }
                 
             } catch (Exception e) {
-                throw new Exception(arguments[0] + ": " + e.getMessage());
+                throw new Exception(e.getMessage());
             }
         }
     }
 
     static class Get extends Command {
         static final int ARG_NUM = 2;
+        public boolean rawArgumentsNeeded = false;
 
         @Override
         protected void execute(String... arguments) throws Exception {
@@ -203,7 +275,7 @@ public class FileMap {
                     return;
                 }
 
-                String value = table.get(key);
+                String value = FileMap.database.serialize(table, table.get(key));
 
                 if (value != null) {
                     System.out.println("found");
@@ -220,6 +292,7 @@ public class FileMap {
 
     static class Remove extends Command {
         static final int ARG_NUM = 2;
+        public boolean rawArgumentsNeeded = false;
 
         @Override
         protected void execute(String... arguments) throws Exception {
@@ -236,7 +309,7 @@ public class FileMap {
                     return;
                 }
 
-                String value = table.remove(key);
+                String value = FileMap.database.serialize(table, table.remove(key));
 
                 if (value != null) {
                     System.out.println("removed");
@@ -252,6 +325,7 @@ public class FileMap {
     
     static class Commit extends Command {
         static final int ARG_NUM = 1;
+        public boolean rawArgumentsNeeded = false;
 
         @Override
         protected void execute(String... arguments) throws Exception {
@@ -278,6 +352,7 @@ public class FileMap {
     
     static class Rollback extends Command {
         static final int ARG_NUM = 1;
+        public boolean rawArgumentsNeeded = false;
 
         @Override
         protected void execute(String... arguments) throws Exception {
@@ -304,6 +379,7 @@ public class FileMap {
     
     static class Size extends Command {
         static final int ARG_NUM = 1;
+        public boolean rawArgumentsNeeded = false;
 
         @Override
         protected void execute(String... arguments) throws Exception {
@@ -327,9 +403,68 @@ public class FileMap {
             }
         }
     }
+    
+    static class StartHTTP extends Command {
+        static final int ARG_NUM = 1;
+        public boolean rawArgumentsNeeded = false;
+
+        @Override
+        protected void execute(String... arguments) throws Exception {
+            try {
+
+                if (arguments.length != ARG_NUM && arguments.length != ARG_NUM + 1) {
+                    throw new IllegalArgumentException("Illegal number of arguments");
+                }
+                
+                if (arguments.length == ARG_NUM + 1) {
+                    int port = Integer.parseInt(arguments[1]);
+                    server.init(port);
+                } else {
+                    server.init();
+                }
+                
+                server.start();
+                
+                System.out.println("started at " + server.getPort());
+                
+            } catch (Exception e) {
+                throw new Exception(arguments[0] + ": not started: " + e.getMessage());
+            }
+            
+        }
+        
+    }
+
+    static class StopHTTP extends Command {
+        static final int ARG_NUM = 1;
+        public boolean rawArgumentsNeeded = false;
+
+        @Override
+        protected void execute(String... arguments) throws Exception {
+            try {
+
+                if (arguments.length != ARG_NUM) {
+                    throw new IllegalArgumentException("Illegal number of arguments");
+                }
+                
+                if (server.isStarted()) {
+                    server.stop();
+                    System.out.println("stopped at " + server.getPort());
+                } else {
+                    System.out.println("not started");
+                }
+                
+            } catch (Exception e) {
+                throw new Exception(arguments[0] + ": " + e.getMessage());
+            }
+            
+        }
+        
+    }
 
     static class Exit extends Command {
         static final int ARG_NUM = 1;
+        public boolean rawArgumentsNeeded = false;
 
         @Override
         protected void execute(String... arguments) throws Exception {

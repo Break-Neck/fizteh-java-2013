@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Arrays;
 
+import ru.fizteh.fivt.students.demidov.basicclasses.BasicCommand;
+
 public class Shell {
 	public ShellMethods curShell;
 	
@@ -17,6 +19,11 @@ public class Shell {
 	}
 	
 	public static class ShellMethods {		
+		private String currentDirectory;
+		private final InputStream inStream;
+		private final PrintStream outStream;
+		private final Map<String, BasicCommand> loadedCommands;
+		
 		public ShellMethods(String newCurrentDirectory, InputStream newInStream, PrintStream newOutStream) {
 				currentDirectory = newCurrentDirectory;
 				inStream = newInStream;
@@ -47,11 +54,6 @@ public class Shell {
 		public BasicCommand getCommandToExecute(String commandName) {
 			return loadedCommands.get(commandName);
 		}
-		
-		private String currentDirectory;
-		private final InputStream inStream;
-		private final PrintStream outStream;
-		private final Map<String, BasicCommand> loadedCommands;
 	}
 	
 	public void startShell(String[] arguments) {		
@@ -99,7 +101,7 @@ public class Shell {
 
 	private void doInstructions(String instructions, ShellMethods curShell) throws IOException, ShellInterruptionException {
 		for (String instruction : instructions.trim().split("\\s*;\\s*", -1)) {
-			executeInstruction(instruction.split("\\s+"), curShell);
+			executeInstruction(instruction.split("\\s+(?![^\\(]*\\))"), curShell);
 		}
 	}
 

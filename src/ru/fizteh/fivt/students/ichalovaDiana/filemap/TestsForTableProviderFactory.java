@@ -1,63 +1,49 @@
 package ru.fizteh.fivt.students.ichalovaDiana.filemap;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class TestsForTableProviderFactory {
-    static Path databaseDirectory;
-    static TableProviderFactory tableProviderFactory;
-    
-    @BeforeClass
-    public static void createDatabase() throws IOException {
-        databaseDirectory = Files.createTempDirectory(Paths.get(System.getProperty("user.dir")), null);
-    }
+    TableProviderFactory tableProviderFactory;
     
     @Before
-    public void createTableProviderFactory() {
+    public void createTable() throws IOException {
         tableProviderFactory = new TableProviderFactoryImplementation();
     }
     
-    @AfterClass
-    public static void deleteDatabase() throws IOException {
-        FileUtils.resursiveDelete(databaseDirectory);
+    @Test(expected = IOException.class)
+    public void createNonExisting() throws IOException {
+        tableProviderFactory.create("smth" + File.separator + "not-exists");
     }
     
     @Test(expected = IllegalArgumentException.class)
-    public void createNonExisting() {
-        tableProviderFactory.create("not-exists");
-    }
-    
-    @Test(expected = IllegalArgumentException.class)
-    public void createNullDir() {
+    public void createNullDir() throws IOException {
         tableProviderFactory.create(null);
     }
     
     @Test(expected = IllegalArgumentException.class)
-    public void createEmptyDir() {
+    public void createEmptyDir() throws IOException {
         tableProviderFactory.create("");
     }
     
     @Test(expected = IllegalArgumentException.class)
-    public void createWhitespaceDir() {
+    public void createWhitespaceDir() throws IOException {
         tableProviderFactory.create("\t \n  ");
     }
     
-    @Test(expected = IllegalArgumentException.class)
-    public void createDirWithSlash() {
-        tableProviderFactory.create("../table");
+    @Test
+    public void createDirWithBackSlash() throws IOException {
+        tableProviderFactory.create("..\\table");
+        Assert.assertTrue(Files.exists(Paths.get("..\\table")));
     }
     
-    @Test(expected = IllegalArgumentException.class)
-    public void createDirWithBackSlash() {
-        tableProviderFactory.create("..\table");
-    }
 }

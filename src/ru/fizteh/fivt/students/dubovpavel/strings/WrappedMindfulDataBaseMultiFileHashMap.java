@@ -1,47 +1,68 @@
 package ru.fizteh.fivt.students.dubovpavel.strings;
 
-import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.students.dubovpavel.executor.Dispatcher;
-import ru.fizteh.fivt.students.dubovpavel.multifilehashmap.DispatcherMultiFileHashMap;
+import ru.fizteh.fivt.students.dubovpavel.filemap.DataBaseHandler;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
-public class WrappedMindfulDataBaseMultiFileHashMap extends MindfulDataBaseMultiFileHashMap implements Table {
-    DispatcherMultiFileHashMap dispatcher;
+public class WrappedMindfulDataBaseMultiFileHashMap<V> extends MindfulDataBaseMultiFileHashMap<V> {
+    private Dispatcher dispatcher;
+    private static final Pattern WHITESPACE_PATTERN;
 
-    public WrappedMindfulDataBaseMultiFileHashMap(File path, DispatcherMultiFileHashMap dispatcherMultiFileHashMap) {
-        super(path);
-        dispatcher = dispatcherMultiFileHashMap;
+    static {
+        WHITESPACE_PATTERN = Pattern.compile("\\s");
     }
-    @Override
-    public String get(String key) {
-        if(key == null) {
+
+    public WrappedMindfulDataBaseMultiFileHashMap(File path, Dispatcher dispatcher, ObjectTransformer<V> transformer) {
+        super(path, transformer);
+        this.dispatcher = dispatcher;
+    }
+
+    protected void checkGetInput(String key) {
+        if (key == null) {
             throw new IllegalArgumentException();
         }
+    }
+
+    @Override
+    public V get(String key) {
+        checkGetInput(key);
         return super.get(key);
     }
-    @Override
-    public String put(String key, String value) {
-        if(key == null || value == null || key.isEmpty() || key.contains("\n") || value.contains("\n")) {
+
+    protected void checkPutInput(String key, V value) {
+        if (key == null || key.isEmpty() || WHITESPACE_PATTERN.matcher(key).find()) {
             throw new IllegalArgumentException();
         }
+    }
+
+    @Override
+    public V put(String key, V value) {
+        checkPutInput(key, value);
         return super.put(key, value);
     }
-    @Override
-    public String remove(String key) {
-        if(key == null) {
+
+    protected void checkRemoveInput(String key) {
+        if (key == null) {
             throw new IllegalArgumentException();
         }
+    }
+
+    @Override
+    public V remove(String key) {
+        checkRemoveInput(key);
         return super.remove(key);
     }
+
     @Override
     public int commit() {
         try {
             return super.commit();
-        } catch (DataBaseException e) {
+        } catch (DataBaseHandler.DataBaseException e) {
             dispatcher.callbackWriter(Dispatcher.MessageType.ERROR,
                     String.format("Database %s: %s", getName(), e.getMessage()));
         }
-        return 0;
+        return -1;
     }
 }

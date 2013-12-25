@@ -1,22 +1,24 @@
 package ru.fizteh.fivt.students.dmitryIvanovsky.fileMap;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import ru.fizteh.fivt.students.dmitryIvanovsky.shell.CommandLauncher;
 import ru.fizteh.fivt.students.dmitryIvanovsky.shell.CommandLauncher.Code;
 
 public class DbMain {
+
     public static void main(String[] args) throws IOException {
         //args = new String[]{"get ключ; get key; get 123"};
         //String path = "/home/deamoon/Music/deamoonSql";
 
         try {
             String path = System.getProperty("fizteh.db.dir");
+            if (path == null) {
+                throw new IllegalArgumentException("path can't be null");
+            }
             Path pathTables = Paths.get(".").resolve(path);
             runDb(args, pathTables.toFile().getCanonicalPath());
-
         } catch (Exception e) {
             System.out.println("Error loading");
             FileMapUtils.getMessage(e);
@@ -28,7 +30,7 @@ public class DbMain {
         FileMapProvider fileMapCommand = null;
         try {
             FileMapProviderFactory factory = new FileMapProviderFactory();
-            fileMapCommand = factory.create(path);
+            fileMapCommand = (FileMapProvider) factory.create(path);
         } catch (Exception e) {
             System.err.println("Error loading database");
             FileMapUtils.getMessage(e);

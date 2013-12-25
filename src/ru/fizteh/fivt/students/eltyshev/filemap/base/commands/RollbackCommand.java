@@ -4,19 +4,19 @@ import ru.fizteh.fivt.students.eltyshev.shell.commands.AbstractCommand;
 import ru.fizteh.fivt.students.eltyshev.shell.commands.CommandParser;
 
 
-public class RollbackCommand extends AbstractCommand<FileMapShellState> {
+public class RollbackCommand<State extends BaseFileMapShellState> extends AbstractCommand<State> {
     public RollbackCommand() {
         super("rollback", "rollback");
     }
 
-    public void executeCommand(String params, FileMapShellState state) {
+    public void executeCommand(String params, State state) {
         if (CommandParser.getParametersCount(params) > 0) {
             throw new IllegalArgumentException("too many parameters");
         }
-        if (state.table == null) {
+        if (state.getTable() == null) {
             System.err.println("no table");
             return;
         }
-        state.table.rollback();
+        System.out.println(state.rollback());
     }
 }

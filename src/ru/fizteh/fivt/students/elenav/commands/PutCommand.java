@@ -1,29 +1,34 @@
 package ru.fizteh.fivt.students.elenav.commands;
 
-import java.io.PrintStream;
+import java.io.IOException;
+import java.text.ParseException;
+
+import javax.xml.stream.XMLStreamException;
 
 import ru.fizteh.fivt.students.elenav.states.FilesystemState;
-import ru.fizteh.fivt.students.elenav.states.MonoMultiAbstractState;
 
 public class PutCommand extends AbstractCommand {
 
-	public PutCommand(FilesystemState s) {
-		super(s, "put", 2);
-	}
+    public PutCommand(FilesystemState s) {
+        super(s, "put", 2);
+    }
 
-	public void execute(String[] args, PrintStream s) {
-		MonoMultiAbstractState fileMap = (MonoMultiAbstractState) getState();
-		if (fileMap.getWorkingDirectory() == null) {
-			getState().getStream().println("no table");
-		} else {
-			String result = fileMap.put(args[1], args[2]);
-			if (result != null) {
-				getState().getStream().println("overwrite");
-				getState().getStream().println(result);
-			}
-			else {
-				getState().getStream().println("new");
-			}
-		}
-	}	
+    public void execute(String[] args) throws IOException {
+        FilesystemState table = getState();
+        if (table.getWorkingDirectory() == null) {
+            getState().getStream().println("no table");
+        } else {
+            try {
+                if (table.getValue(args[1]) != null) {
+                    getState().getStream().println("overwrite");
+                    getState().getStream().println(table.put(args[1], args[2]));
+                } else {
+                    table.put(args[1], args[2]);
+                    getState().getStream().println("new");
+                }
+            } catch (ParseException | XMLStreamException e) {
+                System.err.println("invalid input: " + e.getMessage());
+            }
+        }
+    }    
 }

@@ -8,7 +8,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class FileUtils {
-    public static void resursiveDelete(Path directory) throws IOException {
+    public static void recursiveDelete(Path directory) throws IOException {
         Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)

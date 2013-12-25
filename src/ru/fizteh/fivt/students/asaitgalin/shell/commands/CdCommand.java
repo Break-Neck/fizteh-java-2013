@@ -1,11 +1,11 @@
 package ru.fizteh.fivt.students.asaitgalin.shell.commands;
 
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
 import ru.fizteh.fivt.students.asaitgalin.shell.FilesystemController;
 
 import java.io.IOException;
 
-public class CdCommand implements Command {
+public class CdCommand extends DefaultCommand {
     private FilesystemController controller;
 
     public CdCommand(FilesystemController controller) {

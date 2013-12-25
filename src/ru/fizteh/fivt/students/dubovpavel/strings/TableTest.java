@@ -4,18 +4,18 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import ru.fizteh.fivt.students.dubovpavel.multifilehashmap.DispatcherMultiFileHashMap;
+import ru.fizteh.fivt.students.dubovpavel.executor.Dispatcher;
 
 import java.io.File;
 
 public class TableTest {
-    private WrappedMindfulDataBaseMultiFileHashMap db;
-    private DispatcherMultiFileHashMap dispatcher;
+    private StringWrappedMindfulDataBaseMultiFileHashMap db;
+    private Dispatcher dispatcher;
     private File path;
 
     private void cleanRecursively(File pointer) {
-        if(pointer.isDirectory()) {
-            for(File sub: pointer.listFiles()) {
+        if (pointer.isDirectory()) {
+            for (File sub : pointer.listFiles()) {
                 cleanRecursively(sub);
             }
         }
@@ -27,11 +27,11 @@ public class TableTest {
         String homeDir = System.getProperty("user.home");
         path = new File(homeDir, "sandbox/strings");
         cleanRecursively(path);
-        path.mkdirs();
-        dispatcher = new DispatcherMultiFileHashMap(false, false, path.getPath(), null);
+        assert (path.mkdirs());
+        dispatcher = new Dispatcher(false);
         File tablePath = new File(path, "tableName");
-        tablePath.mkdir();
-        db = new WrappedMindfulDataBaseMultiFileHashMap(tablePath, dispatcher);
+        assert (tablePath.mkdir());
+        db = new StringWrappedMindfulDataBaseMultiFileHashMap(tablePath, dispatcher);
     }
 
     @After
@@ -39,7 +39,7 @@ public class TableTest {
         cleanRecursively(path);
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testGetNull() {
         db.get(null);
     }
@@ -50,7 +50,7 @@ public class TableTest {
         Assert.assertEquals("value", db.get("key"));
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testPutNullValue() {
         db.put("key", null);
     }
@@ -72,7 +72,7 @@ public class TableTest {
         Assert.assertEquals(db.get("key"), "value");
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testRemoveNull() {
         db.remove(null);
     }

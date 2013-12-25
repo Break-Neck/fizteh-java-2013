@@ -29,11 +29,7 @@ public class RmCommand extends Command {
             temp = new File(myState.workingDirectory, args[0]);
         }
         File file = temp;
-        if (!recRemove(file)) {
-            return false;
-        } else {
-            return true;
-        }
+        return recRemove(file);
     }
 
     public String getCmd() {

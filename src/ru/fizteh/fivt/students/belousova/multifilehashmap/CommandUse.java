@@ -19,7 +19,7 @@ public class CommandUse implements Command {
     @Override
     public void execute(String[] args) throws IOException {
         String tableName = args[1];
-        if (state.getTable(tableName) == null) {
+        if (!state.getTable(tableName)) {
             System.out.println(tableName + " not exists");
         } else {
             if (state.getCurrentTable() != null) {
@@ -31,8 +31,6 @@ public class CommandUse implements Command {
             state.setCurrentTable(tableName);
             System.out.println("using " + tableName);
         }
-
-
     }
 
     @Override

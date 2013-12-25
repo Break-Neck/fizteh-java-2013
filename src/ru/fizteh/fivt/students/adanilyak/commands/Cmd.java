@@ -1,5 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.commands;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -12,5 +13,5 @@ public interface Cmd {
 
     int getAmArgs();
 
-    void work(List<String> args) throws Exception;
+    void work(List<String> args) throws IOException;
 }

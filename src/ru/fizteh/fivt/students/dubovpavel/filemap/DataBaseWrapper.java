@@ -4,16 +4,13 @@ import ru.fizteh.fivt.students.dubovpavel.executor.Dispatcher;
 
 import java.io.File;
 
-public class DataBaseWrapper extends DataBase  {
-    private DispatcherFileMap dispatcher;
-
+public class DataBaseWrapper extends DataBase {
     public DataBaseWrapper(String directory, DispatcherFileMap dispatcher) {
-        super(new File(directory, "db.dat"));
+        super(new File(directory, "db.dat"), new StringSerial());
         try {
             open();
-        } catch(DataBaseException e) {
+        } catch (DataBaseException e) {
             dispatcher.callbackWriter(Dispatcher.MessageType.WARNING, e.getMessage());
         }
-        this.dispatcher = dispatcher;
     }
 }

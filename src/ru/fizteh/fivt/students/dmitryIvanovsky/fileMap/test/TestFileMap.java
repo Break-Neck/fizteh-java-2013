@@ -1,41 +1,51 @@
 package ru.fizteh.fivt.students.dmitryIvanovsky.fileMap.test;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import ru.fizteh.fivt.storage.strings.Table;
+import org.junit.*;
+import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.students.dmitryIvanovsky.fileMap.FileMap;
+import ru.fizteh.fivt.students.dmitryIvanovsky.fileMap.FileMapProvider;
 import ru.fizteh.fivt.students.dmitryIvanovsky.fileMap.FileMapUtils;
 import ru.fizteh.fivt.students.dmitryIvanovsky.shell.CommandShell;
-import ru.fizteh.fivt.students.dmitryIvanovsky.shell.ErrorShell;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 
 public class TestFileMap {
 
-    private static Table fileMap;
-    private static String nameTable;
-    private static CommandShell mySystem;
-    private static Path pathTables;
+    private FileMap fileMap;
+    private String nameTable;
+    private CommandShell mySystem;
+    private Path pathTables;
+    private FileMapProvider multiMap;
 
-    @BeforeClass
-    public static void setUp() {
-        nameTable = "1_table";
+    @Before
+    public void setUp() {
+
         pathTables = Paths.get(".");
         mySystem = new CommandShell(pathTables.toString(), false, false);
-
+        pathTables = pathTables.resolve("bdTest");
         try {
-            mySystem.mkdir(new String[]{pathTables.resolve(nameTable).toString()});
-        } catch (ErrorShell e) {
-            e.printStackTrace();
-        }
-
-        try {
-            fileMap = new FileMap(pathTables, nameTable);
+            mySystem.mkdir(new String[]{pathTables.toString()});
+            multiMap = new FileMapProvider(pathTables.toAbsolutePath().toString());
         } catch (Exception e) {
             e.printStackTrace();
             FileMapUtils.getMessage(e);
+        }
+
+        List<Class<?>> list = new ArrayList<Class<?>>();
+        list.add(String.class);
+        list.add(Integer.class);
+
+        try {
+            nameTable = "table";
+            fileMap = (FileMap) multiMap.createTable("table", list);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }
@@ -51,42 +61,39 @@ public class TestFileMap {
     }
 
     @Test
-    public void getPutOneKey() {
-        fileMap.put("1", "2");
-        assertEquals("2", fileMap.get("1"));
-        fileMap.put("1", "3");
-        assertEquals("3", fileMap.get("1"));
-        fileMap.put("1", "2");
-        assertEquals("2", fileMap.get("1"));
+    public void getPutOneKey() throws ParseException {
+        Storeable st = multiMap.deserialize(fileMap, "<row><col>qwe</col><col>12</col></row>");
+        fileMap.put("1", st);
+        assertEquals(st, fileMap.get("1"));
         fileMap.remove("1");
     }
 
     @Test
-    public void getPutManyKey() {
-        fileMap.put("qwe1", "345");
-        fileMap.put("qwe2", "123");
-        assertEquals("123", fileMap.get("qwe2"));
-        fileMap.put("qwe3", "456");
-        fileMap.put("qwe4", "789");
-        assertEquals("789", fileMap.get("qwe4"));
-        fileMap.put("1", "1");
-        fileMap.put("1", "2");
-        fileMap.put("1", "3");
-        assertEquals("3", fileMap.get("1"));
-        fileMap.remove("qwe1");
-        fileMap.remove("qwe2");
-        fileMap.remove("qwe3");
-        fileMap.remove("qwe4");
+    public void getPutManyKey() throws ParseException {
+        Storeable st1 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>1</col></row>");
+        fileMap.put("1", st1);
+        Storeable st2 = multiMap.deserialize(fileMap, "<row><col>qwe2</col><col>2</col></row>");
+        fileMap.put("2", st2);
+        Storeable st3 = multiMap.deserialize(fileMap, "<row><col>qwe3</col><col>3</col></row>");
+        fileMap.put("3", st3);
+        Storeable st4 = multiMap.deserialize(fileMap, "<row><col>qwe4</col><col>4</col></row>");
+        fileMap.put("4", st4);
+        assertEquals(st1, fileMap.get("1"));
+        assertEquals(st4, fileMap.get("4"));
+        assertEquals(st3, fileMap.get("3"));
         fileMap.remove("1");
         fileMap.remove("2");
+        fileMap.remove("3");
+        fileMap.remove("4");
     }
 
     @Test
-    public void correctSizeAfterPut() {
-        fileMap.put("1", "123");
-        fileMap.put("2", "123");
-        fileMap.put("3", "123");
-        fileMap.put("4", "123");
+    public void correctSizeAfterPut() throws ParseException {
+        Storeable st1 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>1</col></row>");
+        fileMap.put("1", st1);
+        fileMap.put("2", st1);
+        fileMap.put("3", st1);
+        fileMap.put("4", st1);
         assertEquals(4, fileMap.size());
         fileMap.remove("1");
         fileMap.remove("2");
@@ -104,8 +111,9 @@ public class TestFileMap {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void putNullKey() {
-        fileMap.put(null, "132");
+    public void putNullKey() throws ParseException {
+        Storeable st1 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>1</col></row>");
+        fileMap.put(null, st1);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -114,48 +122,58 @@ public class TestFileMap {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void putNlValue() {
-        fileMap.put("!23\nwerf", "!23");
+    public void putNlValue() throws ParseException {
+        Storeable st1 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>1</col></row>");
+        fileMap.put("!23\nwerf", st1);
     }
 
     @Test()
-    public void commitSimpleCount() {
+    public void commitSimpleCount() throws IOException, ParseException {
         fileMap.commit();
-        fileMap.put("123", "3453");
+        Storeable st1 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>1</col></row>");
+        fileMap.put("123", st1);
         assertEquals(1, fileMap.commit());
         fileMap.remove("123");
     }
 
     @Test()
-    public void commitHardCount() {
-        fileMap.remove("1");
-        fileMap.remove("2");
-        fileMap.commit();
-        fileMap.put("1", "1");
-        fileMap.put("2", "2");
-        assertEquals(2, fileMap.commit());
+    public void commitHardCount() throws IOException, ParseException {
+        try {
+            fileMap.remove("1");
+            fileMap.remove("2");
+            fileMap.commit();
+            Storeable st1 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>1</col></row>");
+            Storeable st2 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>2</col></row>");
+            fileMap.put("1", st1);
+            fileMap.put("2", st1);
+            assertEquals(2, fileMap.commit());
 
-        fileMap.put("1", "1");
-        fileMap.remove("1");
-        fileMap.put("1", "1");
-        assertEquals(0, fileMap.commit());
+            fileMap.put("1", st1);
+            fileMap.remove("1");
+            fileMap.put("1", st1);
+            assertEquals(0, fileMap.commit());
 
-        fileMap.put("1", "1");
-        fileMap.remove("1");
-        fileMap.put("1", "2");
-        assertEquals(1, fileMap.commit());
-        fileMap.remove("1");
-        fileMap.remove("2");
-        fileMap.commit();
+            fileMap.put("1", st1);
+            fileMap.remove("1");
+            fileMap.put("1", st2);
+            assertEquals(1, fileMap.commit());
+            fileMap.remove("1");
+            fileMap.remove("2");
+            fileMap.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test()
-    public void rollbackAfterRemove() {
+    public void rollbackAfterRemove() throws IOException, ParseException {
         fileMap.remove("1");
         fileMap.remove("2");
         fileMap.commit();
-        fileMap.put("1", "1");
-        fileMap.put("2", "2");
+        Storeable st1 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>1</col></row>");
+        Storeable st2 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>2</col></row>");
+        fileMap.put("1", st1);
+        fileMap.put("2", st2);
         assertEquals(fileMap.rollback(), 2);
         assertEquals(null, fileMap.get("1"));
         assertEquals(null, fileMap.get("2"));
@@ -164,18 +182,103 @@ public class TestFileMap {
     }
 
     @Test()
-    public void rollbackAfterEdit() {
-        fileMap.put("1", "1");
+    public void rollbackAfterEdit() throws IOException, ParseException {
+        Storeable st1 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>1</col></row>");
+        fileMap.put("1", st1);
         fileMap.commit();
-        fileMap.put("1", "2");
+        Storeable st2 = multiMap.deserialize(fileMap, "<row><col>qwe1</col><col>2</col></row>");
+        fileMap.put("1", st2);
         fileMap.rollback();
-        assertEquals("1", fileMap.get("1"));
+        assertEquals(st1, fileMap.get("1"));
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @Test()
+    public void checkGetColumnsCount() {
+        assertEquals(2, fileMap.getColumnsCount());
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void checkErrorGetColumnType() {
+        fileMap.getColumnType(3);
+    }
+
+    @Test()
+    public void checkOKGetColumnType() {
+        assertEquals(String.class, fileMap.getColumnType(0));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableCallGetName() {
+        fileMap.close();
+        fileMap.getName();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableCallToString() {
+        fileMap.close();
+        fileMap.toString();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableCallGet() {
+        fileMap.close();
+        fileMap.get("132");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableCallCommit() {
+        fileMap.close();
+        fileMap.commit();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableCallRemove() {
+        fileMap.close();
+        fileMap.remove("123");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableCallRollback() {
+        fileMap.close();
+        fileMap.rollback();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableCallSize() {
+        fileMap.close();
+        fileMap.size();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableProviderCallTableSize() {
+        multiMap.close();
+        fileMap.size();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableProviderCallTableToString() {
+        multiMap.close();
+        fileMap.toString();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeTableProviderCallTableName() {
+        multiMap.close();
+        fileMap.getName();
+    }
+
+    @Test()
+    public void correctToString() throws IOException {
+        assertEquals(fileMap.toString(),
+                String.format("%s[%s]", "FileMap", pathTables.resolve("table").toAbsolutePath().toString()));
+    }
+
+    @After
+    public void tearDown() {
+        multiMap.close();
+        fileMap.close();
         try {
-            mySystem.rm(new String[]{pathTables.resolve(nameTable).toString()});
+            mySystem.rm(new String[]{pathTables.toString()});
         } catch (Exception e) {
             e.printStackTrace();
         }

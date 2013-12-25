@@ -1,12 +1,6 @@
 package ru.fizteh.fivt.students.mescherinilya.multifilehashmap;
 
-import java.io.File;
-
 public class CommandCreate implements Command {
-
-    public CommandCreate() {
-        super();
-    }
 
     @Override
     public String getName() {
@@ -21,15 +15,12 @@ public class CommandCreate implements Command {
     @Override
     public void execute(String[] args) throws Exception {
 
-        File newTable = new File(MultiFileHashMap.rootDir + File.separator + args[0]);
+        Table newTable = MultiFileHashMap.provider.createTable(args[0]);
 
-        if (!newTable.exists()) {
-            if (!newTable.mkdir()) {
-                throw new Exception("Couldn't create a new directory.");
-            }
-            System.out.println("created");
-        } else {
+        if (newTable == null) {
             System.out.println(args[0] + " exists");
+        } else {
+            System.out.println("created");
         }
 
     }

@@ -5,7 +5,8 @@ import ru.fizteh.fivt.students.dubovpavel.executor.Dispatcher;
 import ru.fizteh.fivt.students.dubovpavel.executor.DispatcherBuilder;
 
 public class DispatcherFileMapBuilder extends DispatcherBuilder {
-    protected String repo;
+    private String repo;
+
     public Dispatcher construct() {
         return setPerformers(new DispatcherFileMap(forwarding, repo));
     }

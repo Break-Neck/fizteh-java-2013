@@ -2,10 +2,6 @@ package ru.fizteh.fivt.students.mescherinilya.multifilehashmap;
 
 public class CommandPut implements Command {
 
-    public CommandPut() {
-        super();
-    }
-
     @Override
     public int getArgsCount() {
         return 2;
@@ -13,16 +9,16 @@ public class CommandPut implements Command {
 
     @Override
     public void execute(String[] args) {
-        if (DatabaseWorker.currentTable == null) {
+        if (MultiFileHashMap.currentTable == null) {
             System.out.println("no table");
             return;
         }
-        if (DatabaseWorker.storage.containsKey(args[0])) {
-            System.out.println("overwrite\n" + DatabaseWorker.storage.get(args[0]));
+        String oldValue = MultiFileHashMap.currentTable.put(args[0], args[1]);
+        if (oldValue != null) {
+            System.out.println("overwrite\n" + oldValue);
         } else {
             System.out.println("new");
         }
-        DatabaseWorker.storage.put(args[0], args[1]);
 
     }
 

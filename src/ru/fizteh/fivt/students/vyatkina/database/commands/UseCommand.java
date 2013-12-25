@@ -1,31 +1,38 @@
 package ru.fizteh.fivt.students.vyatkina.database.commands;
 
-import ru.fizteh.fivt.storage.strings.Table;
+import ru.fizteh.fivt.students.vyatkina.CommandExecutionException;
+import ru.fizteh.fivt.students.vyatkina.WrappedIOException;
+import ru.fizteh.fivt.students.vyatkina.database.DatabaseCommand;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseState;
 
-import java.util.concurrent.ExecutionException;
+public class UseCommand extends DatabaseCommand {
 
-public class UseCommand extends DatabaseGlobalCommand {
-
-    public UseCommand (DatabaseState state) {
-        super (state);
+    public UseCommand(DatabaseState state) {
+        super(state);
         this.name = "use";
         this.argsCount = 1;
     }
 
     @Override
-    public void execute (String[] args) throws ExecutionException {
+    public void execute(String[] args) {
+        if (!saveChanges()) {
+            return;
+        }
         String tableName = args[0];
-        Table useTable = state.getTableProvider ().getTable (tableName);
-        if (previousTableUnsavedChanges () != 0) {
+        boolean tableExists;
+        try {
+            tableExists = state.databaseAdapter.useTable(tableName);
+        } catch (UnsupportedOperationException e) {
+            state.printErrorMessage(e.getMessage());
             return;
+        } catch (WrappedIOException e) {
+            throw new CommandExecutionException(e.getMessage());
         }
-        if (useTable == null) {
-            state.getIoStreams ().out.println (tableName + " not exists");
-            return;
+        if (tableExists) {
+            state.printUserMessage("using " + tableName);
+        } else {
+            state.printUserMessage(tableName + " not exists");
         }
-        state.getIoStreams ().out.println ("using " + tableName);
-        state.setTable (useTable);
     }
 }
 

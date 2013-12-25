@@ -1,14 +1,12 @@
 package ru.fizteh.fivt.students.nlevashov.mode;
 
-import java.util.NoSuchElementException;
-import java.util.Vector;
-import java.util.Scanner;
+import java.util.*;
 import java.io.IOException;
 
 public class Mode {
-    public static Vector<String> parse(String str, String separators) {
+    public static List<String> parse(String str, String separators) {
         String[] tokens = str.split(separators);
-        Vector<String> tokensWithoutEmptyStrings = new Vector<String>();
+        List<String> tokensWithoutEmptyStrings = new ArrayList<>();
         for (int i = 0; i < tokens.length; i++) {
             if (!tokens[i].equals("")) {
                 tokensWithoutEmptyStrings.add(tokens[i]);
@@ -29,7 +27,7 @@ public class Mode {
                 try {
                     System.out.print("$ ");
                     String cmdline = sc.nextLine();
-                    Vector<String> commands = parse(cmdline, ";");
+                    List<String> commands = parse(cmdline, ";");
                     for (String s : commands) {
                         if (!exec.execute(s)) {
                             flag = false;
@@ -50,7 +48,7 @@ public class Mode {
                 sb.append(s).append(' ');
             }
             String cmdline = sb.toString();
-            Vector<String> commands = parse(cmdline, ";");
+            List<String> commands = parse(cmdline, ";");
             for (String s : commands) {
                 if (!exec.execute(s)) {
                     break;

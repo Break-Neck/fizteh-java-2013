@@ -1,15 +1,15 @@
 package ru.fizteh.fivt.students.anastasyev.shell;
 
 import java.io.File;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class Shell extends State {
     private static File userDir;
-    private Vector<Command> commands;
+    private ArrayList<Command> commands;
 
     public Shell() {
         Shell.userDir = new File(System.getProperty("user.dir"));
-        commands = new Vector<Command>();
+        commands = new ArrayList<Command>();
         commands.add(new CdCommand());
         commands.add(new CpCommand());
         commands.add(new DirCommand());
@@ -33,7 +33,7 @@ public class Shell extends State {
     }
 
     @Override
-    public final Vector<Command> getCommands() {
+    public final ArrayList<Command> getCommands() {
         return commands;
     }
 }

@@ -4,7 +4,7 @@ import java.util.Scanner;
 import java.util.StringTokenizer;
 
 public class CommandRunner {    
-    public static void run(String[] args, State state) {  
+    public static void run(String[] args, State state) throws RuntimeException {  
         if (args.length > 0) {
             StringBuilder str = new StringBuilder();
             for (int i = 0; i < args.length; i++) {
@@ -23,13 +23,12 @@ public class CommandRunner {
                 } else {
                     scanner.close();
                     state.exitWithError(0);
-                    return;
                 }
             } 
         }
     }
     
-    private static int execute(String query, State state) {
+    private static int execute(String query, State state) throws RuntimeException {
         query = query.trim();
         if (query.equals("")) {
             return 0;
@@ -37,6 +36,10 @@ public class CommandRunner {
         StringTokenizer token = new StringTokenizer(query);
         int tokenNum = token.countTokens();
         String nextCommand = token.nextToken();
+        
+        if (nextCommand.equals("exit") && tokenNum == 1) {
+            state.exitWithError(0);
+        }
         
         for (Command command : state.commands.values()) {
             if (command.getName().equals(nextCommand)) {
@@ -63,12 +66,32 @@ public class CommandRunner {
                         } 
                     }
                     args[command.getArgNum() - 1] = query.substring(currSize).trim();
-                    return command.execute(args, state);
+                    try {
+                        return command.execute(args, state);
+                    } catch (RuntimeException e) {
+                        try {
+                            int code = Integer.parseInt(e.getMessage());
+                            state.exitWithError(code);
+                        } catch (NumberFormatException e2) {
+                            System.err.println(e.getMessage());
+                            return 1;
+                        } 
+                    }
                 }                
                 for (int i = 0; i < command.getArgNum(); i++) {
                     args[i] = token.nextToken();
                 }
-                return command.execute(args, state);
+                try {
+                    return command.execute(args, state);
+                } catch (RuntimeException e) {
+                    try {
+                        int code = Integer.parseInt(e.getMessage());
+                        state.exitWithError(code);
+                    } catch (NumberFormatException e2) {
+                        System.err.println(e.getMessage());
+                        return 1;
+                    } 
+                }
             }
         }
         
@@ -76,7 +99,7 @@ public class CommandRunner {
         return 1;
     }
 
-    private static int executeQueryLine(String queryLine, State state) {
+    private static int executeQueryLine(String queryLine, State state) throws RuntimeException {
         Scanner scanner = new Scanner(queryLine);
         scanner.useDelimiter(";");
         while (scanner.hasNext()) {

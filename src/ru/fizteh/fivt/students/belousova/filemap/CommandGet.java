@@ -1,6 +1,5 @@
 package ru.fizteh.fivt.students.belousova.filemap;
 
-import ru.fizteh.fivt.students.belousova.multifilehashmap.MultiFileShellState;
 import ru.fizteh.fivt.students.belousova.shell.Command;
 
 import java.io.IOException;

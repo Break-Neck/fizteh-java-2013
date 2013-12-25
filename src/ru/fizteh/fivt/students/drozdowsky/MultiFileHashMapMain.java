@@ -1,11 +1,12 @@
 package ru.fizteh.fivt.students.drozdowsky;
 
+import ru.fizteh.fivt.students.drozdowsky.commands.MfhmController;
 import ru.fizteh.fivt.students.drozdowsky.utils.Utils;
 import ru.fizteh.fivt.students.drozdowsky.modes.ModeController;
 import ru.fizteh.fivt.students.drozdowsky.database.MultiFileHashMap;
 
+import java.awt.geom.IllegalPathStateException;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
@@ -21,16 +22,14 @@ public class MultiFileHashMapMain {
             System.err.println(dbDirectory + ": not a directory");
             System.exit(1);
         }
-
-        String[] commandNames = {"create", "drop", "use", "put", "get", "remove", "exit"};
-        HashMap<String, Method> map = Utils.getMethods(commandNames, MultiFileHashMap.class);
+        String[] commandNames = {"create", "drop", "use", "put", "get", "remove", "exit", "size", "commit", "rollback"};
+        HashMap<String, Method> map = Utils.getMethods(commandNames, MfhmController.class);
         try {
-            MultiFileHashMap db = new MultiFileHashMap(new File(dbDirectory));
-            ModeController<MultiFileHashMap> start = new ModeController<MultiFileHashMap>(db);
+            MfhmController db = new MfhmController(new MultiFileHashMap(dbDirectory));
+            ModeController<MfhmController> start = new ModeController<>(db);
             start.execute(map, args);
-        } catch (IOException e) {
+        } catch (IllegalStateException | IllegalPathStateException e) {
             System.err.println(e.getMessage());
-            System.exit(1);
         }
     }
 }

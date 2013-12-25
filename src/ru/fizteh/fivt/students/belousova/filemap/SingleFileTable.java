@@ -1,9 +1,9 @@
 package ru.fizteh.fivt.students.belousova.filemap;
 
-import ru.fizteh.fivt.storage.strings.Table;
+import ru.fizteh.fivt.students.belousova.multifilehashmap.AbstractTable;
 import ru.fizteh.fivt.students.belousova.multifilehashmap.ChangesCountingTable;
-import ru.fizteh.fivt.students.belousova.utils.Predicate;
 import ru.fizteh.fivt.students.belousova.utils.FileMapUtils;
+import ru.fizteh.fivt.students.belousova.utils.Predicate;
 import ru.fizteh.fivt.students.belousova.utils.TruePredicate;
 
 import java.io.File;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SingleFileTable implements ChangesCountingTable {
+public class SingleFileTable extends AbstractTable<String, String> implements ChangesCountingTable {
     private Map<String, String> dataBase = new HashMap<String, String>();
     private File dataFile;
 

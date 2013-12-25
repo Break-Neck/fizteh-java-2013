@@ -6,14 +6,14 @@ import ru.fizteh.fivt.students.adanilyak.tools.ShellLogic;
 import ru.fizteh.fivt.students.adanilyak.userinterface.GenericCmdList;
 import ru.fizteh.fivt.students.adanilyak.userinterface.GenericShell;
 
-import java.io.File;
-
 /**
  * User: Alexander
  * Date: 21.10.13
  * Time: 16:40
  */
 public class MultiFileHashMapShell extends GenericShell {
+    private final Integer parserAndExecutor = 1;
+
     public MultiFileHashMapShell(String[] args) {
         String workingDirectory = System.getProperty("fizteh.db.dir");
         if (workingDirectory == null) {
@@ -21,25 +21,25 @@ public class MultiFileHashMapShell extends GenericShell {
             System.exit(3);
         }
         try {
-            TableManagerCreator tableManagerCreator = new TableManagerCreator();
-            TableProvider tableManager = tableManagerCreator.create(workingDirectory);
-            DataBaseGlobalState state = new DataBaseGlobalState(tableManager);
-            runMFHMShell(args, makeUpCmdList(state));
+            MultiFileTableProviderFactory multiFileTableProviderFactory = new MultiFileTableProviderFactory();
+            TableProvider tableManager = multiFileTableProviderFactory.create(workingDirectory);
+            MultiFileDataBaseGlobalState state = new MultiFileDataBaseGlobalState(tableManager);
+            runShell(args, makeUpCmdList(state));
         } catch (Exception exc) {
             System.err.println(exc.getMessage());
             System.exit(1);
         }
     }
 
-    private void runMFHMShell(String[] args, GenericCmdList cmdList) {
+    public void runShell(String[] args, GenericCmdList cmdList) {
         if (args.length == 0) {
-            ShellLogic.interactiveMode(System.in, cmdList.getCmdList(), System.out, System.err);
+            ShellLogic.interactiveMode(System.in, cmdList.getCmdList(), System.out, System.err, parserAndExecutor);
         } else {
-            ShellLogic.packageMode(args, cmdList.getCmdList(), System.out, System.err);
+            ShellLogic.packageMode(args, cmdList.getCmdList(), System.out, System.err, parserAndExecutor);
         }
     }
 
-    private GenericCmdList makeUpCmdList(DataBaseGlobalState state) {
+    public GenericCmdList makeUpCmdList(MultiFileDataBaseGlobalState state) {
         GenericCmdList stockShellCmdList = new GenericCmdList();
         stockShellCmdList.addCommand(new CmdPut(state));
         stockShellCmdList.addCommand(new CmdGet(state));

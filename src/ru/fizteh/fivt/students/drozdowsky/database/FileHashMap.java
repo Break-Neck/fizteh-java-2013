@@ -1,96 +1,115 @@
 package ru.fizteh.fivt.students.drozdowsky.database;
 
+import java.awt.geom.IllegalPathStateException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeSet;
 
-public class FileHashMap {
+import ru.fizteh.fivt.storage.strings.Table;
+import ru.fizteh.fivt.students.drozdowsky.utils.Utils;
+
+public class FileHashMap implements Table {
     private static final int NDIRS = 16;
     private static final int NFILES = 16;
 
     private File db;
     private FileMap[][] base;
+    private FileMap[][] baseBackUp;
 
-    FileHashMap(File db) throws IOException {
+    public FileHashMap(File db) {
         this.db = db;
         base = new FileMap[NDIRS][NFILES];
         readDB();
+        baseBackUp = new FileMap[NDIRS][NFILES];
+        copy(baseBackUp, base);
     }
 
-    public boolean put(String[] args) {
-        if (args.length != 3) {
-            error("usage: put key value");
-            return false;
+    public String getName() {
+        return db.getName();
+    }
+
+    public String get(String key) {
+        if (!Utils.isValid(key)) {
+            throw new IllegalArgumentException();
         }
+        int nDir = getDirNum(key);
+        int nFile = getFileNum(key);
+        return base[nDir][nFile].get(key);
+    }
 
-        int nDir = getDirNum(args[1]);
-        int nFile = getFileNum(args[1]);
+    public String put(String key, String value) {
+        if (value == null || value.equals("") || value.contains(System.lineSeparator())) {
+            throw new IllegalArgumentException();
+        }
+        if (!Utils.isValid(key)) {
+            throw new IllegalArgumentException();
+        }
+        int nDir = getDirNum(key);
+        int nFile = getFileNum(key);
 
-        if (base[nDir][nFile] == null) {
-            File dirPath = new File(db.getAbsolutePath() + '/' + Integer.toString(nDir) + ".dir");
-            if (!dirPath.exists()) {
-                dirPath.mkdir();
+        return base[nDir][nFile].put(key, value);
+    }
+
+    public String remove(String key) {
+        if (!Utils.isValid(key)) {
+            throw new IllegalArgumentException();
+        }
+        int nDir = getDirNum(key);
+        int nFile = getFileNum(key);
+        return base[nDir][nFile].remove(key);
+    }
+
+    public int size() {
+        int result = 0;
+        for (int i = 0; i < NDIRS; i++) {
+            for (int j = 0; j < NDIRS; j++) {
+                result += base[i][j].size();
             }
-            File filePath = new File(dirPath.getAbsolutePath() + '/' + Integer.toString(nFile) + ".dat");
-            try {
-                filePath.createNewFile();
-                base[nDir][nFile] = new FileMap(filePath);
-                base[nDir][nFile].put(args);
-            } catch (IOException e) {
-                error(e.getMessage());
-                return false;
+        }
+        return result;
+    }
+
+    public int commit() {
+        int result = difference();
+        writeDB();
+        copy(baseBackUp, base);
+        return result;
+    }
+
+    public int rollback() {
+        int result = difference();
+        copy(base, baseBackUp);
+        return result;
+    }
+
+    public int difference() {
+        int result = 0;
+        for (int i = 0; i < NDIRS; i++) {
+            for (int j = 0; j < NDIRS; j++) {
+                result += compare(base[i][j], baseBackUp[i][j]);
             }
-            return true;
         }
-        return base[nDir][nFile].put(args);
+        return result;
     }
 
-    public boolean get(String[] args) {
-        if (args.length != 2) {
-            error("usage: get key");
-            return false;
+    private int compare(FileMap a, FileMap b) {
+        int result = 0;
+        Set<String> tmp = new TreeSet<>(a.getKeys());
+        tmp.removeAll(b.getKeys());
+        result += tmp.size();
+        tmp = new TreeSet<>(b.getKeys());
+        tmp.removeAll(a.getKeys());
+        result += tmp.size();
+
+        for (String x : a.getKeys()) {
+            if (b.getKeys().contains(x)) {
+                if (!a.get(x).equals(b.get(x))) {
+                    result++;
+                }
+            }
         }
-
-        int nDir = getDirNum(args[1]);
-        int nFile = getFileNum(args[1]);
-
-        if (base[nDir][nFile] == null) {
-            System.out.println("not found");
-            return true;
-        }
-        return base[nDir][nFile].get(args);
-    }
-
-    public boolean remove(String[] args) {
-        if (args.length != 2) {
-            error("usage: remove key");
-            return false;
-        }
-
-        int nDir = getDirNum(args[1]);
-        int nFile = getFileNum(args[1]);
-
-        if (base[nDir][nFile] == null) {
-            System.out.println("not found");
-            return true;
-        }
-        return base[nDir][nFile].remove(args);
-    }
-
-    public boolean exit(String[] args) {
-        if (args.length != 1) {
-            error("usage: exit");
-            return false;
-        }
-        close();
-        System.exit(0);
-        return true;
-    }
-
-    public String getPath() {
-        return db.getAbsolutePath();
+        return result;
     }
 
     public void close() {
@@ -98,58 +117,59 @@ public class FileHashMap {
     }
 
     private int getDirNum(String key) {
+        if (!Utils.isValid(key)) {
+            throw new IllegalArgumentException();
+        }
         byte b = key.getBytes()[0];
         if (b < 0) {
             b *= -1;
         }
-        int nDir = b % 16;
-        int nFile = (b / 16) % 16;
-        return nDir;
+        return b % 16;
     }
 
     private int getFileNum(String key) {
+        if (!Utils.isValid(key)) {
+            throw new IllegalArgumentException();
+        }
         byte b = key.getBytes()[0];
         if (b < 0) {
             b *= -1;
         }
-        int nDir = b % 16;
-        int nFile = (b / 16) % 16;
-        return nFile;
+        return (b / 16) % 16;
     }
 
-    private void readDB() throws IOException {
-        if (!db.getParentFile().exists()) {
-            fatalError(db.getParentFile().getAbsolutePath() + ": No such file or directory");
-        } else if (db.exists() && !db.isDirectory()) {
-            fatalError(db.getAbsolutePath() + ": Not a directory");
-        } else if (!db.exists()) {
-            if (!db.mkdir()) {
-                fatalError(db.getAbsolutePath() + ": Cannot create database");
+    private void readDB() {
+        if (db.exists() && !db.isDirectory()) {
+            throw new IllegalPathStateException(db.getAbsolutePath() + ": Not a directory");
+        }
+
+        for (int i = 0; i < NDIRS; i++) {
+            for (int j = 0; j < NFILES; j++) {
+                base[i][j] = new FileMap();
             }
-            return;
         }
 
         File[] directories = db.listFiles();
-        for (File directory : directories) {
+        for (File directory : (directories != null ? directories : new File[0])) {
             int nDir = dirNameInRange(directory.getName(), NDIRS);
             if (nDir == -1 || !(directory.isDirectory())) {
-                fatalError(db.getAbsolutePath() + ": Not valid database " + directory.getName());
+                throw new IllegalStateException(db.getAbsolutePath() + ": Not valid database " + directory.getName());
             }
 
             File[] files = directory.listFiles();
-            for (File file : files) {
+            for (File file : (files != null ? files : new File[0])) {
                 int nFile = fileNameInRange(file.getName(), NFILES);
                 if (nFile == -1 || !(file.isFile())) {
-                    fatalError(db.getAbsolutePath() + ": Not valid database " + file.getName());
+                    throw new IllegalStateException(db.getAbsolutePath() + ": Not valid database " + file.getName());
                 }
 
-                base[nDir][nFile] = new FileMap(file);
+                base[nDir][nFile].read(file);
                 Set<String> keys = base[nDir][nFile].getKeys();
                 for (String key : keys) {
                     int realNDir = getDirNum(key);
                     int realNFile = getFileNum(key);
                     if (!(nDir == realNDir && nFile == realNFile)) {
-                        fatalError(db.getAbsolutePath() + " " + nDir + " " + nFile + ": Not valid database");
+                        throw new IllegalStateException(db.getAbsolutePath() + ": Not valid database");
                     }
                 }
             }
@@ -158,19 +178,41 @@ public class FileHashMap {
 
     private void writeDB() {
         for (int i = 0; i < NDIRS; i++) {
-            File dirPath = new File(db.getAbsolutePath() + '/' + Integer.toString(i) + ".dir");
+            File dirPath = new File(db.getAbsolutePath() + File.separator + Integer.toString(i) + ".dir");
+            if (!dirPath.exists() && !dirPath.mkdir()) {
+                throw new IllegalPathStateException(dirPath.getAbsolutePath() + ": Permission denied");
+            }
             for (int j = 0; j < NFILES; j++) {
                 if (base[i][j] != null) {
-                    File filePath = new File(dirPath.getAbsolutePath() + '/' + Integer.toString(j) + ".dat");
+                    File filePath = new File(dirPath.getAbsolutePath() + File.separator + Integer.toString(j) + ".dat");
+                    if (!filePath.exists()) {
+                        try {
+                            if (!filePath.createNewFile()) {
+                                throw new IllegalPathStateException(filePath.getAbsolutePath() + ": Permission denied");
+                            }
+                        } catch (IOException e) {
+                            throw new IllegalPathStateException(filePath.getAbsolutePath() + ": Permission denied");
+                        }
+                    }
                     if (base[i][j].getKeys().size() == 0) {
-                        filePath.delete();
+                        if (filePath.exists() && !filePath.delete()) {
+                            throw new IllegalPathStateException(filePath.getAbsolutePath() + ": Permission denied");
+                        }
                     } else {
-                        base[i][j].close();
+                        base[i][j].write(filePath);
                     }
                 }
             }
-            if (dirPath.exists()) {
-                dirPath.delete();
+            if (dirPath.exists() && dirPath.list().length == 0 && !dirPath.delete()) {
+                throw new IllegalPathStateException(dirPath.getAbsolutePath() + ": Permission denied");
+            }
+        }
+    }
+
+    private void copy(FileMap[][] a, FileMap[][] b) {
+        for (int i = 0; i < NDIRS; i++) {
+            for (int j = 0; j < NFILES; j++) {
+                a[i][j] = b[i][j].clone();
             }
         }
     }
@@ -191,13 +233,5 @@ public class FileHashMap {
             }
         }
         return -1;
-    }
-
-    private void fatalError(String error) throws IOException {
-        throw new IOException(error);
-    }
-
-    private void error(String aError) {
-        System.err.println(aError);
     }
 }

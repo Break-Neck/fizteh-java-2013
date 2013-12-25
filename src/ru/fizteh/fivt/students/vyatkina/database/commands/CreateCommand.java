@@ -1,35 +1,37 @@
 package ru.fizteh.fivt.students.vyatkina.database.commands;
 
-import ru.fizteh.fivt.storage.strings.Table;
+import ru.fizteh.fivt.students.vyatkina.CommandExecutionException;
+import ru.fizteh.fivt.students.vyatkina.WrappedIOException;
+import ru.fizteh.fivt.students.vyatkina.database.DatabaseCommand;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseState;
 
+public class CreateCommand extends DatabaseCommand {
 
-import java.util.concurrent.ExecutionException;
-
-public class CreateCommand extends DatabaseGlobalCommand {
-
-    public CreateCommand (DatabaseState state) {
-        super (state);
+    public CreateCommand(DatabaseState state) {
+        super(state);
         this.name = "create";
         this.argsCount = 1;
     }
 
     @Override
-    public void execute (String[] args) throws ExecutionException {
-        String name = args[0];
-        if (previousTableUnsavedChanges () != 0) {
+    public void execute(String[] args) {
+        if (!saveChanges()) {
             return;
         }
+        String tableName = args[0];
+        boolean newTableIsCreated;
         try {
-            Table table = state.getTableProvider ().createTable (name);
-            if (table != null) {
-                state.getIoStreams ().out.println ("created");
-            } else {
-                state.getIoStreams ().out.println (name + " exists");
-            }
+            newTableIsCreated = state.databaseAdapter.createTable(tableName);
+        } catch (UnsupportedOperationException e) {
+            state.printErrorMessage(e.getMessage());
+            return;
+        } catch (WrappedIOException e) {
+            throw new CommandExecutionException(e.getMessage());
         }
-        catch (IllegalArgumentException e) {
-            throw new ExecutionException (e.fillInStackTrace ());
+        if (newTableIsCreated) {
+            state.printUserMessage("created");
+        } else {
+            state.printUserMessage(tableName + " exists");
         }
     }
 

@@ -1,7 +1,7 @@
 package ru.fizteh.fivt.students.adanilyak.shell;
 
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 
 public class Shell {
     // state - is a directory in which the shell is working

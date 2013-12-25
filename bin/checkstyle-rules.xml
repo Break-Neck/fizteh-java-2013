@@ -132,12 +132,6 @@
         <module name="EqualsHashCode"/>
         <module name="IllegalInstantiation"/>
         <module name="MissingSwitchDefault"/>
-        <module name="RedundantThrows">
-            <property name="allowUnchecked" value="true"/>
-            <property name="allowSubclasses" value="true"/>
-            <!-- There are bug with nested exception classes -->
-            <property name="suppressLoadErrors" value="true"/>
-        </module>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
         <module name="DefaultComesLast"/>

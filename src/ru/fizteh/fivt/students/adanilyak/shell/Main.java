@@ -1,7 +1,8 @@
 package ru.fizteh.fivt.students.adanilyak.shell;
 
-import java.util.*;
-import java.io.*;
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.Vector;
 
 public class Main {
     public static Vector<String> intoCommandsAndArgs(String cmd, String delimetr) {
@@ -20,65 +21,67 @@ public class Main {
         try {
             RequestCommandType cmdType = RequestCommandType.getType(cmdAndArgs.get(0));
 
-            switch(cmdType) {
-            case cd:
-                CmdCd curCmd = new CmdCd();
-                if (cmdAndArgs.size() != curCmd.getAmArgs() + 1) {
-                    throw new IOException("Wrong amount of arguments");
-                } else {
-                    curCmd.work(cmdAndArgs.get(1), shell);
-                }
-                break;
-            case mkdir:
-                CmdMkdir curMkDir = new CmdMkdir();
-                if (cmdAndArgs.size() != curMkDir.getAmArgs() + 1) {
-                    throw new IOException("Wrong amount of arguments");
-                } else {
-                    curMkDir.work(cmdAndArgs.get(1), shell);
-                }
-                break;
-            case pwd:
-                CmdPwd curPwd = new CmdPwd();
-                if (cmdAndArgs.size() != curPwd.getAmArgs() + 1) {
-                    throw new IOException("Wrong amount of arguments");
-                } else {
-                    curPwd.work(shell);
-                }
-                break;
-            case rm:
-                CmdRm curRm = new CmdRm();
-                if (cmdAndArgs.size() != curRm.getAmArgs() + 1) {
-                    throw new IOException("Wrong amount of arguments");
-                } else {
-                    curRm.work(cmdAndArgs.get(1), shell);
-                }
-                break;
-            case cp:
-                CmdCp curCp = new CmdCp();
-                if (cmdAndArgs.size() != curCp.getAmArgs() + 1) {
-                    throw new IOException("Wrong amount of arguments");
-                } else {
-                    curCp.work(cmdAndArgs.get(1), cmdAndArgs.get(2), shell);
-                }
-                break;
-            case mv:
-                CmdMv curMv = new CmdMv();
-                if (cmdAndArgs.size() != curMv.getAmArgs() + 1) {
-                    throw new IOException("Wrong amount of arguments");
-                } else {
-                    curMv.work(cmdAndArgs.get(1), cmdAndArgs.get(2), shell);
-                }
-                break;
-            case dir:
-                CmdDir curDir = new CmdDir();
-                if (cmdAndArgs.size() != curDir.getAmArgs() + 1) {
-                    throw new IOException("Wrong amount of arguments");
-                } else {
-                    curDir.work(shell);
-                }
-                break;
-            case exit:
-                return false;
+            switch (cmdType) {
+                case cd:
+                    CmdCd curCmd = new CmdCd();
+                    if (cmdAndArgs.size() != curCmd.getAmArgs() + 1) {
+                        throw new IOException("Wrong amount of arguments");
+                    } else {
+                        curCmd.work(cmdAndArgs.get(1), shell);
+                    }
+                    break;
+                case mkdir:
+                    CmdMkdir curMkDir = new CmdMkdir();
+                    if (cmdAndArgs.size() != curMkDir.getAmArgs() + 1) {
+                        throw new IOException("Wrong amount of arguments");
+                    } else {
+                        curMkDir.work(cmdAndArgs.get(1), shell);
+                    }
+                    break;
+                case pwd:
+                    CmdPwd curPwd = new CmdPwd();
+                    if (cmdAndArgs.size() != curPwd.getAmArgs() + 1) {
+                        throw new IOException("Wrong amount of arguments");
+                    } else {
+                        curPwd.work(shell);
+                    }
+                    break;
+                case rm:
+                    CmdRm curRm = new CmdRm();
+                    if (cmdAndArgs.size() != curRm.getAmArgs() + 1) {
+                        throw new IOException("Wrong amount of arguments");
+                    } else {
+                        curRm.work(cmdAndArgs.get(1), shell);
+                    }
+                    break;
+                case cp:
+                    CmdCp curCp = new CmdCp();
+                    if (cmdAndArgs.size() != curCp.getAmArgs() + 1) {
+                        throw new IOException("Wrong amount of arguments");
+                    } else {
+                        curCp.work(cmdAndArgs.get(1), cmdAndArgs.get(2), shell);
+                    }
+                    break;
+                case mv:
+                    CmdMv curMv = new CmdMv();
+                    if (cmdAndArgs.size() != curMv.getAmArgs() + 1) {
+                        throw new IOException("Wrong amount of arguments");
+                    } else {
+                        curMv.work(cmdAndArgs.get(1), cmdAndArgs.get(2), shell);
+                    }
+                    break;
+                case dir:
+                    CmdDir curDir = new CmdDir();
+                    if (cmdAndArgs.size() != curDir.getAmArgs() + 1) {
+                        throw new IOException("Wrong amount of arguments");
+                    } else {
+                        curDir.work(shell);
+                    }
+                    break;
+                case exit:
+                    return false;
+                default:
+                    break;
             }
         } catch (Exception exc) {
             System.err.println(cmdAndArgs + ": " + exc.getMessage());
@@ -109,7 +112,7 @@ public class Main {
                 Vector<String> commands = intoCommandsAndArgs(inputLine, ";");
                 try {
                     for (String cmd : commands) {
-                        if (!execute(cmd, shell)){
+                        if (!execute(cmd, shell)) {
                             continueCycle = false;
                         }
                     }
@@ -131,7 +134,7 @@ public class Main {
             Vector<String> commands = intoCommandsAndArgs(inputLine, ";");
             try {
                 for (String cmd : commands) {
-                    if (!execute(cmd, shell)){
+                    if (!execute(cmd, shell)) {
                         break;
                     }
                 }

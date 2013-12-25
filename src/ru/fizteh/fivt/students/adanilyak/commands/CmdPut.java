@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.commands;
 
-import ru.fizteh.fivt.students.adanilyak.modernfilemap.FileMapState;
+import ru.fizteh.fivt.students.adanilyak.filemap.FileMapGlobalState;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.List;
 public class CmdPut implements Cmd {
     private final String name = "put";
     private final int amArgs = 2;
-    private FileMapState workState;
+    private FileMapGlobalState workState = null;
 
-    public CmdPut(FileMapState dataBaseState) {
+    public CmdPut(FileMapGlobalState dataBaseState) {
         workState = dataBaseState;
     }
 
@@ -31,7 +31,7 @@ public class CmdPut implements Cmd {
 
     @Override
     public void work(List<String> args) throws IOException {
-        if (workState.currentTable != null) {
+        if (workState.getCurrentTable() != null) {
             String key = args.get(1);
             String value = args.get(2);
             String result = workState.put(key, value);

@@ -1,6 +1,5 @@
 package ru.fizteh.fivt.students.belousova.filemap;
 
-import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.students.belousova.multifilehashmap.ChangesCountingTable;
 import ru.fizteh.fivt.students.belousova.shell.Command;
 
@@ -30,7 +29,7 @@ public class FileMap {
         addCommand(new CommandGet(state));
         addCommand(new CommandPut(state));
         addCommand(new CommandRemove(state));
-        addCommand(new CommandExit(state));
+        addCommand(new CommandExit());
     }
 
     private static void addCommand(Command command) {

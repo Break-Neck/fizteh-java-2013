@@ -20,4 +20,5 @@ public class CommandSize extends Command {
     public String getCmd() {
         return "size";
     }
+
 }

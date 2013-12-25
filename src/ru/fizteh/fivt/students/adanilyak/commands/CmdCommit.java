@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.commands;
 
-import ru.fizteh.fivt.students.adanilyak.modernfilemap.FileMapState;
+import ru.fizteh.fivt.students.adanilyak.multifilehashmap.MultiFileDataBaseGlobalState;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.List;
 public class CmdCommit implements Cmd {
     private final String name = "commit";
     private final int amArgs = 0;
-    private FileMapState workState;
+    private MultiFileDataBaseGlobalState workState = null;
 
-    public CmdCommit(FileMapState dataBaseState) {
+    public CmdCommit(MultiFileDataBaseGlobalState dataBaseState) {
         workState = dataBaseState;
     }
 
@@ -31,8 +31,8 @@ public class CmdCommit implements Cmd {
 
     @Override
     public void work(List<String> args) throws IOException {
-        if (workState.currentTable != null) {
-            System.out.println(workState.currentTable.commit());
+        if (workState.getCurrentTable() != null) {
+            System.out.println(workState.commit());
         } else {
             System.out.println("no table");
         }

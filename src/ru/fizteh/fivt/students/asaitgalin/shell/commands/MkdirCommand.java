@@ -1,12 +1,12 @@
 package ru.fizteh.fivt.students.asaitgalin.shell.commands;
 
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
+import ru.fizteh.fivt.students.asaitgalin.shell.FilesystemController;
+
 import java.io.File;
 import java.io.IOException;
 
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
-import ru.fizteh.fivt.students.asaitgalin.shell.FilesystemController;
-
-public class MkdirCommand implements Command {
+public class MkdirCommand extends DefaultCommand {
     private FilesystemController controller;
 
     public MkdirCommand(FilesystemController controller) {

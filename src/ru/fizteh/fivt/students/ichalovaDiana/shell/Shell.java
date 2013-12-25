@@ -69,9 +69,11 @@ public class Shell {
 
 class Cd extends Command {
     static final int ARG_NUM = 2;
+    public boolean rawArgumentsNeeded = false;
 
     @Override
     protected void execute(String... arguments) throws Exception {
+        
         try {
             if (arguments.length != ARG_NUM) {
                 throw new IllegalArgumentException("Illegal number of arguments");
@@ -93,6 +95,7 @@ class Cd extends Command {
 
 class Mkdir extends Command {
     static final int ARG_NUM = 2;
+    public boolean rawArgumentsNeeded = false;
 
     @Override
     protected void execute(String... arguments) throws Exception {
@@ -114,6 +117,7 @@ class Mkdir extends Command {
 
 class Pwd extends Command {
     static final int ARG_NUM = 1;
+    public boolean rawArgumentsNeeded = false;
 
     @Override
     protected void execute(String... arguments) throws Exception {
@@ -131,6 +135,7 @@ class Pwd extends Command {
 
 class Rm extends Command {
     static final int ARG_NUM = 2;
+    public boolean rawArgumentsNeeded = false;
 
     @Override
     protected void execute(String... arguments) throws Exception {
@@ -177,6 +182,7 @@ class Rm extends Command {
 
 class Cp extends Command {
     static final int ARG_NUM = 3;
+    public boolean rawArgumentsNeeded = false;
 
     @Override
     protected void execute(String... arguments) throws Exception {
@@ -242,6 +248,7 @@ class Cp extends Command {
 
 class Mv extends Command {
     static final int ARG_NUM = 3;
+    public boolean rawArgumentsNeeded = false;
 
     @Override
     protected void execute(String... arguments) throws Exception {
@@ -301,6 +308,7 @@ class Mv extends Command {
 
 class Dir extends Command {
     static final int ARG_NUM = 1;
+    public boolean rawArgumentsNeeded = false;
 
     @Override
     protected void execute(String... arguments) throws Exception {
@@ -321,6 +329,7 @@ class Dir extends Command {
 
 class Exit extends Command {
     static final int ARG_NUM = 1;
+    public boolean rawArgumentsNeeded = false;
 
     @Override
     protected void execute(String... arguments) throws Exception {

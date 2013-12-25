@@ -15,8 +15,8 @@ public class ShellMkdirCommand extends AbstractCommand<ShellState> {
         File newDir = new File(state.getCurState().toPath().resolve(input[0]).toString());
 
         if (!newDir.mkdirs()) {
-            throw new IOException("MKDIR ERROR: directory \"" + input[0] +
-                    "\" already exists or some other error has happened");
+            throw new IOException("MKDIR ERROR: directory \"" + input[0]
+                    + "\" already exists or some other error has happened");
         }
     }
 }

@@ -23,12 +23,12 @@ public class Utils {
 		}
 		
 		FileChannel sourceChannel = new FileInputStream(source.getPath()).getChannel();
-	    FileChannel destinationChannel = new FileOutputStream(destination.getPath()).getChannel();
-	    
-	    destinationChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
-	    
-	    sourceChannel.close();
-	    destinationChannel.close();
+		FileChannel destinationChannel = new FileOutputStream(destination.getPath()).getChannel();
+
+		destinationChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+	
+		sourceChannel.close();
+		destinationChannel.close();
 	} 
 	
 	public static void copyFileOrDirectory(File source, File destination) throws IOException {

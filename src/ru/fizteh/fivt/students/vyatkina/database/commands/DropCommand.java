@@ -1,36 +1,35 @@
 package ru.fizteh.fivt.students.vyatkina.database.commands;
 
+import ru.fizteh.fivt.students.vyatkina.CommandExecutionException;
+import ru.fizteh.fivt.students.vyatkina.WrappedIOException;
+import ru.fizteh.fivt.students.vyatkina.database.DatabaseCommand;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseState;
 
-import java.util.concurrent.ExecutionException;
+public class DropCommand extends DatabaseCommand {
 
-public class DropCommand extends DatabaseGlobalCommand {
-
-    public DropCommand (DatabaseState state) {
-        super (state);
+    public DropCommand(DatabaseState state) {
+        super(state);
         this.name = "drop";
         this.argsCount = 1;
     }
 
     @Override
-    public void execute (String[] args) throws ExecutionException {
+    public void execute(String[] args) {
         String tableName = args[0];
-        if (previousTableUnsavedChanges () != 0) {
-            return;
-        }
+        boolean tableIsDropped;
         try {
-            state.getTableProvider ().removeTable (tableName);
-        }
-        catch (IllegalArgumentException e) {
-            throw new ExecutionException (e.fillInStackTrace ());
-
-        }
-        catch (IllegalStateException e) {
-            state.getIoStreams ().out.println (tableName + " not exists");
+            tableIsDropped = state.databaseAdapter.dropTable(tableName);
+        } catch (UnsupportedOperationException e) {
+            state.printErrorMessage(e.getMessage());
             return;
+        } catch (WrappedIOException e) {
+            throw new CommandExecutionException(e.getMessage());
         }
-
-        state.getIoStreams ().out.println ("dropped");
+        if (tableIsDropped) {
+            state.printUserMessage("dropped");
+        } else {
+            state.printUserMessage(tableName + " not exists");
+        }
     }
 
 }

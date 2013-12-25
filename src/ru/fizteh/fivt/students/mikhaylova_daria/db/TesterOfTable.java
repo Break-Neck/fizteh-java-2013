@@ -1,51 +1,116 @@
 package ru.fizteh.fivt.students.mikhaylova_daria.db;
 
-
 import org.junit.*;
-import ru.fizteh.fivt.storage.strings.*;
-import ru.fizteh.fivt.students.mikhaylova_daria.shell.MyFileSystem;
+import org.junit.rules.TemporaryFolder;
+import ru.fizteh.fivt.storage.structured.*;
+import ru.fizteh.fivt.storage.structured.Table;
 
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertNull;
 
+
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class TesterOfTable {
 
-    private static Table table;
-    private static File tableTempFile;
-    private static String workingTable;
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+    private File mainDir;
+    private File goodTable;
+    private File goodTableSign;
+    private File badTableEmpty;
+    private File badTableEmptySign;
+    private TableManagerFactory factory;
+    private ArrayList<Class<?>> goodTypeList;
+    private ArrayList<Object> goodValueList;
+    private ArrayList<Object> wrongValueList;
+    private TableManager provider;
+    private TableData table;
+    private final String goodStrVal
+            = "<row><col>12</col><col>12</col><null/><col>12.2</col><col>12.2</col><col>true</col><null/></row>";
 
-    public static void removeFile(String name) {
+    @Before
+    public void before() {
+        factory = new TableManagerFactory();
+        goodTypeList = new ArrayList<>();
+        goodTypeList.add(Integer.class);
+        goodTypeList.add(Byte.class);
+        goodTypeList.add(Long.class);
+        goodTypeList.add(Float.class);
+        goodTypeList.add(Double.class);
+        goodTypeList.add(Boolean.class);
+        goodTypeList.add(String.class);
+        goodValueList = new ArrayList<Object>();
+        Integer integ = 12;
+        Float fl = new Float(12.2);
+        goodValueList.add(integ);
+        goodValueList.add(integ.byteValue());
+        goodValueList.add(null);
+        goodValueList.add(fl);
+        goodValueList.add(fl.doubleValue());
+        goodValueList.add(true);
+        goodValueList.add(null);
+        wrongValueList = new ArrayList<Object>();
+        wrongValueList.add(integ);
+        wrongValueList.add(integ.byteValue());
+        wrongValueList.add(integ.longValue());
+        wrongValueList.add(integ.floatValue());
+        wrongValueList.add(integ.doubleValue());
+        wrongValueList.add("123");
+        wrongValueList.add(true);
         try {
-            MyFileSystem.removing(name);
+            mainDir = folder.newFolder("mainDir");
+            goodTable = new File(mainDir, "goodTable");
+            if (!goodTable.mkdir()) {
+                throw new IOException("Creating file error");
+            }
+            goodTableSign = new File(goodTable, "signature.tsv");
+            if (!goodTableSign.createNewFile()) {
+                throw new IOException("Creating file error");
+            }
+            badTableEmptySign = new File(mainDir, "badTable");
+            if (!badTableEmptySign.mkdir()) {
+                throw new IOException("Creating file error");
+            }
+            badTableEmpty = new File(mainDir, "badTable2");
+            if (!badTableEmpty.mkdir()) {
+                throw new IOException("Creating file error");
+            }
+            File badTableSign = new File(badTableEmptySign, "signature.tsv");
+            if (!badTableSign.createNewFile()) {
+                throw new IOException("Creating file error");
+            }
+
+            String str = "int byte long float double boolean String";
+            try (BufferedWriter signatureWriter =
+                         new BufferedWriter(new FileWriter(goodTableSign))) {
+                signatureWriter.write(str);
+            } catch (IOException e) {
+                throw new IOException("Reading error: signature.tsv", e);
+            }
+            provider = factory.create(mainDir.toString());
+            table = provider.getTable("goodTable");
         } catch (IOException e) {
-            System.err.println("Ошибка при удалении временного файла");
+            e.printStackTrace();
+            System.err.println(e.toString());
             System.exit(1);
         }
     }
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        File tempDb = File.createTempFile("darya", "mikhailova");
-        workingTable = tempDb.getName();
-        tableTempFile = new File(workingTable);
-        if (!tempDb.delete()) {
-            System.err.println("Ошибка при удалении временного файла");
-            System.exit(1);
-        }
-        if (!tableTempFile.mkdir()) {
-            System.err.println("Ошибка при создании временного файла");
-            System.exit(1);
-        }
-        table = new TableData(tableTempFile);
+    @After
+    public void after() {
+        factory.close();
+        folder.delete();
     }
+
 
     @Test
-    public void correctGetNameShouldEquals() {
-        assertEquals(workingTable, table.getName());
+    public void correctGetNameShouldEquals() throws Exception {
+        assertEquals(goodTable.getName(), table.getName());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -60,19 +125,47 @@ public class TesterOfTable {
 
     @Test
     public void getExistingKey() {
-        table.put("a", "b");
-        assertEquals(table.get("a"), "b");
+        try {
+            Storeable stor = provider.deserialize(table, goodStrVal);
+            Storeable s = table.put("key", stor);
+            assertEquals("Не работает serialize и/или deserialize", provider.serialize(table, stor), goodStrVal);
+            assertNull("Не работает serialize и/или deserialize и/или put", s);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
-    public void getNonexistentKeyShouldNull() {
-        table.remove("b");
-        assertNull(table.get("b"));
+    public void getPutGetOverwriteRemoveGetRemovedNonexistentKeyShouldNull() {
+        try {
+            Storeable stor = provider.deserialize(table, goodStrVal);
+            Storeable s = table.put("key", stor);
+            Storeable got = table.get("key");
+            Storeable over = table.put("key", stor);
+            Storeable r = table.remove("key");
+            assertEquals("Не работает serialize и/или deserialize", provider.serialize(table, stor), goodStrVal);
+            assertNull("Не работает  put", s);
+            assertEquals("Не работает put или get ", provider.serialize(table, got), goodStrVal);
+            assertEquals("Не работает put", provider.serialize(table, over), goodStrVal);
+            assertEquals("Не работает remove", provider.serialize(table, stor), goodStrVal);
+            assertNull("Не работает get на отсутствующее значение или remove", table.get("key"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void putNullKeyShouldFail() {
-        table.put(null, "ds");
+        Storeable stor = null;
+        try {
+            stor = provider.deserialize(table, goodStrVal);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        table.put(null, stor);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -82,24 +175,32 @@ public class TesterOfTable {
 
     @Test(expected = IllegalArgumentException.class)
     public void putSpaceKeyShouldFail() {
-        table.put("    ", "ds");
+        Storeable stor = null;
+        try {
+            stor = provider.deserialize(table, goodStrVal);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        table.put("  ", stor);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void putSpaceValueShouldFail() {
-        table.put("p", "  ");
+    @Test(expected = ColumnFormatException.class)
+    public void putValueWrongTypeShouldFail() {
+        Table other = null;
+        Storeable stor = null;
+        ArrayList<Class<?>> oth = new ArrayList<>(goodTypeList);
+        oth.add(String.class);
+        try {
+            other = provider.createTable("other", oth);
+            stor = provider.deserialize(table, goodStrVal);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+        other.put("key", stor);
     }
 
-    @Test
-    public void putNewKeyShouldNull() {
-        assertNull(table.put("new", "value"));
-    }
-
-    @Test
-    public void putOldKeyReturnOverwrite() {
-        table.put("key", "valueOld");
-        assertEquals(table.put("key", "valueNew"), "valueOld");
-    }
 
     @Test(expected = IllegalArgumentException.class)
     public void removeNullKeyShouldFail() {
@@ -118,77 +219,135 @@ public class TesterOfTable {
         assertNull(table.remove("key"));
     }
 
-    @Test
-    public void removeExistentKeyShouldNull() {
-        table.put("key", "value");
-        assertEquals("Неправильно работает put или get", "value", table.get("key"));
-        assertEquals(table.remove("key"), "value");
-    }
+
 
     @Test
-    public void putToEmptyTableFourKeysGetOneRemoveOneOverwriteOneCountSize() {
-        int nBefore = table.size();
-        table.put("new1", "value");
-        table.put("new2", "value");
-        table.put("new3", "value");
-        assertEquals("Не работает put или get", table.get("new1"), "value");
-        assertEquals("не работает remove", table.remove("new1"), "value");
-        table.put("new2", "value");
-        int commitSize = table.commit();
-        int nAfter = table.size();
-        assertEquals("неправильный подсчёт элементов", 2, nAfter - nBefore);
-        assertNotEquals("неправильно работает commit", 0, commitSize);
+    public void putPutPutCommitAndCountSize() {
+        try {
+            ArrayList<Class<?>> classList = new ArrayList<>();
+            ArrayList<Object> objList = new ArrayList<>();
+            objList.add("value");
+            classList.add(String.class);
+            Table t = provider.createTable("newTable", classList);
+            int nBefore = t.size();
+            Storeable v1 = provider.createFor(t, objList);
+            Storeable v2 = provider.createFor(t, objList);
+            Storeable v3 = provider.createFor(t, objList);
+            t.put("new1", v1);
+            t.put("new2", v2);
+            t.put("new3", v3);
+            int commitSize = t.commit();
+            int nAfter = t.size();
+            assertEquals("неправильный подсчёт элементов", 3, nAfter - nBefore);
+            assertEquals("неправильно работает commit", 3, commitSize);
+            assertEquals("не правильно работает get или put возвращает неправильное старое значение",
+                    t.put("new1", v1).getStringAt(0), "value");
+            assertEquals("после добавления того же значения изменился размер таблицы", nAfter, t.size());
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     public void commitEmpty() {
-        table.commit();
-        assertEquals(table.commit(), 0);
+        try {
+            table.commit();
+            assertEquals(table.commit(), 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     public void commitRollback() {
-        table.commit();
-        assertEquals(table.rollback(), 0);
+        try {
+            table.commit();
+            assertEquals(table.rollback(), 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
-    public void commitNewState() {
-        table.put("new5", "v");
-        table.put("new6", "value");
-        table.put("new7", "d");
-        table.put("new8", "a");
-        table.commit();
-        table.put("new5", "v");
-        table.put("new6", "new value");
-        assertEquals("неправильно работает remove или put", table.remove("new7"), "d");
-        assertEquals("неправильно работает remove или put", table.remove("new8"), "a");
-        table.put("new8", "b");
-        assertNull("неправильно работает remove", table.remove("nonexistent"));
-        table.get("new8");
-        assertEquals(table.commit(), 3);
+    public void putPutPutRollbackAndCountSize() {
+        try {
+            ArrayList<Class<?>> classList = new ArrayList<>();
+            ArrayList<Object> objList = new ArrayList<>();
+            objList.add(new Long(123));
+            classList.add(Long.class);
+            Table t = provider.createTable("newTable", classList);
+            int nBefore = t.size();
+            Storeable v1 = provider.createFor(t, objList);
+            Storeable v2 = provider.createFor(t, objList);
+            Storeable v3 = provider.createFor(t, objList);
+            t.put("new1", v1);
+            t.put("new2", v2);
+            t.put("new3", v3);
+            int nAfter = t.size();
+            int commitSize = t.rollback();
+            assertEquals("неправильный подсчёт элементов", 3, nAfter - nBefore);
+            assertEquals("неправильно работает commit", 3, commitSize);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
-    public void rollbackOldState() {
-        table.put("new5", "v");
-        table.put("new6", "value");
-        table.put("new7", "d");
-        table.put("new8", "a");
-        table.commit();
-        table.put("new5", "v");
-        table.put("new6", "new value");
-        assertEquals("неправильно работает remove или put", table.remove("new7"), "d");
-        assertEquals("неправильно работает remove или put", table.remove("new8"), "a");
-        table.put("new8", "b");
-        assertNull("неправильно работает remove", table.remove("nonexistent"));
-        table.get("new8");
-        assertEquals(table.rollback(), 3);
+    public void closeTest() throws IOException {
+        TableData t = provider.createTable("close", goodTypeList);
+        t.close();
+        try {
+            t.close();
+        } catch (Exception e) {
+            fail("Повторное закрытие не должно вызывать исключение");
+        }
+
+        try {
+            t.commit();
+            fail("Не работает close");
+        } catch (IllegalStateException e) {
+
+        }
+
+        try {
+            t.rollback();
+            fail("Не работает close");
+        } catch (IllegalStateException e) {
+
+        }
+
+        try {
+            t.getColumnsCount();
+            fail("Не работает close");
+        } catch (IllegalStateException e) {
+
+        }
+
+        try {
+            t.put("key", provider.createFor(t, goodValueList));
+            fail("Не работает close");
+        } catch (IllegalStateException e) {
+
+        }
+
+        try {
+            t.get("key");
+            fail("Не работает close");
+        } catch (IllegalStateException e) {
+
+        }
+
+        try {
+            t.remove("key");
+            fail("Не работает close");
+        } catch (IllegalStateException e) {
+
+        }
     }
 
-    @AfterClass
-    public static void afterAll() {
-        String name = tableTempFile.toPath().toString();
-        removeFile(name);
-    }
+
 }

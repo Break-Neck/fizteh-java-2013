@@ -1,10 +1,10 @@
 package ru.fizteh.fivt.students.mishatkin.filemap;
 
-import ru.fizteh.fivt.students.mishatkin.multifilehashmap.MultiFileHashMap;
 import ru.fizteh.fivt.students.mishatkin.shell.*;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -14,7 +14,10 @@ public class FileMapReceiver extends ShellReceiver implements FileMapReceiverPro
 
 	private File dbFile;
 	private File dbFileOwningDirectory;
-	private HashMap<String, String> dictionary = new HashMap<>();
+	private Map<String, String> dictionary = new HashMap<>();
+
+	private Map<String, String> removedDictionaryPart = new HashMap<>();
+	private Map<String, String> unstagedDictionaryPart = new HashMap<>();
 
 	private static final int TERRIBLE_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
@@ -23,6 +26,11 @@ public class FileMapReceiver extends ShellReceiver implements FileMapReceiverPro
 	}
 
 	public FileMapReceiver(String dbDirectory, String dbFileName, boolean interactiveMode, PrintStream out) throws FileMapDatabaseException {
+		this(dbDirectory, dbFileName, interactiveMode, new ShellPrintStream(out));
+
+	}
+
+	public FileMapReceiver(String dbDirectory, String dbFileName, boolean interactiveMode, ShellPrintStream out) throws FileMapDatabaseException {
 		super(out, interactiveMode);
 		FileInputStream in = null;
 		try {
@@ -70,43 +78,64 @@ public class FileMapReceiver extends ShellReceiver implements FileMapReceiverPro
 			}
 		}
 	}
-
 	public void showPrompt() {
 		if (isInteractiveMode()) {
-			out.print("$ ");
+			print("$ ");
 		}
 	}
 
+	private String getValueForKey(String key) {
+		String value = null;
+		if (removedDictionaryPart.get(key) == null) {
+			value = unstagedDictionaryPart.get(key);
+			if (value == null) {
+				value = dictionary.get(key);
+			}
+		}
+		return value;
+	}
+
 	@Override
-	public void putCommand(String key, String value) {
-		String oldValue = dictionary.get(key);
+	public String putCommand(String key, String value) {
+		String oldValue = getValueForKey(key);
+		removedDictionaryPart.remove(key);
+		if (!value.equals(dictionary.get(key))) {
+			unstagedDictionaryPart.put(key, value);
+		}
 		if (oldValue != null) {
-			out.println("overwrite");
-			out.println(oldValue);
+			println("overwrite");
+			println(oldValue);
 		} else {
-			out.println("new");
+			println("new");
 		}
-		dictionary.put(key, value);
+		return oldValue;
 	}
 
 	@Override
-	public void removeCommand(String key) {
-		if (dictionary.remove(key) != null){
-			out.println("removed");
-		} else {
-			out.println("not found");
+	public String removeCommand(String key) {
+		String retValue = getValueForKey(key);
+		unstagedDictionaryPart.remove(key);
+		if (retValue != null && !retValue.equals("") && dictionary.containsKey(key)) {
+			removedDictionaryPart.put(key, retValue);
 		}
+		if (retValue != null) {
+			println("removed");
+		} else {
+			println("not found");
+		}
+		return retValue;
 	}
 
 	@Override
-	public void getCommand(String key) {
-		String value = dictionary.get(key);
+	public String getCommand(String key) {
+		String value = getValueForKey(key);
 		if (value != null) {
-			out.println("found");
-			out.println(dictionary.get(key));
+			println("found");
+			println(value);
 		} else {
-			out.println("not found");
+			println("not found");
 		}
+		return value;
 	}
 
 	public void exitCommand() throws TimeToExitException {
@@ -143,6 +172,7 @@ public class FileMapReceiver extends ShellReceiver implements FileMapReceiverPro
 				}
 			}
 		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
 			throw new ShellException("OK, now someone just took the file out of me, so I cannot even rewrite it.");
 		} finally {
 			try {
@@ -164,5 +194,43 @@ public class FileMapReceiver extends ShellReceiver implements FileMapReceiverPro
 			}
 		}
 		return doConform;
+	}
+
+	public int getUnstagedChangesCount() {
+		return removedDictionaryPart.size() + unstagedDictionaryPart.size();
+	}
+
+	public int size() {
+		int matchesCount = 0;
+		for (String key : unstagedDictionaryPart.keySet()) {
+			if (dictionary.get(key) != null) {
+				++matchesCount;
+			}
+		}
+		if (dictionary.size() - removedDictionaryPart.size() + unstagedDictionaryPart.size() - matchesCount < 0) {
+			System.err.println("OMFG!!1!111111 Das ist impossible !!11");
+		}
+		return dictionary.size() - removedDictionaryPart.size() + unstagedDictionaryPart.size() - matchesCount;
+	}
+
+	public int commit() throws ShellException {
+		int retValue = getUnstagedChangesCount();
+		for (String key : removedDictionaryPart.keySet()) {
+			dictionary.remove(key);
+		}
+		for (String key : unstagedDictionaryPart.keySet()) {
+			dictionary.put(key, unstagedDictionaryPart.get(key));
+		}
+		writeChangesToFile();
+		unstagedDictionaryPart.clear();
+		removedDictionaryPart.clear();
+		return retValue;
+	}
+
+	public int rollback() {
+		int retValue = getUnstagedChangesCount();
+		unstagedDictionaryPart.clear();
+		removedDictionaryPart.clear();
+		return retValue;
 	}
 }

@@ -32,7 +32,7 @@ public class MultiFileShell {
         addCommand(new CommandCommit(state));
         addCommand(new CommandRollback(state));
         addCommand(new CommandSize(state));
-        addCommand(new CommandExit(state));
+        addCommand(new CommandExit());
     }
 
     private void addCommand(Command command) {

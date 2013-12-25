@@ -14,11 +14,7 @@ public final class ShellExit extends SimpleShellCommand {
 
     @Override
     public void run() {
-        if (context.getChanges() == 0) {
-            throw new ShellExitException("Exit command");
-        } else {
-            System.out.println(context.getChanges() + " unsaved changes");
-        }
+        throw new ShellExitException("Exit command");
     }
 
 }

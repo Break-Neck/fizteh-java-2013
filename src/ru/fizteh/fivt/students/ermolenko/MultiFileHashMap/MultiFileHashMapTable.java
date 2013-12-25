@@ -6,17 +6,25 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class MultiFileHashMapTable implements Table {
 
     private Map<String, String> dataBase;
-    public File dataFile;
+    private Map<String, String> changesBase;
+    private File dataFile;
+    private int sizeTable;
 
-    public MultiFileHashMapTable(File currentFile) throws IOException {
+    public MultiFileHashMapTable(File currentFile) {
 
         dataBase = new HashMap<String, String>();
+        changesBase = new HashMap<String, String>();
         dataFile = currentFile;
-        //MultiFileHashMapUtils.read(dataFile, dataBase);
+    }
+
+    public int getChangesBaseSize() {
+
+        return changesBase.size();
     }
 
     public Map<String, String> getDataBase() {
@@ -29,14 +37,11 @@ public class MultiFileHashMapTable implements Table {
         return dataFile;
     }
 
-    public void setDataBase(Map<String, String> inDataBase) {
+    public void changeCurrentTable(Map<String, String> inMap, File inFile) {
 
-        dataBase = inDataBase;
-    }
-
-    public void setDataFile(File inDataFile) {
-
-        dataFile = inDataFile;
+        dataBase = inMap;
+        dataFile = inFile;
+        sizeTable = dataBase.size();
     }
 
     @Override
@@ -51,16 +56,52 @@ public class MultiFileHashMapTable implements Table {
         if (key == null) {
             throw new IllegalArgumentException("Incorrect key to get.");
         }
-        return dataBase.get(key);
+        String newKey = key.trim();
+        if (newKey.isEmpty()) {
+            throw new IllegalArgumentException("Incorrect key to get");
+        }
+        String returnValue;
+        if (changesBase.containsKey(newKey)) {
+            if (changesBase.get(newKey) == null) {
+                returnValue = null;
+            } else {
+                returnValue = changesBase.get(newKey);
+            }
+        } else {
+            if (dataBase.containsKey(newKey)) {
+                returnValue = dataBase.get(newKey);
+            } else {
+                returnValue = null;
+            }
+        }
+
+        return returnValue;
     }
 
     @Override
     public String put(String key, String value) {
 
         if (key == null || value == null) {
-            throw new IllegalArgumentException("Incorrect key/value to put.");
+            throw new IllegalArgumentException("Incorrect key or value to put.");
         }
-        return dataBase.put(key, value);
+
+        String newKey = key.trim();
+        String newValue = value.trim();
+        if (newKey.isEmpty() || newValue.isEmpty()) {
+            throw new IllegalArgumentException("Incorrect key or value to put");
+        }
+
+        if ((!changesBase.containsKey(newKey) && !dataBase.containsKey(newKey))
+                || (changesBase.containsKey(newKey) && changesBase.get(newKey) == null)) {
+            ++sizeTable;
+        }
+        String result = get(newKey);
+        changesBase.put(newKey, newValue);
+        if (value.equals(dataBase.get(newKey))) {
+            changesBase.remove(newKey);
+        }
+
+        return result;
     }
 
     @Override
@@ -69,29 +110,62 @@ public class MultiFileHashMapTable implements Table {
         if (key == null) {
             throw new IllegalArgumentException("Incorrect key to remove.");
         }
-        return dataBase.remove(key);
+
+        String newKey = key.trim();
+        if (newKey.isEmpty()) {
+            throw new IllegalArgumentException("Incorrect key to remove");
+        }
+
+        if (changesBase.get(newKey) != null
+                || (!changesBase.containsKey(newKey) && dataBase.get(newKey) != null)) {
+            --sizeTable;
+        }
+        String result = get(newKey);
+        changesBase.put(newKey, null);
+        if (dataBase.get(newKey) == null) {
+            changesBase.remove(newKey);
+        }
+        return result;
     }
 
     @Override
     public int size() {
 
-        return 0;
+        return sizeTable;
     }
 
     @Override
     public int commit() {
 
+        int size = changesBase.size();
         try {
-            MultiFileHashMapUtils.write(dataFile, dataBase);
+            if (size != 0) {
+                Set<Map.Entry<String, String>> set = changesBase.entrySet();
+                for (Map.Entry<String, String> pair : set) {
+                    pair.getKey();
+                    if (pair.getValue() == null) {
+                        dataBase.remove(pair.getKey());
+                    } else {
+                        dataBase.put(pair.getKey(), pair.getValue());
+                    }
+                }
+                MultiFileHashMapUtils.write(dataFile, dataBase);
+            }
         } catch (IOException e) {
             System.err.println(e);
         }
-        return 0;
+
+        changesBase.clear();
+        sizeTable = dataBase.size();
+        return size;
     }
 
     @Override
     public int rollback() {
 
-        return 0;
+        int size = changesBase.size();
+        changesBase.clear();
+        sizeTable = dataBase.size();
+        return size;
     }
 }

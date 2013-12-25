@@ -4,8 +4,8 @@ import java.util.Scanner;
 import java.util.Stack;
 
 public class Calculator {
-    private final String INVALID_OPERATION = "Stack of operations has another symbols";
-    private final int RADIX = 19;
+    private static final String INVALID_OPERATION = "Stack of operations has another symbols";
+    private static final int RADIX = 19;
     private Stack<Integer> numbers = new Stack<Integer>();
     private Stack<String> operations = new Stack<String>();
 
@@ -41,24 +41,21 @@ public class Calculator {
         long n2 = second;
         switch (op) {
         case "+":
-            if (((n1 + n2) > Integer.MAX_VALUE)
-                    || ((n1 + n2) < Integer.MIN_VALUE)) {
+            if (((n1 + n2) > Integer.MAX_VALUE) || ((n1 + n2) < Integer.MIN_VALUE)) {
                 System.err.println("Overflow!");
                 System.exit(1);
             }
             result = second + first;
             break;
         case "-":
-            if (((n1 - n2) > Integer.MAX_VALUE)
-                    || ((n1 - n2) < Integer.MIN_VALUE)) {
+            if (((n1 - n2) > Integer.MAX_VALUE) || ((n1 - n2) < Integer.MIN_VALUE)) {
                 System.err.println("Overflow!");
                 System.exit(1);
             }
             result = first - second;
             break;
         case "*":
-            if (((n1 * n2) > Integer.MAX_VALUE)
-                    || ((n1 * n2) < Integer.MIN_VALUE)) {
+            if (((n1 * n2) > Integer.MAX_VALUE) || ((n1 * n2) < Integer.MIN_VALUE)) {
                 System.err.println("Overflow!");
                 System.exit(1);
             }
@@ -69,8 +66,7 @@ public class Calculator {
                 System.err.println("Divide by zero");
                 System.exit(1);
             }
-            if (((n1 / n2) > Integer.MAX_VALUE)
-                    || ((n1 / n2) < Integer.MIN_VALUE)) {
+            if (((n1 / n2) > Integer.MAX_VALUE) || ((n1 / n2) < Integer.MIN_VALUE)) {
                 System.err.println("Overflow!");
                 System.exit(1);
             }
@@ -92,8 +88,8 @@ public class Calculator {
         }
         stringBuilder.append(")");
         String res = stringBuilder.toString();
-        res = res.replace("+", " + ").replace("-", " - ").replace("*", " * ")
-                .replace("/", " / ").replace("(", " ( ").replace(")", " ) ");
+        res = res.replace("+", " + ").replace("-", " - ").replace("*", " * ").replace("/", " / ").replace("(", " ( ")
+                .replace(")", " ) ");
         return res;
     }
 
@@ -103,8 +99,7 @@ public class Calculator {
         } else if (priority(op) > priority(operations.peek())) {
             operations.push(op);
         } else {
-            while ((!operations.isEmpty())
-                    && (priority(operations.peek()) >= priority(op))) {
+            while ((!operations.isEmpty()) && (priority(operations.peek()) >= priority(op))) {
                 calculate(operations.pop());
             }
             operations.push(op);
@@ -127,8 +122,7 @@ public class Calculator {
         Scanner scanner = new Scanner(inputString);
         scanner.useRadix(RADIX);
         while (scanner.hasNext()) {
-            if (nextIsNumber
-                    && (scanner.hasNextInt() || scanner.hasNext("\\("))) {
+            if (nextIsNumber && (scanner.hasNextInt() || scanner.hasNext("\\("))) {
                 if (scanner.hasNextInt()) {
                     numbers.push(scanner.nextInt());
                     nextIsNumber = false;
@@ -136,8 +130,7 @@ public class Calculator {
                     operations.push(scanner.next());
                     ++bracketBalance;
                 }
-            } else if (!nextIsNumber
-                    && (scanner.hasNext(operation) || scanner.hasNext("\\)"))) {
+            } else if (!nextIsNumber && (scanner.hasNext(operation) || scanner.hasNext("\\)"))) {
                 if (scanner.hasNext(operation)) {
                     doOperation(scanner.next());
                     nextIsNumber = true;

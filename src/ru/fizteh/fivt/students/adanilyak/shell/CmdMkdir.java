@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.shell;
 
 import java.io.File;
-import java.io.IOException;
 
 public class CmdMkdir {
     private final RequestCommandType name = RequestCommandType.getType("mkdir");

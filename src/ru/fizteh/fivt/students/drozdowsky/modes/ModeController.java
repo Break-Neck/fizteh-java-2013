@@ -11,10 +11,10 @@ public class ModeController<T> {
 
     public void execute(HashMap<String, Method> commands, String[] args) {
         if (args.length == 0) {
-            InteractiveMode<T> im = new InteractiveMode<T>(controller);
+            InteractiveMode<T> im = new InteractiveMode<>(controller);
             im.execute(commands);
         } else {
-            PacketMode<T> pm = new PacketMode<T>(controller);
+            PacketMode<T> pm = new PacketMode<>(controller);
             pm.execute(args, commands, true);
         }
     }

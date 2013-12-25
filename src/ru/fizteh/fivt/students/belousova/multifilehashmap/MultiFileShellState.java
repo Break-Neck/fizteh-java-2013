@@ -1,23 +1,24 @@
 package ru.fizteh.fivt.students.belousova.multifilehashmap;
 
-import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.students.belousova.filemap.TableState;
 
 public class MultiFileShellState extends TableState {
     private ChangesCountingTableProvider tableProvider = null;
 
+    public MultiFileShellState() {
+    }
 
     public MultiFileShellState(ChangesCountingTableProvider provider, ChangesCountingTable table) {
         tableProvider = provider;
         currentTable = table;
     }
 
-    public Table getTable(String name) {
-        return tableProvider.getTable(name);
+    public boolean getTable(String name) {
+        return (tableProvider.getTable(name) != null);
     }
 
-    public Table createTable(String name) {
-        return tableProvider.createTable(name);
+    public boolean createTable(String name) {
+        return (tableProvider.createTable(name) != null);
     }
 
     public void removeTable(String name) {

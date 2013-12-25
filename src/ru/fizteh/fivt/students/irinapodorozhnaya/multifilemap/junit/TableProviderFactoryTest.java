@@ -15,7 +15,7 @@ public class TableProviderFactoryTest {
     
     @Before
     public void setUp() throws Exception {
-        (new File(DATA_BASE_DIR)).mkdir();
+        new File(DATA_BASE_DIR).mkdirs();
         factory = new MyTableProviderFactory();
     }
 

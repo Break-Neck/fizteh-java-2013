@@ -5,13 +5,13 @@ import ru.fizteh.fivt.students.eltyshev.shell.commands.CommandParser;
 
 import java.util.ArrayList;
 
-public class PutCommand extends AbstractCommand<FileMapShellState> {
+public class PutCommand<Table, Key, Value, State extends BaseFileMapShellState<Table, Key, Value>> extends AbstractCommand<State> {
     public PutCommand() {
         super("put", "put <key> <value>");
     }
 
-    public void executeCommand(String params, FileMapShellState state) {
-        if (state.table == null) {
+    public void executeCommand(String params, State state) {
+        if (state.getTable() == null) {
             System.err.println("no table");
             return;
         }
@@ -24,12 +24,15 @@ public class PutCommand extends AbstractCommand<FileMapShellState> {
             throw new IllegalArgumentException("argument missing");
         }
 
-        String oldValue = state.table.put(parameters.get(0), parameters.get(1));
+        Key key = state.parseKey(parameters.get(0));
+        Value value = state.parseValue(parameters.get(1));
+        Value oldValue = state.put(key, value);
+
         if (oldValue == null) {
             System.out.println("new");
         } else {
             System.out.println("overwrite");
-            System.out.println(oldValue);
+            System.out.println(state.valueToString(oldValue));
         }
     }
 

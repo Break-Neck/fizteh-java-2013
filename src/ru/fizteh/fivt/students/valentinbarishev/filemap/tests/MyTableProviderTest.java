@@ -2,16 +2,20 @@ package ru.fizteh.fivt.students.valentinbarishev.filemap.tests;
 
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
-import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 import ru.fizteh.fivt.students.valentinbarishev.filemap.MyTableProviderFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MyTableProviderTest {
     static TableProviderFactory factory;
     static TableProvider provider;
+    static String path;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -22,85 +26,61 @@ public class MyTableProviderTest {
     }
 
     @Before
-    public void before() throws IOException{
-        provider = factory.create(folder.newFolder().getCanonicalPath());
+    public void before() throws IOException {
+        path = folder.newFolder().getCanonicalPath();
+        provider = factory.create(path);
         Assert.assertNotNull(provider);
     }
 
-    @Test
-    public void testCreateRemoveTable() {
-        Assert.assertNotNull(provider.createTable("test_create_table"));
-        Assert.assertNull(provider.createTable("test_create_table"));
-        provider.removeTable("test_create_table");
+    @Test(expected = Error.class)
+    public void testSignature() {
+        new File(path, "test").mkdirs();
+        provider.getTable("test");
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testRemoveNonExistingTable() {
-        provider.removeTable("non_existing_table");
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testGetTableWithWrongName() {
-        provider.getTable(".." + File.separator + "database");
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testCreateTableWithWrongName() {
-        provider.createTable(".." + File.separator + "database");
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testUseTableWithWrongName() {
-        provider.removeTable(".." + File.separator + "database");
+    @Test(expected = Error.class)
+    public void testSignatureEmpty() throws IOException {
+        File file = new File(path, "test");
+        file.mkdirs();
+        new File(file, "signature.tsv").createNewFile();
+        provider.getTable("test");
     }
 
     @Test
-    public void testGetTable() {
-        provider.createTable("test_get_table");
-        Assert.assertNotNull(provider.getTable("test_get_table"));
-        provider.removeTable("test_get_table");
+    public void testRemove() throws IOException {
+        List<Class<?>> types = new ArrayList<>();
+        types.add(String.class);
+        types.add(Integer.class);
+
+        Table table = provider.createTable("simple", types);
+        Assert.assertNotNull(table);
+        Assert.assertNotNull(provider.getTable("simple"));
+        provider.removeTable("simple");
+        Assert.assertNull(provider.getTable("simple"));
     }
 
-    @Test
-    public void testGetNonExistingTable() {
-        Assert.assertNull(provider.getTable("non_existing_table"));
+    @Test (expected = IllegalArgumentException.class)
+    public void testEmptyTypes() throws IOException {
+        List<Class<?>> types = new ArrayList<>();
+
+        Table table = provider.createTable("simple", types);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetTableWithNull(){
-        provider.getTable(null);
+    @Test (expected = IllegalStateException.class)
+    public void testCloseCreate() throws Exception {
+        ((AutoCloseable) provider).close();
+        provider.createTable("asdasd", new ArrayList<Class<?>>());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testCreateTableWithNull() {
-        provider.createTable(null);
+    @Test (expected = IllegalStateException.class)
+    public void testCloseGet() throws Exception {
+        ((AutoCloseable) provider).close();
+        provider.getTable("asdasd");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testRemoveTableWithNull(){
-        provider.removeTable(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testCreateTableWithEmptyName() {
-        provider.createTable("");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testRemoveTableWithEmptyName() {
-        provider.removeTable("");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetTableWithEmptyName() {
-        provider.getTable("");
-    }
-
-    @Test
-    public void testSameInstanceGetCreate() {
-        Assert.assertEquals(provider.createTable("instance"), provider.getTable("instance"));
-        Assert.assertEquals(provider.getTable("instance"), provider.getTable("instance"));
-        provider.removeTable("instance");
+    @Test (expected = IllegalStateException.class)
+    public void testCloseRemove() throws Exception {
+        ((AutoCloseable) provider).close();
+        provider.removeTable("asdasd");
     }
 }
-

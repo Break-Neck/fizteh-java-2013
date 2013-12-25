@@ -6,8 +6,6 @@ package ru.fizteh.fivt.students.adanilyak.calculator;
  * Time: 15:00
  */
 
-import java.lang.*;
-
 public class Main {
 
     public static void main(String[] args) {

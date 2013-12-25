@@ -46,10 +46,6 @@ public class CommandShell implements CommandAbstract {
         this.err = err;
     }
 
-    public void exit() {
-
-    }
-
     public String getCurrentFile() {
         return currentFile.toString();
     }
@@ -192,7 +188,7 @@ public class CommandShell implements CommandAbstract {
                 } else {
                     error = null;
                 }
-                throw new ErrorShell(error);
+                //throw new ErrorShell(error);
             }
 
         } catch (Exception e) {

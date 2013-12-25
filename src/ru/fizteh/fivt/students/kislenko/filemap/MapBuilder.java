@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 public class MapBuilder {
-    private final long MAX_FILE_SIZE = 100000000;
+    private static final long MAX_FILE_SIZE = 100000000;
 
     public void buildMap(FilemapState state) throws IOException {
         File dbCreator = state.getPath().toFile();
@@ -41,7 +41,7 @@ public class MapBuilder {
             database.read(valueSymbols);
             key = new String(keySymbols, StandardCharsets.UTF_8);
             value = new String(valueSymbols, StandardCharsets.UTF_8);
-            state.putValue(key, value);
+            state.put(key, value, null);
         }
         database.close();
     }
@@ -56,9 +56,9 @@ public class MapBuilder {
                 throw new IOException("Too big database file.");
             }
             database.writeInt(key.getBytes(StandardCharsets.UTF_8).length);
-            database.writeInt(state.getValue(key).getBytes(StandardCharsets.UTF_8).length);
+            database.writeInt(state.get(key, null).getBytes(StandardCharsets.UTF_8).length);
             database.write(key.getBytes(StandardCharsets.UTF_8));
-            database.write(state.getValue(key).getBytes(StandardCharsets.UTF_8));
+            database.write(state.get(key, null).getBytes(StandardCharsets.UTF_8));
         }
         database.close();
     }

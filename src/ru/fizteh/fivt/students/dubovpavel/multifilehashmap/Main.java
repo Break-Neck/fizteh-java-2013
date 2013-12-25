@@ -10,11 +10,14 @@ import ru.fizteh.fivt.students.dubovpavel.multifilehashmap.performers.*;
 public class Main {
     public static void main(String[] args) {
         DispatcherMultiFileHashMapBuilder dispatcherMultiFileHashMapBuilder = new DispatcherMultiFileHashMapBuilder();
-        dispatcherMultiFileHashMapBuilder.setRepoPath("fizteh.db.dir");
-        dispatcherMultiFileHashMapBuilder.setDataBaseBuilder(new DataBaseMultiFileHashMapBuilder());
+        StorageBuilder storageBuilder = new StorageBuilder();
+        storageBuilder.setDataBaseBuilder(new DataBaseMultiFileHashMapBuilder());
+        storageBuilder.setPath(true, "fizteh.db.dir");
+        dispatcherMultiFileHashMapBuilder.setStorageBuilder(storageBuilder);
         dispatcherMultiFileHashMapBuilder.addPerformer(new PerformerSafeDataBaseOperationWrapper(new PerformerGet()));
         dispatcherMultiFileHashMapBuilder.addPerformer(new PerformerSafeDataBaseOperationWrapper(new PerformerPut()));
-        dispatcherMultiFileHashMapBuilder.addPerformer(new PerformerSafeDataBaseOperationWrapper(new PerformerRemove()));
+        dispatcherMultiFileHashMapBuilder.addPerformer(
+                new PerformerSafeDataBaseOperationWrapper(new PerformerRemove()));
         dispatcherMultiFileHashMapBuilder.addPerformer(new PerformerCreate());
         dispatcherMultiFileHashMapBuilder.addPerformer(new PerformerDrop());
         dispatcherMultiFileHashMapBuilder.addPerformer(new PerformerUse());

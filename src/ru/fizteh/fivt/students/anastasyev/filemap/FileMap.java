@@ -1,44 +1,44 @@
 package ru.fizteh.fivt.students.anastasyev.filemap;
 
+import ru.fizteh.fivt.storage.structured.Storeable;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class FileMap {
     private File fileMap;
-    private HashMap<String, String> elementHashMap = new HashMap<String, String>();
+    private FileMapTable table;
+    private FileMapTableProvider provider;
+    private HashMap<String, Storeable> elementHashMap = new HashMap<String, Storeable>();
     private int ndirectory;
     private int nfile;
 
-    public FileMap(String dbDir, int directory, int file) throws IOException {
+    public FileMap(String dbDir, int directory, int file, FileMapTable myTable, FileMapTableProvider myProvider)
+            throws IOException, ParseException {
         fileMap = new File(dbDir);
         ndirectory = directory;
         nfile = file;
+        table = myTable;
+        provider = myProvider;
         try {
             openFileMapWithCheck();
         } catch (FileNotFoundException e) {
-            throw new IOException("File " + nfile + ".dat not found");
-        } catch (IOException e) {
-            throw new IOException(e.getMessage());
-        } catch (Exception e) {
-            throw new IOException(e.getMessage());
-        }
-        if (elementHashMap.isEmpty()) {
-            delete();
+            throw new IOException("File " + nfile + ".dat not found", e);
         }
     }
 
-    private void openFileMapWithCheck() throws Exception {
+    private void openFileMapWithCheck() throws IOException, ParseException {
         if (!fileMap.exists()) {
             return;
         }
-        RandomAccessFile input = null;
-        try {
-            input = new RandomAccessFile(fileMap.toString(), "r");
+        try (RandomAccessFile input = new RandomAccessFile(fileMap, "r")) {
             if (input.length() == 0) {
                 return;
             }
@@ -47,29 +47,17 @@ public class FileMap {
             }
         } catch (FileNotFoundException e) {
             throw new FileNotFoundException(nfile + ".dat - File not found");
-        } catch (IOException e) {
-            throw new IOException(e.getMessage());
-        } catch (Exception e) {
-            throw new Exception("In " + nfile + ".dat something goes very-very wrong");
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    System.err.println("Can't close file " + nfile + ".dat");
-                }
-            }
         }
     }
 
-    private void readWithCheck(RandomAccessFile input) throws IOException {
+    private void readWithCheck(RandomAccessFile input) throws IOException, ParseException {
         int keyLength;
         int valueLength;
         try {
             keyLength = input.readInt();
             valueLength = input.readInt();
         } catch (IOException e) {
-            throw new IOException("Error in key/value reading");
+            throw new IOException("Error in key/value reading", e);
         }
         if (keyLength <= 0 || valueLength <= 0) {
             throw new IOException(nfile + ".dat has incorrect format");
@@ -88,17 +76,17 @@ public class FileMap {
                 throw new IOException(ndirectory + ".dir" + File.separator + nfile + ".dat has wrong key: " + key);
             }
             String value = new String(valueBytes);
-            elementHashMap.put(key, value);
+            elementHashMap.put(key, provider.deserialize(table, value));
         } catch (OutOfMemoryError e) {
-            throw new IOException(nfile + ".dat has incorrect format");
+            throw new IOException(nfile + ".dat has incorrect format", e);
         }
     }
 
-    private void write(RandomAccessFile output, String key, String value) throws IOException {
-        output.writeInt(key.getBytes("UTF-8").length);
-        output.writeInt(value.getBytes("UTF-8").length);
-        output.write(key.getBytes("UTF-8"));
-        output.write(value.getBytes("UTF-8"));
+    private void write(RandomAccessFile output, String key, Storeable value) throws IOException {
+        output.writeInt(key.getBytes(StandardCharsets.UTF_8).length);
+        output.writeInt(provider.serialize(table, value).getBytes(StandardCharsets.UTF_8).length);
+        output.write(key.getBytes(StandardCharsets.UTF_8));
+        output.write(provider.serialize(table, value).getBytes(StandardCharsets.UTF_8));
     }
 
     public void save() throws IOException {
@@ -112,42 +100,28 @@ public class FileMap {
                 throw new IOException("Can't create " + nfile + ".dat");
             }
         }
-        RandomAccessFile output = null;
-        try {
-            output = new RandomAccessFile(fileMap.toString(), "rw");
+        try (RandomAccessFile output = new RandomAccessFile(fileMap, "rw")) {
             output.setLength(0);
-            Set<Map.Entry<String, String>> hashMapSet = elementHashMap.entrySet();
-            for (Map.Entry<String, String> element : hashMapSet) {
+            Set<Map.Entry<String, Storeable>> hashMapSet = elementHashMap.entrySet();
+            for (Map.Entry<String, Storeable> element : hashMapSet) {
                 write(output, element.getKey(), element.getValue());
             }
         } catch (FileNotFoundException e) {
-            throw new IOException("Can't find file to commit");
+            throw new IOException("Can't find file to commit", e);
         } catch (Exception e) {
-            throw new IOException("Can't commit FileMap");
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    System.err.println("Can't close file " + nfile + ".dat");
-                }
-            }
+            throw new IOException("Can't commit FileMap", e);
         }
     }
 
-    public String put(String newKey, String newValue) {
+    public Storeable put(String newKey, Storeable newValue) {
         return elementHashMap.put(newKey, newValue);
     }
 
-    public String get(String key) {
-        String value = elementHashMap.get(key);
-        if (value == null) {
-            return "not found";
-        }
-        return value;
+    public Storeable get(String key) {
+        return elementHashMap.get(key);
     }
 
-    public String remove(String key) {
+    public Storeable remove(String key) {
         return elementHashMap.remove(key);
     }
 

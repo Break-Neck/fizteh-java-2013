@@ -1,14 +1,13 @@
 package ru.fizteh.fivt.students.belousova.multifilehashmap;
 
-import ru.fizteh.fivt.students.belousova.filemap.TableState;
 import ru.fizteh.fivt.students.belousova.shell.Command;
 
 import java.io.IOException;
 
 public class CommandSize implements Command {
-    private TableState state;
+    private MultiFileShellState state;
 
-    public CommandSize(TableState state) {
+    public CommandSize(MultiFileShellState state) {
         this.state = state;
     }
 

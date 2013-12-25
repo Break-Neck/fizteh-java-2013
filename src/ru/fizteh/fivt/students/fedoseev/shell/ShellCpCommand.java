@@ -45,20 +45,20 @@ public class ShellCpCommand extends AbstractCommand<ShellState> {
 
         if (!destination.isDirectory() && source.isFile()) {
             if (destination.isFile()) {
-                throw new IOException("CP ERROR: file with name of source file \"" + source.getName() +
-                        "\" already exists in destination \"" + destination.getCanonicalFile().toString() +
-                        "\"");
+                throw new IOException("CP ERROR: file with name of source file \"" + source.getName()
+                        + "\" already exists in destination \"" + destination.getCanonicalFile().toString()
+                        + "\"");
             }
 
             Files.copy(source.toPath(), destination.toPath());
         } else {
             if (!destination.exists()) {
-                throw new FileNotFoundException("CP ERROR: not existing destination \"" +
-                        destination.getCanonicalFile().toString() + "\"");
+                throw new FileNotFoundException("CP ERROR: not existing destination \""
+                        + destination.getCanonicalFile().toString() + "\"");
             }
             if (destination.listFiles(filter).length != 0) {
-                throw new IOException("CP ERROR: file with name of source file \"" + source.getName() +
-                        "\" already exists in current destination");
+                throw new IOException("CP ERROR: file with name of source file \"" + source.getName()
+                        + "\" already exists in current destination");
 
             }
 

@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 public class Calculator {
     //Checking input string for absence of excess symbols
     public static boolean checkForExcessSymbols(String s) {
-        Pattern alphabet = Pattern.compile("^[A-Ha-h\\d\\s\\+\\-\\*\\/\\(\\)]+");
+        Pattern alphabet = Pattern.compile("^[A-Ha-h\\d\\s\\+\\-\\*/\\(\\)]+");
         return alphabet.matcher(s).matches();
     }
 

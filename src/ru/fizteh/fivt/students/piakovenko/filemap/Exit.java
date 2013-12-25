@@ -1,8 +1,6 @@
 package ru.fizteh.fivt.students.piakovenko.filemap;
 
 import ru.fizteh.fivt.students.piakovenko.shell.Commands;
-import ru.fizteh.fivt.students.piakovenko.shell.CurrentStatus;
-import ru.fizteh.fivt.students.piakovenko.shell.MyException;
 
 import java.io.IOException;
 
@@ -15,33 +13,25 @@ import java.io.IOException;
  */
 public class Exit implements Commands {
     private final String name = "exit";
-    private DataBase db;
+    private GlobalFileMapState db;
 
     public String getName() {
         return name;
     }
 
-    public Exit (DataBase dataBase) {
+    public Exit(GlobalFileMapState dataBase) {
         db = dataBase;
     }
 
-    public void changeCurrentStatus (Object obj){
-        db = (DataBase)obj;
-    }
-
-
-    public void perform(String[] s) throws MyException, IOException {
+    public void perform(String[] s) throws IOException {
         if (s.length != 1) {
-            throw new MyException(new Exception("Wrong arguments! Usage ~ exit"));
+            throw new IOException("Wrong arguments! Usage ~ exit");
         }
-        if (db == null) {
-            return;
+        if (!db.isValidTable()) {
+            System.exit(0);
         }
         try {
-            db.saveDataBase();
-        } catch (MyException e) {
-            System.err.println("Error! " + e.what());
-            System.exit(1);
+            db.saveTable();
         } catch (IOException e) {
             System.err.println("Error! " + e.getMessage());
             System.exit(1);

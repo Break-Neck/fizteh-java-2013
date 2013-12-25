@@ -4,8 +4,8 @@ import java.io.*;
 import java.util.Map;
 
 public class FileMapUtils {
-    public static void readTable(File dbName, State state) throws IOException {
-        FileInputStream fileInputStream = new FileInputStream(dbName);
+    public static void readTable(FileMapState fileMapState) throws IOException {
+        FileInputStream fileInputStream = new FileInputStream(new File(fileMapState.getCurrentTableProvider().getDbDirectory(), fileMapState.getCurrentTable().getName()));
         BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
         DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
         try {
@@ -34,20 +34,20 @@ public class FileMapUtils {
                 }
                 String key = new String(keyBytes, "UTF-8");
                 String value = new String(valueBytes, "UTF-8");
-                state.put(key, value);
+                fileMapState.getCurrentTable().put(key, value);
             }
         } finally {
             dataInputStream.close();
         }
     }
 
-    public static void writeTable(File dbName, State state) throws IOException {
-        FileOutputStream fileOutputStream = new FileOutputStream(dbName);
+    public static void writeTable(FileMapState fileMapState) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(new File(fileMapState.getCurrentTableProvider().getDbDirectory(), fileMapState.getCurrentTable().getName()));
         fileOutputStream.getChannel().truncate(0); // Clear file
         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
         DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
         try {
-            for (Map.Entry<String, String> entry : state.getEntrySet()) {
+            for (Map.Entry<String, String> entry : fileMapState.getCurrentTable().getEntrySet()) {
                 dataOutputStream.writeInt(entry.getKey().getBytes("UTF-8").length);
                 dataOutputStream.writeInt(entry.getValue().getBytes("UTF-8").length);
                 dataOutputStream.write(entry.getKey().getBytes("UTF-8"));

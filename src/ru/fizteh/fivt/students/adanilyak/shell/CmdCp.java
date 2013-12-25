@@ -1,11 +1,8 @@
 package ru.fizteh.fivt.students.adanilyak.shell;
 
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.io.File;
-import java.nio.file.Path;
-import java.util.regex.Pattern;
+import java.io.IOException;
+import java.nio.file.Files;
 
 public class CmdCp {
     private final RequestCommandType name = RequestCommandType.getType("cp");

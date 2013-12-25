@@ -18,8 +18,9 @@ public class CommandMkdir implements Command<ShellState> {
         }
         String dirName = args[0];
         File newDir = new File(state.getState().resolve(dirName).toString());
-        if (newDir.exists())
+        if (newDir.exists()) {
             throw new IOException("mkdir: Directory already exists.");
+        }
         newDir.mkdir();
     }
 }

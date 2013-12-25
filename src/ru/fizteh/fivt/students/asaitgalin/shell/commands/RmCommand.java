@@ -1,12 +1,12 @@
 package ru.fizteh.fivt.students.asaitgalin.shell.commands;
 
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
+import ru.fizteh.fivt.students.asaitgalin.shell.FilesystemController;
+
 import java.io.File;
 import java.io.IOException;
 
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
-import ru.fizteh.fivt.students.asaitgalin.shell.FilesystemController;
-
-public class RmCommand implements Command {
+public class RmCommand extends DefaultCommand {
     private FilesystemController controller;
 
     public RmCommand(FilesystemController controller) {
@@ -30,7 +30,7 @@ public class RmCommand implements Command {
 
     private void deleteRecursively(File file) throws IOException {
         if (file.isDirectory()) {
-            for (File f: file.listFiles()) {
+            for (File f : file.listFiles()) {
                 deleteRecursively(f);
             }
         }

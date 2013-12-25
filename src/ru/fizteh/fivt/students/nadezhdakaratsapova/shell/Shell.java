@@ -1,8 +1,7 @@
 package ru.fizteh.fivt.students.nadezhdakaratsapova.shell;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Scanner;
 
 public class Shell {
 

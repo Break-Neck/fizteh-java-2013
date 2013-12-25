@@ -18,7 +18,8 @@ public class SingleFileTable implements Table {
     public void loadTable() throws IOException {
         TableEntryReader reader = new TableEntryReader(dbName);
         while (reader.hasNextEntry()) {
-            reader.readNextEntry(table);
+            Map.Entry<String, String> entry = reader.readNextEntry();
+            table.put(entry.getKey(), entry.getValue());
         }
     }
 
@@ -61,7 +62,6 @@ public class SingleFileTable implements Table {
     public int rollback() {
         throw new UnsupportedOperationException("rollback operation is not supported");
     }
-
 
 
 }

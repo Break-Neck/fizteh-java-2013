@@ -3,49 +3,49 @@ package ru.fizteh.fivt.students.fedoseev.multifilehashmap;
 import ru.fizteh.fivt.storage.strings.TableProvider;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MultiFileHashMapTableProvider implements TableProvider {
-    private File curDir;
-    private Map<String, MultiFileHashMapTable> tables = new HashMap<String, MultiFileHashMapTable>();
-
-    public MultiFileHashMapTableProvider(String dir) {
-        curDir = new File(dir);
-    }
+    private Map<String, MultiFileHashMapTable> databaseTables = new HashMap<String, MultiFileHashMapTable>();
 
     @Override
     public MultiFileHashMapTable getTable(String tableName) {
-        if (tableName == null) {
-            throw new IllegalArgumentException("GETTABLE ERROR: incorrect table name");
-        }
+        checkTableName(tableName);
 
-        return tables.get(tableName);
+        return databaseTables.get(tableName);
     }
 
     @Override
     public MultiFileHashMapTable createTable(String tableName) {
-        if (tables.containsKey(tableName)) {
+        if (databaseTables.containsKey(tableName)) {
             return null;
         }
+        checkTableName(tableName);
 
         MultiFileHashMapTable table = new MultiFileHashMapTable(tableName);
 
-        tables.put(tableName, table);
+        databaseTables.put(tableName, table);
 
         return table;
     }
 
     @Override
     public void removeTable(String tableName) {
-        if (tableName == null) {
-            throw new IllegalArgumentException("REMOVETABLE ERROR: incorrect table name");
-        }
-        if (!tables.containsKey(curDir.toPath().resolve(tableName).toString())) {
-            throw new IllegalStateException("REMOVETABLE ERROR: not existing table");
+        checkTableName(tableName);
+
+        if (!databaseTables.containsKey(tableName)) {
+            throw new IllegalStateException("REMOVE TABLE ERROR: not existing table");
         }
 
-        tables.remove(curDir.toPath().resolve(tableName).toString());
+        databaseTables.remove(tableName);
+    }
+
+    private void checkTableName(String tableName) throws IllegalArgumentException {
+        String nameFormat = "[а-яА-яa-zA-Z0-9]+";
+
+        if (tableName == null || !new File(tableName).toPath().getFileName().toString().matches(nameFormat)) {
+            throw new IllegalArgumentException("GET | CREATE | REMOVE TABLE ERROR: incorrect table name");
+        }
     }
 }

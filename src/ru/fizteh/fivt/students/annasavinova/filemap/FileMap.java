@@ -1,17 +1,42 @@
 package ru.fizteh.fivt.students.annasavinova.filemap;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.students.annasavinova.shell.UserShell;
 
 public class FileMap extends UserShell {
+    DBaseProviderFactory factory;
     private DataBaseProvider prov;
     private DataBase currTable;
 
+    private static String root = "";
+
     public FileMap() {
+        String property = System.getProperty("fizteh.db.dir");
+        if (property == null) {
+            throw new RuntimeException("root dir not selected");
+        }
+        File r = new File(property);
+        if (!r.exists()) {
+            if (!r.mkdirs()) {
+                throw new RuntimeException("cannot create root dir " + property);
+            }
+        }
+        if (property.endsWith(File.separator)) {
+            root = property;
+        } else {
+            root = property + File.separatorChar;
+        }
+        factory = new DBaseProviderFactory();
         try {
-            DBaseProviderFactory factory = new DBaseProviderFactory();
-            prov = (DataBaseProvider) factory.create(factory.getRoot());
-        } catch (RuntimeException e1) {
-            System.err.println(e1.getMessage());
+            prov = (DataBaseProvider) factory.create(root);
+        } catch (IllegalArgumentException | IOException e) {
+            System.err.println(e.getMessage());
             System.exit(1);
         }
     }
@@ -28,9 +53,12 @@ public class FileMap extends UserShell {
     @Override
     public void printError(String errStr) {
         if (isPacket) {
-            currTable.unloadData();
-            System.err.println(errStr);
-            System.exit(1);
+            try {
+                currTable.unloadData();
+            } finally {
+                System.err.println(errStr);
+                System.exit(1);
+            }
         } else {
             System.out.println(errStr);
         }
@@ -104,16 +132,19 @@ public class FileMap extends UserShell {
                 System.out.println(currTable.size());
                 break;
             case "commit":
-                doCommit();
+                if (checkArgs(1, args)) {
+                    doCommit();
+                }
                 break;
             case "rollback":
-                doRollBack();
+                if (checkArgs(1, args)) {
+                    doRollBack();
+                }
                 break;
             case "exit":
-                if (currTable != null) {
-                    currTable.unloadData();
+                if (checkArgs(1, args)) {
+                    doExit();
                 }
-                System.exit(0);
                 break;
             default:
                 printError("Unknown command");
@@ -121,25 +152,61 @@ public class FileMap extends UserShell {
         }
     }
 
+    private void doExit() {
+        System.exit(0);
+    }
+
     private void doCommit() {
-        System.out.println(currTable.commit());
+        try {
+            System.out.println(currTable.commit());
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
     }
 
     private void doRollBack() {
         System.out.println(currTable.rollback());
     }
 
-    private void doCreateTable(String tableName) {
+    private void doCreateTable(String args) {
+        args.trim();
+        if (!args.endsWith(")")) {
+            printError("Incorrect arguments. Need types");
+            return;
+        }
+        args = args.replace(")", "");
+        String[] strArray = args.split("[ ]+[/(]", 2);
+        if (strArray.length < 2) {
+            printError("Incorrect arguments. Need types");
+            return;
+        }
+        String tableName = strArray[0];
+        ArrayList<Class<?>> list = new ArrayList<>();
+        Scanner sc = new Scanner(strArray[1]);
+        while (sc.hasNext()) {
+            try {
+                String type = sc.next();
+                Class<?> cl = prov.getClassFromString(type);
+                list.add(cl);
+            } catch (RuntimeException e) {
+                printError("wrong type (" + e.getMessage() + ")");
+                sc.close();
+                return;
+            }
+        }
+        sc.close();
         try {
-            if (prov.createTable(tableName) == null) {
+            if (prov.createTable(tableName, list) == null) {
                 System.out.println(tableName + " exists");
             } else {
                 System.out.println("created");
             }
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-        } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
+            System.out.println("wrong type (" + e.getMessage() + ")");
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         }
     }
 
@@ -152,18 +219,17 @@ public class FileMap extends UserShell {
             }
         }
         try {
-            if (prov.getTable(tableName) == null) {
+            DataBase tmp = (DataBase) prov.getTable(tableName);
+            if (tmp == null) {
                 System.out.println(tableName + " not exists");
             } else {
                 if (currTable != null) {
                     currTable.unloadData();
                 }
-                currTable = (DataBase) prov.getTable(tableName);
+                currTable = tmp;
                 System.out.println("using " + tableName);
             }
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-        } catch (RuntimeException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -175,47 +241,48 @@ public class FileMap extends UserShell {
         try {
             prov.removeTable(tableName);
             System.out.println("dropped");
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         } catch (IllegalStateException e) {
             System.out.println(tableName + " not exists");
-        } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
         }
     }
 
     private void doPut(String key, String value) {
         try {
-            String oldValue = currTable.put(key, value);
+            Storeable oldValue = currTable.put(key, prov.deserialize(currTable, value));
             if (oldValue == null) {
                 System.out.println("new");
             } else {
                 System.out.println("overwrite");
-                System.out.println(oldValue);
+                System.out.println(prov.serialize(currTable, oldValue));
             }
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+        } catch (ParseException | RuntimeException e) {
+            printError("Cannot parse arguments");
         }
+
     }
 
     private void doGet(String key) {
         try {
-            String value = currTable.get(key);
+            Storeable value = currTable.get(key);
             if (value == null) {
                 System.out.println("not found");
             } else {
                 System.out.println("found");
-                System.out.println(value);
+                System.out.println(prov.serialize(currTable, value));
             }
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
-            return;
         }
     }
 
     private void doRemove(String key) {
         try {
-            String value = currTable.remove(key);
+            Storeable value = currTable.remove(key);
             if (value == null) {
                 System.out.println("not found");
             } else {
@@ -230,6 +297,7 @@ public class FileMap extends UserShell {
         try {
             FileMap data = new FileMap();
             data.exec(args);
+            data.doExit();
         } catch (RuntimeException e) {
             System.err.println(e.getMessage());
             System.exit(1);

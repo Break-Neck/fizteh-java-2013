@@ -5,10 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.fizteh.fivt.storage.strings.TableProvider;
 import ru.fizteh.fivt.storage.strings.TableProviderFactory;
-import ru.fizteh.fivt.students.belousova.multifilehashmap.MultiFileTableProvider;
 import ru.fizteh.fivt.students.belousova.multifilehashmap.MultiFileTableProviderFactory;
-
-import java.io.File;
 
 public class MultiFileTableProviderTest {
     private TableProvider tableProvider;

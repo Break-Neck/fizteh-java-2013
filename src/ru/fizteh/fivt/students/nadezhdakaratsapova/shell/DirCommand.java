@@ -41,7 +41,7 @@ public class DirCommand implements Command {
         }
     }
 
-    public int getArgsCount() {
-        return 0;
+    public boolean compareArgsCount(int inputArgsCount) {
+        return (inputArgsCount == 0);
     }
 }

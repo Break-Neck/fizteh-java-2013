@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class Copy implements CommandInterface {
 
@@ -61,7 +61,7 @@ public class Copy implements CommandInterface {
             File newFile = new File(destination);
             if (!(new File((new File(destination)).getParent())).exists()) {
                 Mkdir mkdir = new Mkdir();
-                Vector<String> args = new Vector<String>();
+                ArrayList<String> args = new ArrayList<String>();
                 args.add(" " + (new File(destination)).getParent());
                 mkdir.execute(args);
             }
@@ -87,7 +87,7 @@ public class Copy implements CommandInterface {
         if (new File(source).isDirectory()) {
             if (!(new File(destination)).exists()) {
                 Mkdir mkdir = new Mkdir();
-                Vector<String> args = new Vector<String>();
+                ArrayList<String> args = new ArrayList<>();
                 args.add(" " + destination);
                 mkdir.execute(args);
             }
@@ -109,8 +109,8 @@ public class Copy implements CommandInterface {
         return ((new File(source).isDirectory()) && (new File(destination).isFile()));
     }
 
-    public void execute(Vector<String> args) throws IOException {
-        String expr = args.elementAt(0);
+    public void execute(ArrayList<String> args) throws IOException {
+        String expr = args.get(0);
         int spaceIndex = expr.indexOf(' ', 0);
         while (expr.indexOf(' ', spaceIndex + 1) == spaceIndex + 1) {
             ++spaceIndex;

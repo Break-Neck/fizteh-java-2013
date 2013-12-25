@@ -12,7 +12,7 @@ public class Parser {
         String inputString;
         while (flag) {
             if (arg.length == 0) {
-                System.out.print("$ ");
+                System.out.print(" $ ");
                 if (input.hasNextLine()) {
                     inputString = input.nextLine();
                     commandString = inputString.split("[;]");

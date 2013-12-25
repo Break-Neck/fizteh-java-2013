@@ -18,18 +18,15 @@ public class ChangeDirectory implements Commands {
         currentStatus = cs;
     }
 
-    public void changeCurrentStatus (Object obj){
-        currentStatus = (CurrentStatus)obj;
-    }
 
     public String getName() {
         return name;
     }
 
 
-    public void perform(String[] array) throws MyException, IOException {
+    public void perform(String[] array) throws IOException {
         if (array.length != 2) {
-            throw new MyException(new Exception("Wrong arguments! Usage ~ cd <destination>"));
+            throw new IOException("Wrong arguments! Usage ~ cd <destination>");
         }
         File f;
         f = new File(array[1]);
@@ -37,7 +34,7 @@ public class ChangeDirectory implements Commands {
             f = new File(currentStatus.getCurrentDirectory(), array[1]);
         }
         if (!f.exists()) {
-            throw new MyException(new Exception(f.getCanonicalPath() + " doesn't exist!"));
+            throw new IOException(f.getCanonicalPath() + " doesn't exist!");
         }
         currentStatus.changeCurrentDirectory(f.getCanonicalPath());
     }

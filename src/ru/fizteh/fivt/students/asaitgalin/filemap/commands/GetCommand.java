@@ -1,11 +1,11 @@
 package ru.fizteh.fivt.students.asaitgalin.filemap.commands;
 
 import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
 
 import java.io.IOException;
 
-public class GetCommand implements Command {
+public class GetCommand extends DefaultCommand {
     private Table storage;
 
     public GetCommand(Table storage) {
@@ -19,7 +19,7 @@ public class GetCommand implements Command {
 
     @Override
     public void execute(String[] args) throws IOException {
-        String value =  storage.get(args[1]);
+        String value = storage.get(args[1]);
         if (value != null) {
             System.out.println("found");
             System.out.println(value);

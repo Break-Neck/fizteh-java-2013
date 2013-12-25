@@ -8,10 +8,12 @@ import java.nio.file.Path;
 public class Cp implements Command<ShellState> {
 
     public String getName() {
+
         return "cp";
     }
 
     private void copy(Path source, Path target) throws IOException {
+
         target = target.resolve(source.getFileName());
         if (source.toFile().isFile()) {
             Files.copy(source, target);
@@ -25,6 +27,7 @@ public class Cp implements Command<ShellState> {
     }
 
     public void executeCmd(ShellState inState, String[] args) throws IOException {
+
         if (2 == args.length) {
             Path source = inState.getPath().resolve(args[0]).normalize();
             Path target = inState.getPath().resolve(args[1]).normalize();
@@ -49,13 +52,11 @@ public class Cp implements Command<ShellState> {
 
             if (source.toFile().isFile() && !target.toFile().exists()) {
                 Files.copy(source, target);
-            }
-            //можно копировать файл в директорию
-            else if (source.toFile().isFile() && target.toFile().isDirectory()) {
+            } else
+            if (source.toFile().isFile() && target.toFile().isDirectory()) {
                 Files.copy(source, target.resolve(source.getFileName()));
-            }
-            //можно копировать директорию в директорию
-            else if (source.toFile().isDirectory() && target.toFile().isDirectory()) {
+            } else
+            if (source.toFile().isDirectory() && target.toFile().isDirectory()) {
                 File[] masOfSource = source.toFile().listFiles();
                 target.toFile().mkdir();
                 if (masOfSource != null) {

@@ -1,5 +1,7 @@
 package ru.fizteh.fivt.students.kislenko.junit;
 
+import ru.fizteh.fivt.students.kislenko.multifilemap.MyTable;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -9,7 +11,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 public class Utils {
-    static public void readTable(MyTable table) throws IOException {
+    public static void readTable(MyTable table) throws IOException {
         File tableDir = new File(table.getName());
         if (tableDir.listFiles() != null) {
             for (File dir : tableDir.listFiles()) {

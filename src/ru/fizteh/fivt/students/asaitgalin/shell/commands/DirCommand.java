@@ -1,14 +1,14 @@
 package ru.fizteh.fivt.students.asaitgalin.shell.commands;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.io.IOException;
-
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
 import ru.fizteh.fivt.students.asaitgalin.shell.FilesystemController;
 
-public class DirCommand implements Command {
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
+
+public class DirCommand extends DefaultCommand {
     private FilesystemController controller;
 
     public DirCommand(FilesystemController controller) {
@@ -37,7 +37,7 @@ public class DirCommand implements Command {
             }
         });
 
-        for (File f: files) {
+        for (File f : files) {
             if (!f.getName().equals(".") && !f.getName().equals("..")) {
                 System.out.println(f.getName());
             }

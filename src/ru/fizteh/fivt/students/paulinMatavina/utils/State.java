@@ -38,7 +38,7 @@ public abstract class State {
         commands.put(command.getName(), command);
     } 
     
-    public void exitWithError(int errCode) {
-        System.exit(errCode);
+    public int exitWithError(int errCode) throws ExitException {
+        return errCode;
     }
 }

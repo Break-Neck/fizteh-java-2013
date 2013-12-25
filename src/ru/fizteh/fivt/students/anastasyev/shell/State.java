@@ -1,9 +1,7 @@
 package ru.fizteh.fivt.students.anastasyev.shell;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 public abstract class State {
-    public abstract Vector<Command> getCommands();
-    //public abstract void stopping() throws IOException;
-    //public abstract State getMyState(int hashCode) throws IOException;
+    public abstract ArrayList<Command> getCommands();
 }

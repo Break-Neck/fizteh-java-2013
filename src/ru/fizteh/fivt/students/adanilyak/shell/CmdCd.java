@@ -1,6 +1,7 @@
 package ru.fizteh.fivt.students.adanilyak.shell;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 
 public class CmdCd {
     private final RequestCommandType name = RequestCommandType.getType("cd");
@@ -14,7 +15,7 @@ public class CmdCd {
         return amArgs;
     }
 
-    public void work(String arg, Shell shell) throws  IOException {
+    public void work(String arg, Shell shell) throws IOException {
         File newFile = new File(arg);
         if (newFile.isFile()) {
             throw new IOException("It's not directory");

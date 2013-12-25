@@ -1,13 +1,13 @@
 package ru.fizteh.fivt.students.mescherinilya.multifilehashmap;
 
-import java.io.*;
 import java.util.*;
 
 public class MultiFileHashMap {
 
-    private static Map<String, Command> commandList;
+    static TableProvider provider;
+    static Table currentTable;
+    static Map<String, Command> commandList;
 
-    static File rootDir;
 
     public static boolean batchMode(String input) throws TimeToExitException {
 
@@ -58,6 +58,7 @@ public class MultiFileHashMap {
         return true;
     }
 
+
     public static void interactiveMode() throws TimeToExitException {
         Scanner scanner = new Scanner(System.in);
 
@@ -67,26 +68,31 @@ public class MultiFileHashMap {
 
             batchMode(input);
         }
-
-
     }
+
 
     public static void main(String[] args) {
 
-        commandList = new HashMap<String, Command>();
-        commandList.put("put", new CommandPut());
+        commandList = new TreeMap<String, Command>();
+
         commandList.put("get", new CommandGet());
+        commandList.put("put", new CommandPut());
         commandList.put("remove", new CommandRemove());
+
         commandList.put("create", new CommandCreate());
         commandList.put("drop", new CommandDrop());
         commandList.put("use", new CommandUse());
 
-        DatabaseWorker.storage = new TreeMap<String, String>();
+        commandList.put("size", new CommandSize());
+        commandList.put("commit", new CommandCommit());
+        commandList.put("rollback", new CommandRollback());
 
-        rootDir = new File(System.getProperty("fizteh.db.dir")).getAbsoluteFile();
-        if (!rootDir.exists() || !rootDir.isDirectory()
-                || !rootDir.canRead() || !rootDir.canWrite()) {
-            System.err.println("Bad root directory!");
+        TableProviderFactory factory = new TableProviderFactory();
+
+        try {
+            provider = factory.create(System.getProperty("fizteh.db.dir"));
+        } catch (Throwable e) {
+            System.err.println(e.getMessage());
             System.exit(1);
         }
 
@@ -97,28 +103,18 @@ public class MultiFileHashMap {
                 StringBuilder sb = new StringBuilder();
                 for (String arg : args) {
                     sb.append(arg).append(" ");
-
                 }
-
                 batchMode(sb.toString());
             }
-        } catch (TimeToExitException te) {
-            try {
-                DatabaseWorker.writeDatabase();
-
-            } catch (IOException e) {
-                System.err.println(e.getMessage());
-                System.exit(1);
-            }
-
+        } catch (TimeToExitException e) {
             System.exit(0);
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+        } catch (Throwable t) {
+            System.err.println(t.getMessage());
             System.exit(1);
         }
 
-
         System.exit(1);
+
     }
 
 }

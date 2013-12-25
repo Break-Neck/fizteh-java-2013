@@ -14,20 +14,16 @@ public class ShellState extends State{
         this.add(new ShellMove());
         this.add(new ShellPwd());
         this.add(new ShellCopy());
-        this.add(new ShellExit());
         this.add(new ShellMkdir());
     }
     
     public int cd(final String source) {
         File newDir = new File(makeNewSource(source));
         if (!newDir.exists()) {
-            System.err.println("cd: " + source + ": is not a directory");
-            return 2;
+            throw new IllegalArgumentException("cd: " + source + ": does not exist");
         }
-        
-        if  (!newDir.isDirectory()) {
-            System.err.println("cd: " + source + ": is not a directory");
-            return 1;
+        if (!newDir.isDirectory()) {
+            throw new IllegalArgumentException("cd: " + source + ": is not a directory");
         }
         try {
             if (newDir.isAbsolute()) {
@@ -37,14 +33,19 @@ public class ShellState extends State{
                             + File.separator + newDir);
             }
         } catch (Exception e) {
-            System.err.println("cd: " + source
+            throw new IllegalArgumentException("cd: " + source
                     + ": is not a correct directory");
-            return 1;
         }
         return 0;
     }
     
-    public int rm(String[] args) {
+    @Override
+    public int exitWithError(int errCode) {
+        System.exit(errCode);
+        return 0;
+    }
+    
+    public int rm(String[] args) throws IllegalArgumentException {
         Command rm = new ShellRm();
         return rm.execute(args, this);
     }
@@ -54,12 +55,12 @@ public class ShellState extends State{
         return pwd.execute(args, this);
     }
     
-    public int cd(String[] args) {
+    public int cd(String[] args) throws IllegalArgumentException {
         Command cd = new ShellCd();
         return cd.execute(args, this);
     }
     
-    public int mkdir(String[] args) {
+    public int mkdir(String[] args) throws IllegalArgumentException {
         Command mkdir = new ShellMkdir();
         return mkdir.execute(args, this);
     }

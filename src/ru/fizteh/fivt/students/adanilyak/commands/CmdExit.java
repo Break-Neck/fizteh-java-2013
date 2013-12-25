@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.commands;
 
-import ru.fizteh.fivt.students.adanilyak.modernfilemap.FileMapState;
+import ru.fizteh.fivt.students.adanilyak.filemap.FileMapGlobalState;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.List;
 public class CmdExit implements Cmd {
     private final String name = "exit";
     private final int amArgs = 0;
-    private FileMapState workState;
+    private FileMapGlobalState workState = null;
 
-    public CmdExit(FileMapState stateTable) {
+    public CmdExit(FileMapGlobalState stateTable) {
         workState = stateTable;
     }
 
@@ -31,12 +31,13 @@ public class CmdExit implements Cmd {
 
     @Override
     public void work(List<String> args) throws IOException {
-        boolean autoCommitOnExit = false;
-        if (autoCommitOnExit) {
-            if (workState.currentTable != null) {
+        /*
+        if (workState.autoCommitOnExit) {
+            if (workState.getCurrentTable() != null) {
                 workState.commit();
             }
         }
+        */
         System.exit(0);
     }
 }

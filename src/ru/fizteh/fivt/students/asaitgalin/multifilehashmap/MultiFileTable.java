@@ -1,35 +1,25 @@
 package ru.fizteh.fivt.students.asaitgalin.multifilehashmap;
 
-import ru.fizteh.fivt.students.asaitgalin.filemap.TableEntryReader;
-import ru.fizteh.fivt.students.asaitgalin.filemap.TableEntryWriter;
+import ru.fizteh.fivt.students.asaitgalin.multifilehashmap.container.TableContainer;
 import ru.fizteh.fivt.students.asaitgalin.multifilehashmap.extensions.ChangesCountingTable;
+import ru.fizteh.fivt.students.asaitgalin.multifilehashmap.values.TableValuePackerString;
+import ru.fizteh.fivt.students.asaitgalin.multifilehashmap.values.TableValueUnpackerString;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 public class MultiFileTable implements ChangesCountingTable {
-    private static final int DIR_COUNT = 16;
-    private static final int FILES_PER_DIR = 16;
+    // Underlying container
+    private TableContainer<String> container;
 
     private File tableDir;
-
-    private Map<String, String> currentTable;
-    private Map<String, String> originalTable;
-    private Set<String> removedKeys;
-    private int changesCount;
-
     private String name;
 
     public MultiFileTable(File tableDir, String name) {
         this.name = name;
-        this.currentTable = new HashMap<>();
-        this.removedKeys = new HashSet<>();
-        this.originalTable = new HashMap<>();
         this.tableDir = tableDir;
+        this.container = new TableContainer<String>(tableDir, new TableValuePackerString(),
+                new TableValueUnpackerString());
     }
 
     @Override
@@ -42,14 +32,7 @@ public class MultiFileTable implements ChangesCountingTable {
         if (key == null) {
             throw new IllegalArgumentException("get: key is null");
         }
-        String value = currentTable.get(key);
-        if (value == null) {
-            if (removedKeys.contains(key)) {
-                return null;
-            }
-            value = originalTable.get(key);
-        }
-        return value;
+        return container.containerGetValue(key);
     }
 
     @Override
@@ -60,16 +43,7 @@ public class MultiFileTable implements ChangesCountingTable {
         if (key.trim().isEmpty() || value.trim().isEmpty()) {
             throw new IllegalArgumentException("put: key or value is empty");
         }
-        String oldValue = originalTable.get(key);
-        String currentValue = currentTable.put(key, value);
-        if (currentValue == null) {
-            ++changesCount;
-            currentValue = oldValue;
-        }
-        if (oldValue != null) {
-            removedKeys.add(key);
-        }
-        return currentValue;
+        return container.containerPutValue(key, value);
     }
 
     @Override
@@ -77,110 +51,35 @@ public class MultiFileTable implements ChangesCountingTable {
         if (key == null) {
             throw new IllegalArgumentException("remove: key is null");
         }
-        String oldValue = currentTable.get(key);
-        if (oldValue == null && !removedKeys.contains(key)) {
-            oldValue = originalTable.get(key);
-        }
-        if (currentTable.containsKey(key)) {
-            --changesCount;
-            currentTable.remove(key);
-            if (originalTable.containsKey(key)) {
-                removedKeys.add(key);
-            }
-        } else {
-            if (originalTable.containsKey(key) && !removedKeys.contains(key)) {
-                removedKeys.add(key);
-                ++changesCount;
-            }
-        }
-        return oldValue;
+        return container.containerRemoveValue(key);
     }
 
     @Override
     public int size() {
-        return currentTable.size() + originalTable.size() - removedKeys.size();
+        return container.containerGetSize();
     }
 
     @Override
     public int commit() {
-        int count = Math.abs(size() - originalTable.size());
-        for (String key : removedKeys) {
-            originalTable.remove(key);
-        }
-        originalTable.putAll(currentTable);
-        currentTable.clear();
-        removedKeys.clear();
-        changesCount = 0;
         try {
-            save();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return container.containerCommit();
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
         }
-        return count;
     }
 
     @Override
     public int rollback() {
-        int count = Math.abs(size() - originalTable.size());
-        currentTable.clear();
-        removedKeys.clear();
-        changesCount = 0;
-        return count;
+        return container.containerRollback();
     }
 
     @Override
     public int getChangesCount() {
-        return changesCount;
-    }
-
-    private int getKeyDir(String key) {
-        return Math.abs(key.hashCode()) % DIR_COUNT;
-    }
-
-    private int getKeyFile(String key) {
-        return Math.abs(key.hashCode()) / DIR_COUNT % FILES_PER_DIR;
-    }
-
-    public void save() throws IOException {
-        for (int i = 0; i < DIR_COUNT; ++i) {
-            for (int j = 0; j < FILES_PER_DIR; ++j) {
-                Map<String, String> values = new HashMap<>();
-                for (String s : originalTable.keySet()) {
-                    if (getKeyDir(s) == i && getKeyFile(s) == j) {
-                        values.put(s, originalTable.get(s));
-                    }
-                }
-                if (values.size() > 0) {
-                    File keyDir = new File(tableDir, i + ".dir");
-                    if (!keyDir.exists()) {
-                        keyDir.mkdir();
-                    }
-                    File fileName = new File(keyDir, j + ".dat");
-                    TableEntryWriter writer = new TableEntryWriter(fileName);
-                    writer.writeEntries(values);
-                }
-            }
-        }
+        return container.containerGetChangesCount();
     }
 
     public void load() throws IOException {
-        for (File subDir : tableDir.listFiles()) {
-            if (subDir.isDirectory()) {
-                for (File f : subDir.listFiles()) {
-                    if (f.exists()) {
-                        TableEntryReader reader = new TableEntryReader(f);
-                        while (reader.hasNextEntry()) {
-                            String key = reader.getNextKey();
-                            File validFile = new File(new File(tableDir, getKeyDir(key) + ".dir"), getKeyFile(key) + ".dat");
-                            if (!f.equals(validFile)) {
-                                throw new IOException("Corrupted database");
-                            }
-                            reader.readNextEntry(originalTable);
-                        }
-                    }
-                }
-            }
-        }
+        container.containerLoad();
     }
 
 }

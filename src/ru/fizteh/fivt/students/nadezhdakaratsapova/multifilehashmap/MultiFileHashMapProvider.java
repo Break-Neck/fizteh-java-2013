@@ -2,24 +2,21 @@ package ru.fizteh.fivt.students.nadezhdakaratsapova.multifilehashmap;
 
 import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.students.nadezhdakaratsapova.filemap.DataTable;
-import ru.fizteh.fivt.students.nadezhdakaratsapova.filemap.FileWriter;
 import ru.fizteh.fivt.students.nadezhdakaratsapova.shell.CommandUtils;
-
+import ru.fizteh.fivt.students.nadezhdakaratsapova.tableutils.UniversalDataTable;
+import ru.fizteh.fivt.students.nadezhdakaratsapova.tableutils.UniversalTableProvider;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
-public class MultiFileHashMapProvider implements TableProvider {
-    public static final int DIR_COUNT = 16;
-    public static final int FILE_COUNT = 16;
+public class MultiFileHashMapProvider implements TableProvider, UniversalTableProvider {
     public static final String TABLE_NAME = "[a-zA-Zа-яА-Я0-9]+";
     private File workingDirectory;
-    public DataTable curDataBaseStorage = null;
-    private Map<String, DataTable> dataBaseTables = new HashMap<String, DataTable>();
+    public MultiFileDataTable curDataBaseStorage = null;
+    private Map<String, MultiFileDataTable> dataBaseTables = new HashMap<String, MultiFileDataTable>();
 
 
     public MultiFileHashMapProvider(File dir) throws IOException {
@@ -28,7 +25,7 @@ public class MultiFileHashMapProvider implements TableProvider {
         if (tables.length != 0) {
             for (File f : tables) {
                 if (f.isDirectory()) {
-                    DataTable dataTable = new DataTable(f.getName(), workingDirectory);
+                    MultiFileDataTable dataTable = new MultiFileDataTable(f.getName(), workingDirectory);
                     dataBaseTables.put(f.getName(), dataTable);
                 }
             }
@@ -36,23 +33,27 @@ public class MultiFileHashMapProvider implements TableProvider {
     }
 
 
-    public DataTable setCurTable(String newTable) throws IOException {
-        DataTable dataTable = null;
-        if (!dataBaseTables.isEmpty()) {
-            dataTable = dataBaseTables.get(newTable);
-            if (dataTable != null) {
-                dataTable.load();
-                if (curDataBaseStorage != null) {
-                    curDataBaseStorage.writeToDataBase();
+    public MultiFileDataTable setCurTable(String newTable) throws IOException {
+        try {
+            MultiFileDataTable dataTable = null;
+            if (!dataBaseTables.isEmpty()) {
+                dataTable = dataBaseTables.get(newTable);
+                if (dataTable != null) {
+                    dataTable.load();
+                    if (curDataBaseStorage != null) {
+                        curDataBaseStorage.writeToDataBase();
+                    }
+                    curDataBaseStorage = dataTable;
                 }
-                curDataBaseStorage = dataTable;
             }
+            return dataTable;
+        } catch (ParseException e) {
+            throw new IOException(e.getMessage());
         }
-        return dataTable;
     }
 
 
-    public Table getTable(String name) throws IllegalArgumentException {
+    public MultiFileDataTable getTable(String name) throws IllegalArgumentException {
         if ((name == null) || (name.isEmpty())) {
             throw new IllegalArgumentException("The table has not allowed name");
         }
@@ -79,7 +80,7 @@ public class MultiFileHashMapProvider implements TableProvider {
                 throw new IllegalArgumentException("Programme's mistake in getting canonical file");
             }
             newTableFile.mkdir();
-            DataTable newTable = new DataTable(name, workingDirectory);
+            MultiFileDataTable newTable = new MultiFileDataTable(name, workingDirectory);
             dataBaseTables.put(name, newTable);
             return newTable;
         }
@@ -111,7 +112,13 @@ public class MultiFileHashMapProvider implements TableProvider {
         }
     }
 
+    public UniversalDataTable getCurTable() {
+        return curDataBaseStorage;
+    }
 
+    public String toString() {
+        return new String(this.getClass().getSimpleName() + "[" + workingDirectory.toString() + "]");
+    }
 }
 
 

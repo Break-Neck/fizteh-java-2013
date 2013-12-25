@@ -54,7 +54,7 @@ public class ShellUtils {
         String[] commands = s.trim().split("\\s*;\\s*");
 
         for (String com : commands) {
-            String[] tokens = com.split("\\s+");
+            String[] tokens = com.split("\\s+", 3);
             try {
                 String commandName = tokens[0];
                 if (!commandList.containsKey(commandName)) {
@@ -70,7 +70,9 @@ public class ShellUtils {
                 }
                 command.execute(tokens);
             } catch (IOException e) {
-                throw new IOException(tokens[0] + ": " + e.getMessage(), e);
+                throw new IOException("wrong type (" + tokens[0] + ": " + e.getMessage() + ")", e);
+            } catch (IllegalArgumentException e) {
+                throw new IOException("wrong type (" + tokens[0] + ": " + e.getMessage() + ")", e);
             }
         }
     }

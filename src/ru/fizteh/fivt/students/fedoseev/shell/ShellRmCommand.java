@@ -20,8 +20,8 @@ public class ShellRmCommand extends AbstractCommand<ShellState> {
         }
 
         if (!curFile.delete()) {
-            throw new SecurityException("RM ERROR: cannot delete file \"" +
-                    curFile.getCanonicalFile().toString() + "\"");
+            throw new SecurityException("RM ERROR: cannot delete file \""
+                    + curFile.getCanonicalFile().toString() + "\"");
         }
     }
 

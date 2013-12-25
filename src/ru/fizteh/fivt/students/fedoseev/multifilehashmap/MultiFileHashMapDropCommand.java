@@ -1,22 +1,24 @@
 package ru.fizteh.fivt.students.fedoseev.multifilehashmap;
 
 import ru.fizteh.fivt.students.fedoseev.common.AbstractCommand;
+import ru.fizteh.fivt.students.fedoseev.common.State;
 
 import java.io.File;
 import java.io.IOException;
 
-public class MultiFileHashMapDropCommand extends AbstractCommand<MultiFileHashMapState> {
+public class MultiFileHashMapDropCommand extends AbstractCommand<State> {
     public MultiFileHashMapDropCommand() {
         super("drop", 1);
     }
 
     @Override
-    public void execute(String[] input, MultiFileHashMapState state) throws IOException {
-        File tableDir = state.getCurDir().toPath().resolve(input[0]).toFile();
+    public void execute(String[] input, State state) throws IOException {
+        String tableName = input[0];
+        File curTableDir = new File(state.getCurDir(), tableName);
 
-        if (tableDir.exists()) {
-            if (tableDir.listFiles() != null) {
-                for (File dir : tableDir.listFiles()) {
+        if (curTableDir.exists()) {
+            if (curTableDir.listFiles() != null) {
+                for (File dir : curTableDir.listFiles()) {
                     if (dir.listFiles() != null) {
                         for (File file : dir.listFiles()) {
                             file.delete();
@@ -27,18 +29,17 @@ public class MultiFileHashMapDropCommand extends AbstractCommand<MultiFileHashMa
                 }
             }
 
-            if (input[0].equals(state.getCurTableName())) {
-                state.getCurTable().clearContent();
-                state.setCurTable("");
-                state.setDbDir("");
+            if (state.getCurTable() != null && tableName.equals(state.getCurTableDir().getName())) {
+                state.clearContentAndDiff();
+                state.setCurTable(null);
             }
 
-            tableDir.delete();
-            state.removeTable(input[0]);
+            curTableDir.delete();
+            state.removeTable(curTableDir.toString());
 
             System.out.println("dropped");
         } else {
-            System.out.println(input[0] + " not exists");
+            System.out.println(tableName + " not exists");
         }
     }
 }

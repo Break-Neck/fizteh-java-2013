@@ -1,12 +1,11 @@
 package ru.fizteh.fivt.students.belousova.filemap;
 
-import ru.fizteh.fivt.students.belousova.filemap.TableState;
 import ru.fizteh.fivt.students.belousova.shell.Command;
 
 import java.io.IOException;
 
 public class CommandPut implements Command {
-    private static final String name = "put";
+
     private TableState state;
 
     public CommandPut(TableState state) {
@@ -15,7 +14,7 @@ public class CommandPut implements Command {
 
     @Override
     public String getName() {
-        return name;
+        return "put";
     }
 
     @Override

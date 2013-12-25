@@ -5,7 +5,7 @@ import java.io.IOException;
 import ru.fizteh.fivt.students.irinapodorozhnaya.multifilemap.MultiDbState;
 import ru.fizteh.fivt.students.irinapodorozhnaya.shell.AbstractCommand;
 
-public class CommandDrop extends AbstractCommand{
+public class CommandDrop extends AbstractCommand {
     
     private MultiDbState state;
     

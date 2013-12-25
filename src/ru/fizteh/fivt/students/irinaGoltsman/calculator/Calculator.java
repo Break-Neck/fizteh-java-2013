@@ -7,22 +7,13 @@ import java.util.StringTokenizer;
 public class Calculator {
 
     private static boolean isItArithmeticSign(String c) {
-        if (c.equals("+") || c.equals("-") || c.equals("*") || c.equals("/")) {
-            return true;
-        } else {
-            return false;
-        }
+        return (c.equals("+") || c.equals("-") || c.equals("*") || c.equals("/"));
     }
 
     //Проверяет, является ли введённый символ цифрой.
     private static boolean isItDigit(char c) {
-        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'G')) {
-            return true;
-        } else {
-            return false;
-        }
+        return ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'G'));
     }
-
 
     private static boolean isNumber(String number) {
         switch (number.length()) {
@@ -31,17 +22,18 @@ public class Calculator {
             case 1:
                 return isItDigit(number.charAt(0));
             default: {
-                for (int i = 1; i < number.length(); i++)
+                for (int i = 1; i < number.length(); i++) {
                     if (!isItDigit(number.charAt(i))) {
                         return false;
                     }
+                }
                 return true;
             }
         }
     }
 
     private static ArrayList<String> divideNumberMinusNumber(String string) {
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         boolean flag = false;
         StringBuilder tmp = new StringBuilder();
         char c;
@@ -50,9 +42,8 @@ public class Calculator {
             if (isItDigit(c)) {
                 tmp.append(c);
                 flag = false;
-                continue;
             } else if (c == '-') {
-                if (flag == false) {
+                if (!flag) {
                     flag = true;
                     result.add(tmp.toString());
                     tmp.delete(0, tmp.length());
@@ -105,7 +96,6 @@ public class Calculator {
                 ArrayList<String> buf;
                 buf = divideNumberMinusNumber(list.get(start));
                 if (buf.size() == 0) {
-                    statusOfLastSymbol = status.ERROR;
                     System.err.println("Incorrect input:" + list.get(start) + " Check the begin of the formula.");
                     System.exit(1);
                 }
@@ -207,8 +197,8 @@ public class Calculator {
     }
 
     private static void polishRecord(ArrayList<String> list) {
-        ArrayList<String> result = new ArrayList<String>();
-        Stack<String> stack = new Stack<String>();
+        ArrayList<String> result = new ArrayList<>();
+        Stack<String> stack = new Stack<>();
         int priorPrev;
         int prior;
         for (String string : list) {
@@ -222,8 +212,9 @@ public class Calculator {
                 }
                 //приоритет последнего элемента в стеке
                 prior = priority(string);        //приоритет текущего элемента
-
-                if ((stack.size() == 0 || priorPrev == 0) && prior != 1) {    //если в стеке нет операций или верхним элементом стека является открывающая скобка, операции кладётся в стек;
+                //если в стеке нет операций или верхним элементом стека является открывающая скобка,
+                // операции кладётся в стек;
+                if ((stack.size() == 0 || priorPrev == 0) && prior != 1) {
                     stack.push(string);
                     continue;
                 }
@@ -231,7 +222,9 @@ public class Calculator {
                     stack.push(string);
                     continue;
                 }
-                if (prior == 1) {   //До тех пор, пока верхним элементом стека не станет открывающая скобка, выталкиваем элементы из стека в выходную строку
+                //До тех пор, пока верхним элементом стека не станет открывающая скобка,
+                // выталкиваем элементы из стека в выходную строку
+                if (prior == 1) {
                     while (priorPrev != 0) {
                         result.add(stack.pop());
                         if (stack.size() == 0) {
@@ -243,13 +236,18 @@ public class Calculator {
                     stack.pop();            //delete last elem
                     continue;
                 }
-                if (prior > priorPrev) {          //если новая операции имеет больший* приоритет, чем верхняя операции в стеке, то новая операции кладётся в стек;
+                //если новая операции имеет больший* приоритет,
+                // чем верхняя операции в стеке, то новая операции кладётся в стек;
+                if (prior > priorPrev) {
                     stack.push(string);
                     continue;
                 }
-                if (prior <= priorPrev) {                                        //если новая операция имеет меньший или равный приоритет,
-                    while (prior <= priorPrev && stack.size() != 0) {        //чем верхняя операции в стеке, то операции, находящиеся в стеке,
-                        result.add(stack.pop());                    //до ближайшей открывающей скобки или до операции с приоритетом меньшим,
+                //если новая операция имеет меньший или равный приоритет,
+                if (prior <= priorPrev) {
+                    //чем верхняя операции в стеке, то операции, находящиеся в стеке,
+                    while (prior <= priorPrev && stack.size() != 0) {
+                        //до ближайшей открывающей скобки или до операции с приоритетом меньшим,
+                        result.add(stack.pop());
                         //чем у новой операции, перекладываются в формируемую запись,
                         if (stack.size() == 0) {
                             priorPrev = 0;
@@ -312,9 +310,9 @@ public class Calculator {
                     if (a > 0 ? b > Integer.MAX_VALUE / a
                             || b < Integer.MIN_VALUE / a
                             : (a < -1 ? b > Integer.MIN_VALUE / a
-                                || b < Integer.MAX_VALUE / a
-                                : a == -1
-                                    && b == Integer.MIN_VALUE)) {
+                            || b < Integer.MAX_VALUE / a
+                            : a == -1
+                            && b == Integer.MIN_VALUE)) {
                         System.err.print("Integer overflow by multiplying the numbers "
                                 + Integer.toString(a, 17) + " and " + Integer.toString(b, 17));
                         System.exit(1);
@@ -351,7 +349,7 @@ public class Calculator {
         }
         String string = str.toString().toUpperCase();
         StringTokenizer st = new StringTokenizer(string, "+/*() ", true);
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         while (st.hasMoreElements()) {
             String tmp = (String) st.nextElement();
             if (!tmp.equals(" ")) {

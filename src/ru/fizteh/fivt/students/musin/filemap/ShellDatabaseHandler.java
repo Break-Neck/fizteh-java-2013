@@ -1,28 +1,34 @@
 package ru.fizteh.fivt.students.musin.filemap;
 
-import ru.fizteh.fivt.storage.strings.Table;
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.musin.shell.Shell;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 public class ShellDatabaseHandler {
-    FileMapProvider database;
-    MultiFileMap current;
+    private FileMapProvider database;
+    private MultiFileMap current;
 
-    public ShellDatabaseHandler(String location) {
-        FileMapProviderFactory factory = new FileMapProviderFactory();
-        database = factory.create(location);
+    public ShellDatabaseHandler(FileMapProvider database) throws IOException {
+        this.database = database;
         current = null;
     }
 
-    void printException(Throwable e) {
+    void printException(Throwable e, PrintStream errorLog) {
         if (e.getCause() != null) {
-            printException(e.getCause());
+            printException(e.getCause(), errorLog);
         }
         for (Throwable suppressed : e.getSuppressed()) {
-            printException(suppressed);
+            printException(suppressed, errorLog);
         }
-        System.err.println(e.getMessage());
+        if (e.getMessage() != null && !e.getMessage().equals("")) {
+            errorLog.println(e.getMessage());
+        }
     }
 
     ArrayList<String> parseArguments(int argCount, String argString) {
@@ -51,28 +57,70 @@ public class ShellDatabaseHandler {
     }
 
     private Shell.ShellCommand[] commands = new Shell.ShellCommand[]{
-            new Shell.ShellCommand("create", new Shell.ShellExecutable() {
+            new Shell.ShellCommand("create", false, new Shell.ShellExecutable() {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
-                    if (args.size() > 1) {
-                        System.err.println("create: Too many arguments");
+                    args = parseArguments(2, args.get(0));
+                    if (args.size() > 2) {
+                        shell.writer.println("create: Too many arguments");
                         return -1;
                     }
-                    if (args.size() < 1) {
-                        System.err.println("create: Too few arguments");
+                    if (args.size() < 2) {
+                        shell.writer.println("wrong type (type not specified)");
                         return -1;
                     }
                     try {
-                        Table table = database.createTable(args.get(0));
+                        if (args.get(1).length() < 2) {
+                            shell.writer.println("wrong type (wrong argument format)");
+                            return -1;
+                        }
+                        if (args.get(1).charAt(0) != '(') {
+                            shell.writer.println("wrong type (wrong argument format)");
+                            return -1;
+                        }
+                        if (args.get(1).charAt(args.get(1).length() - 1) != ')') {
+                            shell.writer.println("wrong type (wrong argument format)");
+                            return -1;
+                        }
+                        String[] typeNames = args.get(1).substring(1, args.get(1).length() - 1).trim().split("\\s+");
+                        ArrayList<Class<?>> columnTypes = new ArrayList<>();
+                        for (int i = 0; i < typeNames.length; i++) {
+                            if (typeNames[i].equals("int")) {
+                                columnTypes.add(Integer.class);
+                            } else if (typeNames[i].equals("long")) {
+                                columnTypes.add(Long.class);
+                            } else if (typeNames[i].equals("byte")) {
+                                columnTypes.add(Byte.class);
+                            } else if (typeNames[i].equals("float")) {
+                                columnTypes.add(Float.class);
+                            } else if (typeNames[i].equals("double")) {
+                                columnTypes.add(Double.class);
+                            } else if (typeNames[i].equals("boolean")) {
+                                columnTypes.add(Boolean.class);
+                            } else if (typeNames[i].equals("String")) {
+                                columnTypes.add(String.class);
+                            } else {
+                                shell.writer.println(String.format("wrong type (%s is not supported)",
+                                        typeNames[i]));
+                                return -1;
+                            }
+                        }
+                        Table table = database.createTable(args.get(0), columnTypes);
                         if (table == null) {
-                            System.out.printf("%s exists\n", args.get(0));
+                            shell.writer.printf("%s exists%s", args.get(0), System.lineSeparator());
                             return 0;
                         }
+                    } catch (ColumnFormatException e) {
+                        shell.writer.println(String.format("wrong type (%s)", e.getMessage()));
+                        return -1;
                     } catch (RuntimeException e) {
-                        printException(e);
+                        printException(e, shell.writer);
+                        return -1;
+                    } catch (IOException e) {
+                        printException(e, shell.writer);
                         return -1;
                     }
-                    System.out.println("created");
+                    shell.writer.println("created");
                     return 0;
                 }
             }),
@@ -80,23 +128,30 @@ public class ShellDatabaseHandler {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
                     if (args.size() > 1) {
-                        System.err.println("drop: Too many arguments");
+                        shell.writer.println("drop: Too many arguments");
                         return -1;
                     }
                     if (args.size() < 1) {
-                        System.err.println("drop: Too few arguments");
+                        shell.writer.println("drop: Too few arguments");
                         return -1;
                     }
+                    boolean inUse = args.get(0).equals(current.getName());
                     try {
                         database.removeTable(args.get(0));
                     } catch (IllegalStateException e) {
-                        System.out.printf("%s not exists\n", args.get(0));
+                        shell.writer.printf("%s not exists%s", args.get(0), System.lineSeparator());
                         return 0;
                     } catch (RuntimeException e) {
-                        printException(e);
+                        printException(e, shell.writer);
                         return -1;
+                    } catch (IOException e) {
+                        printException(e, shell.writer);
+                        return  -1;
                     }
-                    System.out.println("dropped");
+                    if (current != null && inUse) {
+                        current = null;
+                    }
+                    shell.writer.println("dropped");
                     return 0;
                 }
             }),
@@ -104,15 +159,16 @@ public class ShellDatabaseHandler {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
                     if (args.size() > 1) {
-                        System.err.println("use: Too many arguments");
+                        shell.writer.println("use: Too many arguments");
                         return -1;
                     }
                     if (args.size() < 1) {
-                        System.err.println("use: Too few arguments");
+                        shell.writer.println("use: Too few arguments");
                         return -1;
                     }
                     if (current != null && current.uncommittedChanges() != 0) {
-                        System.out.printf("%d unsaved changes\n", current.uncommittedChanges());
+                        shell.writer.printf("%d unsaved changes%s",
+                                current.uncommittedChanges(), System.lineSeparator());
                         return 0;
                     }
                     try {
@@ -120,14 +176,14 @@ public class ShellDatabaseHandler {
                         if (newTable != null) {
                             current = newTable;
                         } else {
-                            System.out.printf("%s not exists\n", args.get(0));
+                            shell.writer.printf("%s not exists%s", args.get(0), System.lineSeparator());
                             return 0;
                         }
                     } catch (RuntimeException e) {
-                        printException(e);
+                        printException(e, shell.writer);
                         return -1;
                     }
-                    System.out.printf("using %s\n", args.get(0));
+                    shell.writer.printf("using %s%s", args.get(0), System.lineSeparator());
                     return 0;
                 }
             }),
@@ -135,13 +191,16 @@ public class ShellDatabaseHandler {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
                     if (args.size() > 0) {
-                        System.err.println("commit: Too many arguments");
+                        shell.writer.println("commit: Too many arguments");
                         return -1;
                     }
                     try {
-                        System.out.printf("%d\n", current.commit());
+                        shell.writer.println(current.commit());
                     } catch (RuntimeException e) {
-                        printException(e);
+                        printException(e, shell.writer);
+                        return -1;
+                    } catch (IOException e) {
+                        printException(e, shell.writer);
                         return -1;
                     }
                     return 0;
@@ -151,13 +210,13 @@ public class ShellDatabaseHandler {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
                     if (args.size() > 0) {
-                        System.err.println("rollback: Too many arguments");
+                        shell.writer.println("rollback: Too many arguments");
                         return -1;
                     }
                     try {
-                        System.out.printf("%d\n", current.rollback());
+                        shell.writer.println(current.rollback());
                     } catch (RuntimeException e) {
-                        printException(e);
+                        printException(e, shell.writer);
                         return -1;
                     }
                     return 0;
@@ -167,13 +226,13 @@ public class ShellDatabaseHandler {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
                     if (args.size() > 0) {
-                        System.err.println("rollback: Too many arguments");
+                        shell.writer.println("rollback: Too many arguments");
                         return -1;
                     }
                     try {
-                        System.out.printf("%d\n", current.size());
+                        shell.writer.println(current.size());
                     } catch (RuntimeException e) {
-                        printException(e);
+                        printException(e, shell.writer);
                         return -1;
                     }
                     return 0;
@@ -184,22 +243,32 @@ public class ShellDatabaseHandler {
                 public int execute(Shell shell, ArrayList<String> args) {
                     args = parseArguments(2, args.get(0));
                     if (args.size() > 2) {
-                        System.err.println("put: Too many arguments");
+                        shell.writer.println("put: Too many arguments");
                         return -1;
                     }
                     if (args.size() < 2) {
-                        System.err.println("put: Too few arguments");
+                        shell.writer.println("put: Too few arguments");
                         return -1;
                     }
                     if (current == null) {
-                        System.out.println("no table");
+                        shell.writer.println("no table");
                         return 0;
                     }
-                    String value = current.put(args.get(0), args.get(1));
-                    if (value == null) {
-                        System.out.println("new");
-                    } else {
-                        System.out.printf("overwrite\n%s\n", value);
+                    try {
+                        Storeable value = current.put(args.get(0), database.deserialize(current, args.get(1)));
+                        if (value == null) {
+                            shell.writer.println("new");
+                        } else {
+                            shell.writer.printf("overwrite%s%s%s",
+                                    System.lineSeparator(), database.serialize(current, value), System.lineSeparator());
+                        }
+                    } catch (ColumnFormatException e) {
+                        shell.writer.printf("wrong type (%s)%s", e.getMessage(), System.lineSeparator());
+                    } catch (ParseException e) {
+                        shell.writer.printf("wrong type (%s)%s", e.getMessage(), System.lineSeparator());
+                    } catch (Exception e) {
+                        printException(e, shell.writer);
+                        return -1;
                     }
                     return 0;
                 }
@@ -208,22 +277,23 @@ public class ShellDatabaseHandler {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
                     if (args.size() > 1) {
-                        System.err.println("get: Too many arguments");
+                        shell.writer.println("get: Too many arguments");
                         return -1;
                     }
                     if (args.size() < 1) {
-                        System.err.println("get: Too few arguments");
+                        shell.writer.println("get: Too few arguments");
                         return -1;
                     }
                     if (current == null) {
-                        System.out.println("no table");
+                        shell.writer.println("no table");
                         return 0;
                     }
-                    String value = current.get(args.get(0));
+                    Storeable value = current.get(args.get(0));
                     if (value == null) {
-                        System.out.println("not found");
+                        shell.writer.println("not found");
                     } else {
-                        System.out.printf("found\n%s\n", value);
+                        shell.writer.printf("found%s%s%s",
+                                System.lineSeparator(), database.serialize(current, value), System.lineSeparator());
                     }
                     return 0;
                 }
@@ -232,31 +302,69 @@ public class ShellDatabaseHandler {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
                     if (args.size() > 1) {
-                        System.err.println("remove: Too many arguments");
+                        shell.writer.println("remove: Too many arguments");
                         return -1;
                     }
                     if (args.size() < 1) {
-                        System.err.println("remove: Too few arguments");
+                        shell.writer.println("remove: Too few arguments");
                         return -1;
                     }
                     if (current == null) {
-                        System.out.println("no table");
+                        shell.writer.println("no table");
                         return 0;
                     }
-                    if (current.remove(args.get(0)) != null) {
-                        System.out.println("removed");
+                    Storeable value = current.remove(args.get(0));
+                    if (value != null) {
+                        shell.writer.printf("removed%s", System.lineSeparator());
                     } else {
-                        System.out.println("not found");
+                        shell.writer.println("not found");
                     }
                     return 0;
                 }
             }),
-            new Shell.ShellCommand("exit", new Shell.ShellExecutable() {
+            new Shell.ShellCommand("describe", new Shell.ShellExecutable() {
                 @Override
                 public int execute(Shell shell, ArrayList<String> args) {
-                    shell.stop();
-                    if (current != null) {
-                        current.commit();
+                    if (args.size() > 1) {
+                        shell.writer.println("describe: Too many arguments");
+                        return -1;
+                    }
+                    if (args.size() < 1) {
+                        shell.writer.println("describe: Too few arguments");
+                        return -1;
+                    }
+                    try {
+                        MultiFileMap newTable = database.getTable(args.get(0));
+                        if (newTable != null) {
+                            int columnCount = newTable.getColumnsCount();
+                            for (int i = 0; i < columnCount; i++) {
+                                if (newTable.getColumnType(i) == Integer.class) {
+                                    shell.writer.print("int");
+                                } else if (newTable.getColumnType(i) == Long.class) {
+                                    shell.writer.print("long");
+                                } else if (newTable.getColumnType(i) == Byte.class) {
+                                    shell.writer.print("byte");
+                                } else if (newTable.getColumnType(i) == Float.class) {
+                                    shell.writer.print("float");
+                                } else if (newTable.getColumnType(i) == Double.class) {
+                                    shell.writer.print("double");
+                                } else if (newTable.getColumnType(i) == Boolean.class) {
+                                    shell.writer.print("boolean");
+                                } else if (newTable.getColumnType(i) == String.class) {
+                                    shell.writer.print("String");
+                                }
+                                if (i != columnCount - 1) {
+                                    shell.writer.print(" ");
+                                }
+                            }
+                            shell.writer.println();
+                        } else {
+                            shell.writer.println(String.format("%s not exists", args.get(0)));
+                            return -1;
+                        }
+                    } catch (RuntimeException e) {
+                        printException(e, shell.writer);
+                        return -1;
                     }
                     return 0;
                 }
@@ -267,5 +375,18 @@ public class ShellDatabaseHandler {
         for (int i = 0; i < commands.length; i++) {
             shell.addCommand(commands[i]);
         }
+        shell.addExitFunction(new Shell.ShellCommand(null, new Shell.ShellExecutable() {
+            @Override
+            public int execute(Shell shell, ArrayList<String> args) {
+                try {
+                    if (current != null) {
+                        current.rollback();
+                    }
+                } catch (Exception e) {
+                    printException(e, shell.writer);
+                }
+                return 0;
+            }
+        }));
     }
 }

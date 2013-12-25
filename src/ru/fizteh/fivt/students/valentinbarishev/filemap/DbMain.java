@@ -1,8 +1,9 @@
 package ru.fizteh.fivt.students.valentinbarishev.filemap;
 
+import java.io.IOException;
 import java.util.Scanner;
 
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 import ru.fizteh.fivt.students.valentinbarishev.shell.Shell;
 import ru.fizteh.fivt.students.valentinbarishev.shell.InvalidCommandException;
 import ru.fizteh.fivt.students.valentinbarishev.shell.CommandParser;
@@ -20,22 +21,27 @@ public class DbMain {
     }
 
     private static void initShell() {
+        try {
+            shell = new Shell();
 
-        shell = new Shell();
+            TableProviderFactory factory = new MyTableProviderFactory();
+            Context context = new Context(factory.create(System.getProperty("fizteh.db.dir")));
 
-        TableProviderFactory factory = new MyTableProviderFactory();
-        Context context = new Context(factory.create(System.getProperty("fizteh.db.dir")));
+            shell.addCommand(new ShellDbPut(context));
+            shell.addCommand(new ShellExit(context));
+            shell.addCommand(new ShellDbGet(context));
+            shell.addCommand(new ShellDbRemove(context));
+            shell.addCommand(new ShellCreateTable(context));
+            shell.addCommand(new ShellDropTable(context));
+            shell.addCommand(new ShellUseTable(context));
+            shell.addCommand(new ShellDbSize(context));
+            shell.addCommand(new ShellDbCommit(context));
+            shell.addCommand(new ShellDbRollback(context));
 
-        shell.addCommand(new ShellDbPut(context));
-        shell.addCommand(new ShellExit(context));
-        shell.addCommand(new ShellDbGet(context));
-        shell.addCommand(new ShellDbRemove(context));
-        shell.addCommand(new ShellCreateTable(context));
-        shell.addCommand(new ShellDropTable(context));
-        shell.addCommand(new ShellUseTable(context));
-        shell.addCommand(new ShellDbSize(context));
-        shell.addCommand(new ShellDbCommit(context));
-        shell.addCommand(new ShellDbRollback(context));
+        } catch (IOException e) {
+            System.out.println("init shell failed!");
+            System.exit(1);
+        }
     }
 
     private static void packetRun(final String[] args) {
@@ -51,7 +57,7 @@ public class DbMain {
 
     private static void interactiveRun() {
         Scanner scanner = new Scanner(System.in);
-        System.out.print("$ ");
+        System.out.print(" $ ");
         while (true) {
             try {
                 if (!scanner.hasNextLine()) {
@@ -72,7 +78,7 @@ public class DbMain {
                     |RuntimeException e) {
                 System.err.println(e.getMessage());
             } finally {
-                System.out.print("$ ");
+                System.out.print(" $ ");
             }
         }
     }

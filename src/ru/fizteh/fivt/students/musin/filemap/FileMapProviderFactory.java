@@ -1,22 +1,56 @@
 package ru.fizteh.fivt.students.musin.filemap;
 
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
-public class FileMapProviderFactory implements TableProviderFactory {
+public class FileMapProviderFactory implements TableProviderFactory, AutoCloseable {
+    private ArrayList<FileMapProvider> providers;
+    private volatile boolean valid;
 
-    public FileMapProvider create(String location) {
+    public FileMapProviderFactory() {
+        providers = new ArrayList<>();
+        valid = true;
+    }
+
+
+    public FileMapProvider create(String location) throws IOException {
+        if (!valid) {
+            throw new IllegalStateException("TableProvider is closed");
+        }
         if (location == null) {
             throw new IllegalArgumentException("Null location");
         }
-        FileMapProvider newProvider = new FileMapProvider(new File(location));
+        if (location.equals("")) {
+            throw new IllegalArgumentException("Empty location");
+        }
+        File path = new File(location);
+        FileMapProvider newProvider = new FileMapProvider(path);
+        if (path.exists() && !path.isDirectory()) {
+            throw new IllegalArgumentException("File is located at specified location");
+        }
         if (!newProvider.isValidLocation()) {
-            throw new IllegalArgumentException("Database location is invalid");
+            if (!path.mkdirs()) {
+                throw new IOException("Database location is invalid");
+            }
         }
         if (!newProvider.isValidContent()) {
-            throw new IllegalArgumentException("Database folder contains files");
+            throw new RuntimeException("Database folder contains files");
         }
+        providers.add(newProvider);
         return newProvider;
+    }
+
+    public void close() {
+        try {
+            for (FileMapProvider provider : providers) {
+                provider.close();
+            }
+            providers.clear();
+        } finally {
+            valid = false;
+        }
     }
 }

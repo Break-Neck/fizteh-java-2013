@@ -5,6 +5,6 @@ package ru.fizteh.fivt.students.mishatkin.multifilehashmap;
  */
 public interface MultiFileHashMapReceiverProtocol {
 	public void createCommand(String tableName) throws MultiFileHashMapException;
-	public void dropCommand(String tableName) throws MultiFileHashMapException;
+	public boolean dropCommand(String tableName) throws MultiFileHashMapException;
 	public void useCommand(String tableName) throws MultiFileHashMapException;
 }

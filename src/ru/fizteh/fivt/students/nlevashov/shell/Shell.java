@@ -2,7 +2,8 @@ package ru.fizteh.fivt.students.nlevashov.shell;
 
 import ru.fizteh.fivt.students.nlevashov.mode.Mode;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.EnumSet;
 import java.io.File;
@@ -17,9 +18,9 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.DirectoryStream;
 
 public class Shell {
-    public static Vector<String> parse(String str, String separators) {
+    public static List<String> parse(String str, String separators) {
         String[] tokens = str.split(separators);
-        Vector<String> tokensWithoutEmptyStrings = new Vector<String>();
+        List<String> tokensWithoutEmptyStrings = new ArrayList<>();
         for (int i = 0; i < tokens.length; i++) {
             if (!tokens[i].equals("")) {
                 tokensWithoutEmptyStrings.add(tokens[i]);
@@ -202,7 +203,7 @@ public class Shell {
         try {
             Mode.start(args, new Mode.Executor() {
                 public boolean execute(String cmd) throws IOException {
-                    Vector<String> tokens = parse(cmd, " ");
+                    List<String> tokens = parse(cmd, " ");
                     if (tokens.size() != 0) {
                         switch (tokens.get(0)) {
                             case "cd":

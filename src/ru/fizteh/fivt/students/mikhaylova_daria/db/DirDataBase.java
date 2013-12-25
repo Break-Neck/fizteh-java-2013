@@ -1,6 +1,9 @@
 package ru.fizteh.fivt.students.mikhaylova_daria.db;
 
 import java.io.File;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class DirDataBase {
 
@@ -10,13 +13,21 @@ public class DirDataBase {
 
     private boolean isReady = false;
 
+    TableData table;
+
     FileMap[] fileArray = new FileMap[16];
+
+    private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
+
+
+    private final Lock creatingLock = new ReentrantLock();
 
     DirDataBase() {
 
     }
 
-    DirDataBase(File directory, Short id) {
+    DirDataBase(File directory, Short id, TableData table) {
+        this.table = table;
         dir = directory;
         this.id = id;
         Short[] idFile = new Short[2];
@@ -29,34 +40,40 @@ public class DirDataBase {
     }
 
     void startWorking() throws Exception {
-        if (!isReady) {
+        creatingLock.lock();
+        try {
             if (!dir.exists()) {
                 if (!dir.mkdir()) {
                     throw new Exception(dir.toString() + ": Creating directory error");
                 }
             }
-            isReady = true;
+        } finally {
+            creatingLock.unlock();
         }
     }
 
+
     void deleteEmptyDir() throws Exception {
-        File[] f = dir.listFiles();
-        if (f != null) {
-            if (f.length == 0) {
-                if (!dir.delete()) {
-                    throw new Exception("Deleting directory error");
+        creatingLock.lock();
+        try {
+            File[] f = dir.listFiles();
+            if (f != null) {
+                if (f.length == 0) {
+                    if (!dir.delete()) {
+                        throw new Exception("Deleting directory error");
+                    }
                 }
             }
-        } else {
-            throw new Exception("Internal error");
+            isReady = false;
+        } finally {
+            creatingLock.unlock();
         }
-        isReady = false;
     }
 
     int countChanges() {
         int numberOfChanges = 0;
         for (int i = 0; i < 16; ++i) {
-            numberOfChanges += fileArray[i].numberOfChangesCounter();
+            numberOfChanges += fileArray[i].numberOfChangesCounter(this.table);
         }
         return numberOfChanges;
     }
@@ -64,33 +81,37 @@ public class DirDataBase {
     int size() {
         int numberOfKeys = 0;
         for (int i = 0; i < 16; ++i) {
-            numberOfKeys += fileArray[i].size();
+            numberOfKeys += fileArray[i].size(this.table);
         }
         return numberOfKeys;
     }
 
     int commit() {
-        int numberOfChanges = 0;
-
-        for (int i = 0; i < 16; ++i) {
-            int changesInFile = fileArray[i].numberOfChangesCounter();
-            if (changesInFile != 0) {
-                try {
-                    startWorking();
-                } catch (Exception e) {
-                    throw new RuntimeException(e.getMessage(), e);
+        creatingLock.lock();
+        try {
+            int numberOfChanges = 0;
+            for (int i = 0; i < 16; ++i) {
+                int changesInFile = fileArray[i].numberOfChangesCounter(this.table);
+                if (changesInFile != 0) {
+                    try {
+                        startWorking();
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException(e.getMessage(), e);
+                    }
+                    fileArray[i].commit(this.table);
+                    numberOfChanges += changesInFile;
                 }
-                fileArray[i].commit();
-                numberOfChanges += changesInFile;
             }
+            return numberOfChanges;
+        } finally {
+            creatingLock.unlock();
         }
-        return numberOfChanges;
     }
 
     int rollback() {
         int numberOfChanges = 0;
         for (int i = 0; i < 16; ++i) {
-            numberOfChanges += fileArray[i].rollback();
+            numberOfChanges += fileArray[i].rollback(this.table);
         }
         return numberOfChanges;
     }

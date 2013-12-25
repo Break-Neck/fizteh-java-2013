@@ -1,22 +1,35 @@
 package ru.fizteh.fivt.students.nadezhdakaratsapova.multifilehashmap.junittests;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.storage.strings.TableProvider;
 import ru.fizteh.fivt.students.nadezhdakaratsapova.multifilehashmap.MultiFileHashMapProvider;
+import ru.fizteh.fivt.students.nadezhdakaratsapova.shell.CommandUtils;
 
 import java.io.File;
 
 public class MultiFileHashMapProviderTest {
-    private static final String TESTED_DIRECTORY = "/home/hope/JavaTests";
+    private static final String TESTED_DIRECTORY = "JavaTests";
     private TableProvider tableProvider;
 
 
     @Before
     public void setUp() throws Exception {
-        tableProvider = new MultiFileHashMapProvider(new File(TESTED_DIRECTORY));
+        File dir = new File(TESTED_DIRECTORY);
+        dir = dir.getCanonicalFile();
+        dir.mkdir();
+        tableProvider = new MultiFileHashMapProvider(dir);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        File dir = new File(TESTED_DIRECTORY);
+        dir = dir.getCanonicalFile();
+        CommandUtils.recDeletion(dir);
+
     }
 
     @Test

@@ -5,11 +5,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.students.nadezhdakaratsapova.filemap.DataTable;
-import ru.fizteh.fivt.students.nadezhdakaratsapova.multifilehashmap.MultiFileHashMapProvider;
+import ru.fizteh.fivt.students.nadezhdakaratsapova.multifilehashmap.MultiFileDataTable;
 
-import java.io.File;
 import java.io.IOException;
 
 public class DataTableTest {
@@ -18,7 +15,12 @@ public class DataTableTest {
 
     @Before
     public void setUp() throws Exception {
-        dataTable = new DataTable(TESTED_TABLE);
+        MultiFileDataTable dataTable = new MultiFileDataTable(TESTED_TABLE);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+
     }
 
     @Test

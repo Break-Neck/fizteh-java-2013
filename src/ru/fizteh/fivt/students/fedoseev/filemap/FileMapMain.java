@@ -13,9 +13,9 @@ public class FileMapMain {
             AbstractFileMap fileMap = new AbstractFileMap(file);
 
             if (args.length != 0) {
-                fileMap.BatchMode(args);
+                fileMap.batchMode(args);
             } else {
-                fileMap.InteractiveMode();
+                fileMap.interactiveMode();
             }
         } catch (NullPointerException e) {
             System.err.println("ERROR: cannot get property\n");

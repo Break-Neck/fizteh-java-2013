@@ -14,7 +14,9 @@ public class CommandCommit extends Command {
             throw new IllegalArgumentException("Illegal arguments");
         }
         for (String step: myState.table.oldData.keySet()) {
-            myState.database.tables.get(myState.table.getName()).put(step, myState.table.get(step));
+            if (myState.table.get(step) != null) {
+                myState.database.tables.get(myState.table.getName()).put(step, myState.table.get(step));
+            }
         }
         myState.table = myState.database.tables.get(myState.table.getName());
         System.out.println(myState.table.commit());

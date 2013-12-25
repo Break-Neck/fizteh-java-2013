@@ -10,23 +10,8 @@ import java.util.Set;
 import java.util.TreeMap;
 
 public class Utils {
-    final static private int MAX_TABLE_SIZE = 100 * 1024 * 1024;
-    final static private int MAX_FILE_SIZE = 50 * 1024 * 1024;
-
-//    static public void readTable(MyTable table) throws IOException {
-//        File tableDir = new File (table.getName());
-//        if (tableDir.listFiles() != null) {
-//            for (File dir : tableDir.listFiles()) {
-//                if (dir.listFiles() != null) {
-//                    for (File file : dir.listFiles()) {
-//                        RandomAccessFile f = new RandomAccessFile(file, "r");
-//                        readFile(table, f);
-//                        f.close();
-//                    }
-//                }
-//            }
-//        }
-//    }
+    private static final int MAX_TABLE_SIZE = 100 * 1024 * 1024;
+    private static final int MAX_FILE_SIZE = 50 * 1024 * 1024;
 
     public static void loadFile(MyTable table, TwoLayeredString key) throws IOException {
         byte nDirectory = getDirNumber(key);
@@ -47,8 +32,8 @@ public class Utils {
         int valueLength;
         String key;
         String value;
-        table.setSize(table.getSize() + datafile.length());
-        if (table.getSize() > MAX_TABLE_SIZE) {
+        table.setByteSize(table.getByteSize() + datafile.length());
+        if (table.getByteSize() > MAX_TABLE_SIZE) {
             dumpTable(table);
             table.getMap().clear();
         }
@@ -56,7 +41,7 @@ public class Utils {
             datafile.close();
             throw new IOException("Too big datafile.");
         }
-        table.setSize(table.getSize() + datafile.length());
+        table.setByteSize(table.getByteSize() + datafile.length());
         while (datafile.getFilePointer() != datafile.length()) {
             keyLength = datafile.readInt();
             if (keyLength < 1 || keyLength > datafile.length() - datafile.getFilePointer() + 4) {
@@ -83,7 +68,7 @@ public class Utils {
         if (table == null) {
             return;
         }
-        table.setSize(0);
+        table.setByteSize(0);
         File[] dirs = new File[16];
         Map<String, TwoLayeredString> strings = new HashMap<String, TwoLayeredString>();
         Map<Integer, File> files = new TreeMap<Integer, File>();

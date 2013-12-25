@@ -3,23 +3,26 @@ package ru.fizteh.fivt.students.vyatkina.database.commands;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseCommand;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseState;
 
-import java.util.concurrent.ExecutionException;
-
 public class RollbackCommand extends DatabaseCommand {
 
-    @Override
-    public void execute (String[] args) throws ExecutionException {
-        if (state.getTable () == null) {
-            state.getIoStreams ().out.println ("no table");
-            return;
-        }
-        state.getIoStreams ().out.println (state.getTable ().rollback ());
-    }
-
-    public RollbackCommand (DatabaseState state) {
-        super (state);
+    public RollbackCommand(DatabaseState state) {
+        super(state);
         this.name = "rollback";
         this.argsCount = 0;
     }
 
+    @Override
+    public void execute(String[] args) {
+        if (!tableIsSelected()) {
+            return;
+        }
+        int deletedChanges = 0;
+        try {
+            deletedChanges = state.databaseAdapter.rollback();
+        } catch (UnsupportedOperationException e) {
+            state.printErrorMessage(e.getMessage());
+            return;
+        }
+        state.printUserMessage(String.valueOf(deletedChanges));
+    }
 }

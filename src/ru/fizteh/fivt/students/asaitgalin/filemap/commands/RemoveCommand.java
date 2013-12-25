@@ -1,11 +1,11 @@
 package ru.fizteh.fivt.students.asaitgalin.filemap.commands;
 
 import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
 
 import java.io.IOException;
 
-public class RemoveCommand implements Command {
+public class RemoveCommand extends DefaultCommand {
     private Table storage;
 
     public RemoveCommand(Table storage) {

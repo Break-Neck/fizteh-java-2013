@@ -8,7 +8,6 @@ import org.junit.Test;
 import ru.fizteh.fivt.storage.strings.Table;
 import ru.fizteh.fivt.storage.strings.TableProvider;
 import ru.fizteh.fivt.students.irinapodorozhnaya.multifilemap.MyTableProviderFactory;
-import ru.fizteh.fivt.students.irinapodorozhnaya.shell.CommandRemove;
 
 public class TableTest {
 
@@ -18,7 +17,7 @@ public class TableTest {
 
     @Before
     public void setUp() {
-        (new File(DATA_BASE_DIR)).mkdir();
+        new File(DATA_BASE_DIR).mkdirs();
         provider = new MyTableProviderFactory().create(DATA_BASE_DIR);
         testTable = provider.createTable("table");
     }

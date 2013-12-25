@@ -31,8 +31,8 @@ public class Shell<State> {
         this.shellState = shellState;
     }
 
-    public void setCommands(List<Command> commands) {
-        for (final Command command : commands) {
+    public void setCommands(List<Command<?>> commands) {
+        for (final Command<?> command : commands) {
             this.commands.put(command.getCommandName(), command);
         }
     }

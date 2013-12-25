@@ -215,8 +215,7 @@ public class Shell {
             for (String entry : entries) {
                 System.out.println(entry);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.err.println("dir: couldn't execute the command.");
         }
         return true;
@@ -310,7 +309,7 @@ public class Shell {
                     continue;
                 }
 
-                for (String command: commands) {
+                for (String command : commands) {
                     if (command.equals("")) {
                         continue;
                     }

@@ -1,43 +1,28 @@
 package ru.fizteh.fivt.students.chernigovsky.filemap;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.text.ParseException;
 
-public class State {
-    private HashMap<String, String> hashMap;
-    private File currentTable;
-    private File dbDirectory;
+import java.io.IOException;
 
-    public State(File directory) {
-        hashMap = new HashMap<String, String>();
-        dbDirectory = directory;
-    }
-    public String put(String key, String value) {
-        return hashMap.put(key, value);
-    }
-    public String get(String key) {
-        return hashMap.get(key);
-    }
-    public String remove(String key) {
-        return hashMap.remove(key);
-    }
+public interface State {
+    boolean currentTableIsNull();
 
-    public File getCurrentTable() {
-        return currentTable;
-    }
+    String getFromCurrentTable(String key);
+    String putToCurrentTable(String key, String value) throws ParseException;
+    String removeFromCurrentTable(String key);
 
-    public void changeCurrentTable(File table) {
-        currentTable = table;
-    }
+    boolean createTable(String name);
+    boolean createStoreableTable(String name, String types) throws IOException;
+    boolean removeTable(String name) throws IOException;
+    void checkDropTableUsing(String name);
+    boolean isTableExists(String name);
+    void changeCurrentTable(String name);
+    int getDiffCount();
 
-    public File getDbDirectory() {
-        return dbDirectory;
-    }
+    void writeTable() throws IOException;
+    void readTable() throws IOException;
 
-    public Set<Map.Entry<String, String>> getEntrySet() {
-        return hashMap.entrySet();
-    }
-
+    int commit() throws IOException;
+    int rollback();
+    int size();
 }

@@ -1,10 +1,10 @@
 package ru.fizteh.fivt.students.dzvonarev.shell;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class Exit implements CommandInterface {
 
-    public void execute(Vector<String> args) {
+    public void execute(ArrayList<String> args) {
         System.exit(0);
     }
 

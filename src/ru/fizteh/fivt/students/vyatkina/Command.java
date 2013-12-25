@@ -1,14 +1,13 @@
 package ru.fizteh.fivt.students.vyatkina;
 
-import java.io.PrintStream;
-import java.util.concurrent.ExecutionException;
-
 public interface Command {
 
-    void execute (String[] args) throws ExecutionException;
+    void execute(String[] args) throws CommandExecutionException;
 
-    String getName ();
+    String getName();
 
-    int getArgumentCount ();
+    int getArgumentCount();
+
+    String[] parseArgs(String line);
 
 }

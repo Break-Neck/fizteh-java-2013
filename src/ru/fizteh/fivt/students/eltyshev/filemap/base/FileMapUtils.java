@@ -1,8 +1,7 @@
 package ru.fizteh.fivt.students.eltyshev.filemap.base;
 
-import java.io.*;
+import java.io.File;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Set;
 
 public class FileMapUtils {
@@ -24,5 +23,15 @@ public class FileMapUtils {
             keysLength += keyLength + 5;
         }
         return keysLength;
+    }
+
+    public static boolean compareKeys(Object key1, Object key2) {
+        if (key1 == null && key2 == null) {
+            return true;
+        }
+        if (key1 == null || key2 == null) {
+            return false;
+        }
+        return key1.equals(key2);
     }
 }

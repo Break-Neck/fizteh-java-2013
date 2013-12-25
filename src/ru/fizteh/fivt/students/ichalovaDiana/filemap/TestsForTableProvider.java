@@ -1,38 +1,44 @@
 package ru.fizteh.fivt.students.ichalovaDiana.filemap;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
-import ru.fizteh.fivt.storage.strings.TableProvider;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class TestsForTableProvider {
     
-    static Path databaseDirectory;
-    static TableProvider tableProvider;
+    TableProviderFactory tableProviderFactory;
+    TableProvider tableProvider;
+    Table table;
+    List<Class<?>> columnTypes;
     
-    @BeforeClass
-    public static void createDatabase() throws IOException {
-        databaseDirectory = Files.createTempDirectory(Paths.get(System.getProperty("user.dir")), null);
-    }
+    Storeable value1;
+    
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
     
     @Before
-    public void createTableProvider() {
-        tableProvider = new TableProviderImplementation(databaseDirectory);
+    public void createTable() throws IOException {
+        File databaseDirectory = folder.newFolder("database");
+        tableProviderFactory = new TableProviderFactoryImplementation();
+        tableProvider = tableProviderFactory.create(databaseDirectory.toString());
+        
+        columnTypes = new ArrayList<Class<?>>();
+        columnTypes.add(Boolean.class);
+        columnTypes.add(String.class);
+        columnTypes.add(Integer.class);
     }
-    
-    @AfterClass
-    public static void deleteDatabase() throws IOException {
-        FileUtils.resursiveDelete(databaseDirectory);
-    }
-    
     
     @Test(expected = IllegalArgumentException.class)
     public void getTableNullTableName() {
@@ -49,50 +55,49 @@ public class TestsForTableProvider {
     }
     
     @Test
-    public void getTableForSameNamesShouldReturnSameObject() {
-        tableProvider.createTable("temp");
+    public void getTableForSameNamesShouldReturnSameObject() throws IOException {
+        tableProvider.createTable("temp", columnTypes);
         Assert.assertEquals(tableProvider.getTable("temp"), tableProvider.getTable("temp"));
         tableProvider.removeTable("temp");
     }
     
     
     @Test
-    public void createTableForExistingTableReturnsNull() {
-        tableProvider.createTable("temp");
-        Assert.assertNull(tableProvider.createTable("temp"));
+    public void createTableForExistingTableReturnsNull() throws IOException {
+        tableProvider.createTable("temp", columnTypes);
+        Assert.assertNull(tableProvider.createTable("temp", columnTypes));
         tableProvider.removeTable("temp");
     }
     
     @Test(expected = IllegalArgumentException.class)
-    public void createTableNullTableName() {
-        tableProvider.createTable(null);
+    public void createTableNullTableName() throws IOException {
+        tableProvider.createTable(null, columnTypes);
     }
     
     @Test(expected = IllegalArgumentException.class)
-    public void createTableNullByteTableName() {
-        tableProvider.createTable("a\0b");
+    public void createTableNullByteTableName() throws IOException {
+        tableProvider.createTable("a\0b", columnTypes);
     }
     
     
     @Test(expected = IllegalStateException.class)
-    public void removeNonExistingTable() {
+    public void removeNonExistingTable() throws IOException {
         tableProvider.removeTable("not-exists");
     }
     
     @Test(expected = IllegalArgumentException.class)
-    public void removeTableNullTableName() {
+    public void removeTableNullTableName() throws IOException {
         tableProvider.removeTable(null);
     }
     
     @Test(expected = IllegalArgumentException.class)
-    public void removeTableNullByteTableName() {
+    public void removeTableNullByteTableName() throws IOException {
         tableProvider.removeTable("a\0b");
     }
-    
-    
+       
     @Test 
-    public void createRemove() {
-        tableProvider.createTable("temp");
+    public void createRemove() throws IOException {
+        tableProvider.createTable("temp", columnTypes);
         Assert.assertNotNull(tableProvider.getTable("temp"));
         tableProvider.removeTable("temp");
         Assert.assertNull(tableProvider.getTable("temp"));

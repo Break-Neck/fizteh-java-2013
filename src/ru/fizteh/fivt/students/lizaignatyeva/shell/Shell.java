@@ -1,7 +1,7 @@
 package ru.fizteh.fivt.students.lizaignatyeva.shell;
 
-import java.util.Hashtable;
 import java.io.File;
+import java.util.Hashtable;
 
 public class Shell {
     static Hashtable<String, Command> commandsMap = new Hashtable<String, Command>();

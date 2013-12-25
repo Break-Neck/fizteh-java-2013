@@ -8,7 +8,7 @@ public class Shell {
     private Shell() {
     }
     
-    public static void startShell(String[] args, StateInterface st) {
+    public static int startShell(String[] args, StateInterface st) {
         int code = 0;
         try {
             if (args.length > 0) {
@@ -27,6 +27,6 @@ public class Shell {
                 code = 1;
             }
         }
-        System.exit(code);
+        return code;
     }
 }

@@ -3,7 +3,6 @@ package ru.fizteh.fivt.students.nadezhdakaratsapova.shell;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class CpCommand implements Command {
 
@@ -40,7 +39,8 @@ public class CpCommand implements Command {
                 if (destination.isDirectory()) {
                     File target = new File(destination, source.getName());
                     if (target.exists()) {
-                        throw new IOException("cp: " + source.getName() + " already exists in " + destination.getName());
+                        throw new IOException("cp: " + source.getName() + " already exists in "
+                                + destination.getName());
                     } else {
                         Files.copy(source.toPath(), target.toPath());
                     }
@@ -56,7 +56,8 @@ public class CpCommand implements Command {
                 }
                 copyingRec(source, destination);
             } else {
-                throw new IOException("cp: " + "it's impossible to copy directory " + source.getName() + " to file " + destination.getName());
+                throw new IOException("cp: " + "it's impossible to copy directory " + source.getName()
+                        + " to file " + destination.getName());
             }
         }
     }
@@ -68,15 +69,16 @@ public class CpCommand implements Command {
         } else {
             if (src.isDirectory()) {
                 target.mkdir();
-                for (File file : src.listFiles())
+                for (File file : src.listFiles()) {
                     copyingRec(file, target);
+                }
             } else {
                 Files.copy(src.toPath(), target.toPath());
             }
         }
     }
 
-    public int getArgsCount() {
-        return 2;
+    public boolean compareArgsCount(int inputArgsCount) {
+        return (inputArgsCount == 2);
     }
 }

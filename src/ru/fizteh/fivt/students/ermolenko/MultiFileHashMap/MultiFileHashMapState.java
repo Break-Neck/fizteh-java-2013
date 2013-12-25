@@ -1,7 +1,5 @@
 package ru.fizteh.fivt.students.ermolenko.multifilehashmap;
 
-import ru.fizteh.fivt.storage.strings.Table;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -15,41 +13,39 @@ public class MultiFileHashMapState {
 
         currentTable = null;
         MultiFileHashMapTableProviderFactory factory = new MultiFileHashMapTableProviderFactory();
-        provider = (MultiFileHashMapTableProvider) factory.create(inFile.getPath());
+        provider = factory.create(inFile.getPath());
     }
 
-    public void changeCurrentTable(Map<String, String> inMap, File inFile) {
+    public int getChangesBaseSize() {
 
-        currentTable.setDataBase(inMap);
-        currentTable.setDataFile(inFile);
+        return currentTable.getChangesBaseSize();
     }
 
-    public Table createTable(String name) throws IOException {
+    public MultiFileHashMapTable createTable(String name) throws IOException {
 
-        Table tmp = provider.createTable(name);
-        //currentTable = (MultiFileHashMapTable) tmp;
-        return tmp;
+        return provider.createTable(name);
     }
 
-    public Table getTable(String name) throws IOException {
+    public MultiFileHashMapTable getTable(String name) throws IOException {
 
         return provider.getTable(name);
     }
 
-    public Table getCurrentTable() throws IOException {
+    public MultiFileHashMapTable getCurrentTable() throws IOException {
 
         return currentTable;
     }
 
-    public void setCurrentTable(String name) throws IOException {
+    public void setCurrentTable(String name, Map<String, String> inMap, File inFile) throws IOException {
 
-        currentTable = (MultiFileHashMapTable) provider.getTable(name);
+        currentTable = provider.getTable(name);
+        currentTable.changeCurrentTable(inMap, inFile);
     }
 
     public void deleteTable(String name) throws IOException {
 
         provider.removeTable(name);
-        //currentTable = null;
+        currentTable = null;
     }
 
     public String putToCurrentTable(String key, String value) {

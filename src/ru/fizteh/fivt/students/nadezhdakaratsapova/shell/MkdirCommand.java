@@ -26,7 +26,7 @@ public class MkdirCommand implements Command {
 
     }
 
-    public int getArgsCount() {
-        return 1;
+    public boolean compareArgsCount(int inputArgsCount) {
+        return (inputArgsCount == 1);
     }
 }

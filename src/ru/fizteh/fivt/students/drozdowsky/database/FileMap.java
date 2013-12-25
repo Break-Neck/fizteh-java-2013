@@ -2,6 +2,7 @@ package ru.fizteh.fivt.students.drozdowsky.database;
 
 import ru.fizteh.fivt.students.drozdowsky.utils.Pair;
 
+import java.awt.geom.IllegalPathStateException;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -9,110 +10,45 @@ import java.util.HashMap;
 import java.util.Set;
 
 public class FileMap {
-    private File dbPath;
     private HashMap<String, String> db;
-    private boolean changed;
 
     static final int BUFFSIZE = 100000;
 
-    public FileMap(File dbPath) throws IOException {
-        this.dbPath = dbPath;
-        changed = false;
-        db = new HashMap<String, String>();
-        validityCheck();
-        if (dbPath.exists()) {
-            readDB();
-        }
+    public FileMap() {
+        db = new HashMap<>();
     }
 
-    public boolean put(String[] args) {
-        if (args.length != 3) {
-            error("usage: put key value");
-            return false;
-        }
-
-        if (db.get(args[1]) == null) {
-            System.out.println("new");
-        } else {
-            System.out.println("overwrite" + System.lineSeparator() + db.get(args[1]));
-        }
-        db.put(args[1], args[2]);
-        changed = true;
-        return true;
+    private FileMap(HashMap<String, String> db) {
+        this.db = (HashMap<String, String>) db.clone();
     }
 
-    public boolean get(String[] args) {
-        if (args.length != 2) {
-            error("usage: get key");
-            return false;
-        }
-        if (db.get(args[1]) == null) {
-            System.out.println("not found");
-        } else {
-            System.out.println("found" + System.lineSeparator() + db.get(args[1]));
-        }
-        return true;
+    public String get(String key) {
+        return db.get(key);
     }
 
-    public boolean remove(String[] args) {
-        if (args.length != 2) {
-            error("usage: remove key");
-            return false;
-        }
-
-        if (db.get(args[1]) == null) {
-            System.out.println("not found");
-        } else {
-            db.remove(args[1]);
-            System.out.println("removed");
-        }
-        changed = true;
-        return true;
+    public String put(String key, String value) {
+        String result = db.get(key);
+        db.put(key, value);
+        return result;
     }
 
-    public boolean exit(String[] args) {
-        if (args.length != 1) {
-            error("usage: exit");
-            return false;
-        }
-        close();
-        System.exit(0);
-        return true;
+    public String remove(String key) {
+        String result = db.get(key);
+        db.remove(key);
+        return result;
     }
 
-    public void close() {
-        if (changed) {
-            writeDB();
-        }
-    }
-
-    public String getPath() {
-        return dbPath.getAbsolutePath();
+    public int size() {
+        return db.size();
     }
 
     public Set<String> getKeys() {
         return db.keySet();
     }
 
-    private void validityCheck() throws IOException {
-        if (!dbPath.getParentFile().exists()) {
-            fatalError(dbPath.getParentFile().getAbsolutePath() + ": No such file or directory");
-        } else if (dbPath.exists() && !dbPath.isFile()) {
-            fatalError(dbPath.getAbsolutePath() + ": Not a file");
-        }
-    }
-
-    private void fatalError(String error) throws IOException {
-        throw new IOException(error);
-    }
-
-    private void error(String aError) {
-        System.err.println(aError);
-    }
-
-    private void readDB() throws IOException {
+    void read(File dbPath) {
         try (FileInputStream inputDB = new FileInputStream(dbPath)) {
-            ArrayList<Pair<String, Integer>> offset = new ArrayList<Pair<String, Integer>>();
+            ArrayList<Pair<String, Integer>> offset = new ArrayList<>();
 
             byte next;
             int byteRead = 0;
@@ -123,7 +59,7 @@ public class FileMap {
                     byte[] sizeBuf = new byte[4];
                     for (int i = 0; i < 4; i++) {
                         if ((sizeBuf[i] = (byte) inputDB.read()) == -1) {
-                            fatalError(dbPath.getPath() + ": unexpected end of the database");
+                            throw new IOException(dbPath.getPath() + ": unexpected end of the database");
                         }
                     }
                     int valueSize = ByteBuffer.wrap(sizeBuf).getInt();
@@ -132,7 +68,7 @@ public class FileMap {
                     byteRead += key.position() + 4 + 1;
                     key.clear();
                     key.get(keyArray);
-                    offset.add(new Pair<String, Integer>(new String(keyArray, "UTF-8"), valueSize));
+                    offset.add(new Pair<>(new String(keyArray, "UTF-8"), valueSize));
                     key.clear();
 
                 } else {
@@ -141,7 +77,7 @@ public class FileMap {
             }
 
             if (offset.size() == 0 && key.position() != 0) {
-                fatalError("No keys found");
+                throw new IOException("No keys found");
             }
 
             if (offset.size() == 0) {
@@ -149,20 +85,20 @@ public class FileMap {
             }
 
             if (offset.get(0).snd != byteRead) {
-                fatalError("No valid database format");
+                throw new IOException("No valid database format");
             }
 
             for (int i = 0; i < offset.size() - 1; i++) {
-                offset.set(i, new Pair<String, Integer>(offset.get(i).fst, offset.get(i + 1).snd - byteRead));
+                offset.set(i, new Pair<>(offset.get(i).fst, offset.get(i + 1).snd - byteRead));
             }
             int n = offset.size();
-            offset.set(n - 1, new Pair<String, Integer>(offset.get(n - 1).fst, key.position()));
+            offset.set(n - 1, new Pair<>(offset.get(n - 1).fst, key.position()));
 
             int prevOffset = 0;
             for (Pair<String, Integer> now: offset) {
                 Integer currentOffset = now.snd;
                 if (currentOffset <= prevOffset) {
-                    fatalError("Not valid format");
+                    throw new IOException("Not valid format");
                 } else {
                     ByteBuffer valueBuf = ByteBuffer.allocate(currentOffset - prevOffset);
                     for (int i = prevOffset; i < currentOffset; i++) {
@@ -173,16 +109,16 @@ public class FileMap {
                     db.put(now.fst, value);
                 }
             }
-        } catch (FileNotFoundException e) {
-            fatalError(dbPath.getAbsolutePath() + ": No such file or directory");
+        } catch (IOException e) {
+            throw new IllegalPathStateException(dbPath.getAbsolutePath() + e.getMessage());
         }
     }
 
-    private void writeDB() {
+    void write(File dbPath) {
         try (FileOutputStream out = new FileOutputStream(dbPath)) {
-            ArrayList<Integer> length = new ArrayList<Integer>();
-            ArrayList<String> values = new ArrayList<String>();
-            ArrayList<String> keys = new ArrayList<String>();
+            ArrayList<Integer> length = new ArrayList<>();
+            ArrayList<String> values = new ArrayList<>();
+            ArrayList<String> keys = new ArrayList<>();
             int totalLength = 0;
             for (String key:db.keySet()) {
                 keys.add(key);
@@ -202,7 +138,11 @@ public class FileMap {
                 out.write(values.get(i).getBytes("UTF-8"));
             }
         } catch (IOException e) {
-            error(dbPath.getAbsolutePath() + e.toString());
+            throw new IllegalPathStateException(dbPath.getAbsolutePath() + e.getMessage());
         }
+    }
+
+    protected FileMap clone() {
+        return new FileMap(db);
     }
 }

@@ -2,12 +2,12 @@ package ru.fizteh.fivt.students.dzvonarev.shell;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class Cd implements CommandInterface {
 
-    public void execute(Vector<String> args) throws IOException {
-        String expr = args.elementAt(0);
+    public void execute(ArrayList<String> args) throws IOException {
+        String expr = args.get(0);
         int spaceIndex = expr.indexOf(' ', 0);
         if (expr.indexOf(' ', spaceIndex + 1) != -1) {
             throw new IOException("cd: wrong parameters");

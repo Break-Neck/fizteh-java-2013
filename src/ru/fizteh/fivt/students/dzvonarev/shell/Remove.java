@@ -2,7 +2,7 @@ package ru.fizteh.fivt.students.dzvonarev.shell;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class Remove implements CommandInterface {
 
@@ -34,8 +34,8 @@ public class Remove implements CommandInterface {
         }
     }
 
-    public void execute(Vector<String> args) throws IOException {
-        String expr = args.elementAt(0);
+    public void execute(ArrayList<String> args) throws IOException {
+        String expr = args.get(0);
         int spaceIndex = expr.indexOf(' ', 0);
         while (expr.indexOf(' ', spaceIndex + 1) == spaceIndex + 1) {
             ++spaceIndex;
@@ -44,7 +44,8 @@ public class Remove implements CommandInterface {
             throw new IOException("Wrong parametres of remove");
         }
         String path = Shell.getAbsPath(expr.substring(spaceIndex + 1, expr.length()));
-        if (path.equals(Shell.getCurrentDirectory()) || Shell.getCurrentDirectory().contains(path)) {                                  // can't delete father of son
+        if (args.size() != 2                                                           // can't delete father of son
+                && (path.equals(Shell.getCurrentDirectory()) || Shell.getCurrentDirectory().contains(path))) {
             throw new IOException("rm: can't remove " + path);
         }
         if ((new File(path)).isFile() || (new File(path)).isDirectory()) {

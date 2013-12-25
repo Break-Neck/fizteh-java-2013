@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.commands;
 
-import ru.fizteh.fivt.students.adanilyak.multifilehashmap.DataBaseGlobalState;
+import ru.fizteh.fivt.students.adanilyak.multifilehashmap.MultiFileDataBaseGlobalState;
 import ru.fizteh.fivt.students.adanilyak.tools.CheckOnCorrect;
 
 import java.io.IOException;
@@ -14,9 +14,9 @@ import java.util.List;
 public class CmdDrop implements Cmd {
     private final String name = "drop";
     private final int amArgs = 1;
-    private DataBaseGlobalState workState;
+    private MultiFileDataBaseGlobalState workState = null;
 
-    public CmdDrop(DataBaseGlobalState dataBaseState) {
+    public CmdDrop(MultiFileDataBaseGlobalState dataBaseState) {
         workState = dataBaseState;
     }
 
@@ -36,8 +36,7 @@ public class CmdDrop implements Cmd {
         if (!CheckOnCorrect.goodArg(useTableName)) {
             throw new IllegalArgumentException("Bad table name");
         }
-        if (workState.getTable(useTableName) == null) {
-            System.err.println(useTableName + " not exists");
+        if (!workState.isTableExist(useTableName)) {
             throw new IllegalStateException(useTableName + " not exists");
         } else {
             workState.removeTable(useTableName);

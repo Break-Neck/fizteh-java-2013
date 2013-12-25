@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.commands;
 
-import ru.fizteh.fivt.students.adanilyak.modernfilemap.FileMapState;
+import ru.fizteh.fivt.students.adanilyak.multifilehashmap.MultiFileDataBaseGlobalState;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,9 +13,9 @@ import java.util.List;
 public class CmdRollback implements Cmd {
     private final String name = "rollback";
     private final int amArgs = 0;
-    private FileMapState workState;
+    private MultiFileDataBaseGlobalState workState = null;
 
-    public CmdRollback(FileMapState dataBaseState) {
+    public CmdRollback(MultiFileDataBaseGlobalState dataBaseState) {
         workState = dataBaseState;
     }
 
@@ -31,8 +31,8 @@ public class CmdRollback implements Cmd {
 
     @Override
     public void work(List<String> args) throws IOException {
-        if (workState.currentTable != null) {
-            System.out.println(workState.currentTable.rollback());
+        if (workState.getCurrentTable() != null) {
+            System.out.println(workState.rollback());
         } else {
             System.out.println("no table");
         }

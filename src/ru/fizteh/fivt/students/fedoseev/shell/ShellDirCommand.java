@@ -17,8 +17,9 @@ public class ShellDirCommand extends AbstractCommand<ShellState> {
 
         if (files != null) {
             for (File file : files) {
-                if (!file.isHidden())
+                if (!file.isHidden()) {
                     System.out.println(file.getName());
+                }
             }
         }
     }

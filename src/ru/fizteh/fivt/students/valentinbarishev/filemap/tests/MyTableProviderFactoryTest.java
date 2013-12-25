@@ -2,10 +2,9 @@ package ru.fizteh.fivt.students.valentinbarishev.filemap.tests;
 
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 import ru.fizteh.fivt.students.valentinbarishev.filemap.MyTableProviderFactory;
 
-import java.io.File;
 import java.io.IOException;
 
 public class MyTableProviderFactoryTest {
@@ -13,7 +12,7 @@ public class MyTableProviderFactoryTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test(expected = IllegalArgumentException.class)
-    public void testCreateNull() {
+    public void testCreateNull() throws IOException {
         TableProviderFactory factory = new MyTableProviderFactory();
         factory.create(null);
     }
@@ -22,5 +21,18 @@ public class MyTableProviderFactoryTest {
     public void testCreateNotNull() throws IOException {
         TableProviderFactory factory = new MyTableProviderFactory();
         Assert.assertNotNull(factory.create(folder.newFolder("folder").getCanonicalPath()));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCreateEmpty() throws IOException {
+        TableProviderFactory factory = new MyTableProviderFactory();
+        Assert.assertNotNull(factory.create(""));
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testClose() throws Exception {
+        TableProviderFactory factory = new MyTableProviderFactory();
+        ((AutoCloseable) factory).close();
+        factory.create("asdasd");
     }
 }

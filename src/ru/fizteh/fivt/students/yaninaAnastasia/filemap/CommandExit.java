@@ -6,12 +6,16 @@ import java.io.IOException;
 
 public class CommandExit extends Command {
     public boolean exec(String[] args, State curState) throws IOException {
-        MultiDBState myState = MultiDBState.class.cast(curState);
-        if (myState.table == null) {
-            return true;
-        }
+        ServletState myState = ServletState.class.cast(curState);
         if (args.length != 0) {
             throw new IllegalArgumentException("Illegal arguments");
+        }
+        if (myState.server.isStarted()) {
+            try {
+                myState.server.stop();
+            } catch (Exception e) {
+                //
+            }
         }
         return true;
     }

@@ -1,7 +1,7 @@
 package ru.fizteh.fivt.students.fedoseev.common;
 
 import java.io.IOException;
-import java.io.PrintStream;
+import java.text.ParseException;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -11,7 +11,8 @@ public abstract class AbstractFrame<State> implements Frame {
     protected State state;
 
     @Override
-    public void runCommands(String cmd, int end) throws IOException, InterruptedException {
+    public void runCommands(String cmd, int end)
+            throws IOException, InterruptedException, ClassNotFoundException, ParseException {
         Map<String, AbstractCommand> commands = getCommands();
 
         if (!commands.containsKey(cmd.substring(0, end))) {
@@ -20,16 +21,16 @@ public abstract class AbstractFrame<State> implements Frame {
 
         AbstractCommand command = commands.get(cmd.substring(0, end));
 
-        if (Utils.getCommandArguments(cmd).length != command.getArgsCount()) {
-            throw new IOException(command.getCmdName() + " ERROR: \"" + command.getCmdName() +
-                    "\" command receives " + command.getArgsCount() + " arguments");
+        if (Utils.getCommandArguments(cmd).length != command.getArgsCount() && command.getArgsCount() != -1) {
+            throw new IOException(command.getCmdName() + " ERROR: \"" + command.getCmdName()
+                    + "\" command receives " + command.getArgsCount() + " arguments");
         }
 
         command.execute(Utils.getCommandArguments(cmd), state);
     }
 
     @Override
-    public void BatchMode(String[] args) {
+    public void batchMode(String[] args) {
         String[] input = Utils.join(args, " ").split("\\s*;\\s*");
 
         for (String cmd : input) {
@@ -53,7 +54,7 @@ public abstract class AbstractFrame<State> implements Frame {
     }
 
     @Override
-    public void InteractiveMode() throws InterruptedException {
+    public void interactiveMode() throws InterruptedException {
         Scanner scanner = new Scanner(System.in);
 
         while (!Thread.currentThread().isInterrupted()) {
@@ -76,6 +77,9 @@ public abstract class AbstractFrame<State> implements Frame {
                     }
 
                     runCommands(cmd, end);
+                } catch (ParseException e) {
+                    System.out.println("wrong type (" + e.getMessage() + ")");
+                    System.err.println(e.getMessage());
                 } catch (Exception e) {
                     System.err.println(e.getMessage());
                 }

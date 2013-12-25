@@ -13,7 +13,7 @@ public class MultifileMapMain {
     public static void main(String[] Args) {
         Shell<MultifileMapShellState> shell = new Shell<MultifileMapShellState>();
 
-        List<Command> commands = new ArrayList<Command>();
+        List<Command<?>> commands = new ArrayList<Command<?>>();
 
         Command<FileMapShellState> command = new PutCommand();
         commands.add(command);

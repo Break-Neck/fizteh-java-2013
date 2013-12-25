@@ -47,22 +47,20 @@ public class ShellMvCommand extends AbstractCommand<ShellState> {
 
         if (!destination.isDirectory() && source.isFile()) {
             if (destination.isFile()) {
-                throw new IOException("MV ERROR: file with name of source file \"" + source.getName() +
-                        "\" already exists in current destination");
+                throw new IOException("MV ERROR: file with name of source file \"" + source.getName()
+                        + "\" already exists in current destination");
             }
 
             Files.copy(source.toPath(), destination.toPath());
             source.delete();
         } else {
             if (!destination.exists()) {
-                throw new FileNotFoundException("MV ERROR: not existing destination \"" +
-                        destination.getCanonicalFile().toString() + "\"");
+                throw new FileNotFoundException("MV ERROR: not existing destination \""
+                        + destination.getCanonicalFile().toString() + "\"");
             }
             if (destination.listFiles(filter).length != 0) {
-                throw new IOException("MV ERROR: file with name of source file \"" + source.getName() +
-                        "\" already exists in destination \"" + destination.getCanonicalFile().toString() +
-                        "\"");
-
+                throw new IOException("MV ERROR: file with name of source file \"" + source.getName()
+                        + "\" already exists in destination \"" + destination.getCanonicalFile().toString() + "\"");
             }
 
             if (source.isFile()) {

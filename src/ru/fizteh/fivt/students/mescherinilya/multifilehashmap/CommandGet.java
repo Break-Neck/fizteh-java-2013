@@ -7,26 +7,28 @@ public class CommandGet implements Command {
     }
 
     @Override
+    public String getName() {
+        return "get";
+    }
+    @Override
     public int getArgsCount() {
         return 1;
     }
 
     @Override
     public void execute(String[] args) {
-        if (DatabaseWorker.currentTable == null) {
+
+        if (MultiFileHashMap.currentTable == null) {
             System.out.println("no table");
             return;
         }
-        if (DatabaseWorker.storage.containsKey(args[0])) {
-            System.out.println("found\n" + DatabaseWorker.storage.get(args[0]));
-        } else {
+        String value = MultiFileHashMap.currentTable.get(args[0]);
+        if (value == null) {
             System.out.println("not found");
+        } else {
+            System.out.println("found\n" + value);
         }
 
     }
 
-    @Override
-    public String getName() {
-        return "get";
-    }
 }

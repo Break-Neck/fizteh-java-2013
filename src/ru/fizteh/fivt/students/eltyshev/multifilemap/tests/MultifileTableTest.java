@@ -70,7 +70,8 @@ public class MultifileTableTest {
 
     @Test
     public void testTableCommit() {
-        Assert.assertEquals(KEYS_COUNT, currentTable.commit());
+        int committed = currentTable.commit();
+        Assert.assertEquals(KEYS_COUNT, committed);
 
         for (int index = 0; index < 2 * KEYS_COUNT; ++index) {
             String key = String.format("key%d", index);
@@ -78,7 +79,7 @@ public class MultifileTableTest {
             currentTable.put(key, value);
         }
 
-        Assert.assertEquals(2 * KEYS_COUNT, currentTable.commit());
+        Assert.assertEquals(KEYS_COUNT, currentTable.commit());
 
         for (int index = 0; index < 2 * KEYS_COUNT; ++index) {
             String key = String.format("key%d", index);
@@ -119,11 +120,11 @@ public class MultifileTableTest {
         // get
         currentTable.get(null);
 
-        // put
+        // storagePut
         currentTable.put(null, "value");
         currentTable.put("key", null);
 
-        // remove
+        // storageRemove
         currentTable.remove(null);
     }
 
@@ -145,13 +146,13 @@ public class MultifileTableTest {
             String value = String.format("value%d", index);
             currentTable.put(key, value);
         }
-        Assert.assertEquals(KEYS_COUNT, currentTable.rollback());
+        Assert.assertEquals(0, currentTable.rollback());
 
         currentTable.remove("non-exists");
         currentTable.remove("non-exists1");
         currentTable.remove("key1");
         currentTable.put("key1", "value1");
-        Assert.assertEquals(1, currentTable.rollback());
+        Assert.assertEquals(0, currentTable.rollback());
 
         currentTable.put("key1", "value1");
         currentTable.commit();

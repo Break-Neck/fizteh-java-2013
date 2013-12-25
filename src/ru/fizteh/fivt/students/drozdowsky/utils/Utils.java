@@ -1,5 +1,6 @@
 package ru.fizteh.fivt.students.drozdowsky.utils;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,7 +8,6 @@ import java.util.Scanner;
 
 public class Utils {
     public static String[] scanArgs(Scanner in) {
-
         System.out.print("$ ");
         String temp;
         if (!in.hasNextLine()) {
@@ -32,8 +32,8 @@ public class Utils {
 
     public static ArrayList<String[]> parse(String[] args, String[] noWSCommands) {
         args[args.length - 1] = args[args.length - 1] + ";";
-        ArrayList<String[]> result = new ArrayList<String[]>();
-        ArrayList<String> tempArgs = new ArrayList<String>();
+        ArrayList<String[]> result = new ArrayList<>();
+        ArrayList<String> tempArgs = new ArrayList<>();
         boolean noWS = false;
         for (String arg : args) {
             int last = -1;
@@ -66,27 +66,21 @@ public class Utils {
         return result;
     }
 
-    public static HashMap<String, Method> getMethods(String[] commandNames, Class commandClass, Class controllerClass) {
-        HashMap<String, Method> map = new HashMap<String, Method>();
-        try {
-            for (String commandName: commandNames) {
-                map.put(commandName, commandClass.getMethod(commandName, controllerClass, String[].class));
+    public static HashMap<String, Method> getMethods(String[] commandNames, Class commandClass) {
+        HashMap<String, Method> map = new HashMap<>();
+        Method[] methods = commandClass.getMethods();
+        for (Method method : methods)
+            if (in(method.getName(), commandNames)) {
+                map.put(method.getName(), method);
             }
-        } catch (NoSuchMethodException e) {
-            System.err.println(e.getMessage());
-        }
         return map;
     }
 
-    public static HashMap<String, Method> getMethods(String[] commandNames, Class commandClass) {
-        HashMap<String, Method> map = new HashMap<String, Method>();
-        try {
-            for (String commandName: commandNames) {
-                map.put(commandName, commandClass.getMethod(commandName, String[].class));
-            }
-        } catch (NoSuchMethodException e) {
-            System.err.println(e.getMessage());
-        }
-        return map;
+    public static boolean isValid(String name) {
+        return !(name == null || name.equals("") || name.contains(System.lineSeparator()) || name.contains(" ") || name.contains("\t"));
+    }
+
+    public static boolean isValidTablename(String name) {
+        return isValid(name) && !name.contains(File.separator) && !name.contains("\\");
     }
 }

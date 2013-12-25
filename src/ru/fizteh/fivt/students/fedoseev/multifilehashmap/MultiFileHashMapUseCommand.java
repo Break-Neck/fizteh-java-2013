@@ -1,39 +1,49 @@
 package ru.fizteh.fivt.students.fedoseev.multifilehashmap;
 
 import ru.fizteh.fivt.students.fedoseev.common.AbstractCommand;
+import ru.fizteh.fivt.students.fedoseev.common.State;
 
-import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 
-public class MultiFileHashMapUseCommand extends AbstractCommand<MultiFileHashMapState> {
+public class MultiFileHashMapUseCommand extends AbstractCommand<State> {
     public MultiFileHashMapUseCommand() {
         super("use", 1);
     }
 
     @Override
-    public void execute(String[] input, MultiFileHashMapState state) throws IOException {
-        if (state.getCurDir().getName().toString().equals(input[0])) {
+    public void execute(String[] input, State state) throws IOException, ParseException {
+        String tableName = input[0];
+
+        if (state.getCurDir().getName().equals(tableName)) {
+            System.out.println("using " + tableName);
             return;
         }
 
-        MultiFileHashMapTable table = state.getCurTable();
-        File newDir = state.getCurDir().toPath().resolve(input[0]).toFile();
+        int changesNumber = 0;
 
-        if (newDir.exists()) {
-            AbstractMultiFileHashMap.commitTable(table);
+        if (state.getCurTable() != null) {
+            changesNumber = state.getDiffSize();
+        }
 
-            if (!state.getCurTableName().equals("")) {
-                if (table != null) {
-                    table.clearContent();
-                }
+        if (changesNumber != 0) {
+            throw new IOException(changesNumber + " unsaved changes");
+        }
+
+        if (state.getCurDir().toPath().resolve(tableName).toFile().exists()) {
+            state.saveTable(state.getCurTable());
+
+            if (state.getCurTable() != null) {
+                state.clearContentAndDiff();
             }
 
-            state.setDbDir(input[0]);
-            state.setCurTable(input[0]);
+            state.setCurTable(tableName);
 
-            System.out.println("using " + input[0]);
+            state.readTableOff(state.getCurTable());
+
+            System.out.println("using " + tableName);
         } else {
-            System.out.println(input[0] + " not exists");
+            System.out.println(tableName + " not exists");
         }
     }
 }

@@ -2,7 +2,7 @@ package ru.fizteh.fivt.students.fedoseev.multifilehashmap;
 
 import ru.fizteh.fivt.students.fedoseev.common.AbstractCommand;
 import ru.fizteh.fivt.students.fedoseev.common.AbstractFrame;
-import ru.fizteh.fivt.students.fedoseev.filemap.AbstractFileMap;
+import ru.fizteh.fivt.students.fedoseev.filemap.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,12 +10,7 @@ import java.io.RandomAccessFile;
 import java.util.*;
 
 public class AbstractMultiFileHashMap extends AbstractFrame<MultiFileHashMapState> {
-    private static final int MAX_TABLE_SIZE = 4 * 1024 * 1024;
-    private static final int MAX_FILE_SIZE = 1024 * 1024;
-    private static final int DIR_COUNT = 16;
-    private static final int DIR_FILES_COUNT = 16;
-
-    public AbstractMultiFileHashMap(File dir) {
+    public AbstractMultiFileHashMap(File dir) throws IOException {
         state = new MultiFileHashMapState(dir);
 
         File newDir = state.getCurDir();
@@ -33,26 +28,34 @@ public class AbstractMultiFileHashMap extends AbstractFrame<MultiFileHashMapStat
 
     @Override
     public Map<String, AbstractCommand> getCommands() {
-        final MultiFileHashMapCreateCommand CREATE = new MultiFileHashMapCreateCommand();
-        final MultiFileHashMapDropCommand DROP = new MultiFileHashMapDropCommand();
-        final MultiFileHashMapUseCommand USE = new MultiFileHashMapUseCommand();
-        final MultiFileHashMapPutCommand PUT = new MultiFileHashMapPutCommand();
-        final MultiFileHashMapGetCommand GET = new MultiFileHashMapGetCommand();
-        final MultiFileHashMapRemoveCommand REMOVE = new MultiFileHashMapRemoveCommand();
-        final MultiFileHashMapExitCommand EXIT = new MultiFileHashMapExitCommand();
+        final MultiFileHashMapCreateCommand create = new MultiFileHashMapCreateCommand();
+        final MultiFileHashMapDropCommand drop = new MultiFileHashMapDropCommand();
+        final MultiFileHashMapUseCommand use = new MultiFileHashMapUseCommand();
+        final FileMapPutCommand put = new FileMapPutCommand();
+        final FileMapGetCommand get = new FileMapGetCommand();
+        final FileMapRemoveCommand remove = new FileMapRemoveCommand();
+        final FileMapExitCommand exit = new FileMapExitCommand();
+        final MultiFileHashMapSizeCommand size = new MultiFileHashMapSizeCommand();
+        final MultiFileHashMapCommitCommand commit = new MultiFileHashMapCommitCommand();
+        final MultiFileHashMapRollbackCommand rollback = new MultiFileHashMapRollbackCommand();
 
-        return new HashMap<String, AbstractCommand>() {{
-            put(CREATE.getCmdName(), CREATE);
-            put(DROP.getCmdName(), DROP);
-            put(USE.getCmdName(), USE);
-            put(PUT.getCmdName(), PUT);
-            put(GET.getCmdName(), GET);
-            put(REMOVE.getCmdName(), REMOVE);
-            put(EXIT.getCmdName(), EXIT);
-        }};
+        return new HashMap<String, AbstractCommand>() {
+            {
+                put(create.getCmdName(), create);
+                put(drop.getCmdName(), drop);
+                put(use.getCmdName(), use);
+                put(put.getCmdName(), put);
+                put(get.getCmdName(), get);
+                put(remove.getCmdName(), remove);
+                put(exit.getCmdName(), exit);
+                put(size.getCmdName(), size);
+                put(commit.getCmdName(), commit);
+                put(rollback.getCmdName(), rollback);
+            }
+        };
     }
 
-    public static void readTable(MultiFileHashMapTable table) throws IOException {
+    public static void readTableOff(MultiFileHashMapTable table) throws IOException {
         File curDir = new File(table.getName());
 
         if (curDir.listFiles() != null) {
@@ -69,16 +72,10 @@ public class AbstractMultiFileHashMap extends AbstractFrame<MultiFileHashMapStat
     }
 
     public static void checkOpenFile(MultiFileHashMapTable curTable, RandomAccessFile curFile) throws IOException {
-        curTable.setTableSize(curTable.getTableSize() + curFile.length());
+        curTable.ifUnfitCurFileSize(curFile);
+        curTable.ifUnfitCurTableSize();
 
-        if (curFile.length() > MAX_FILE_SIZE) {
-            curFile.close();
-            throw new IOException("ERROR: too big file");
-        }
-        if (curTable.getTableSize() > MAX_TABLE_SIZE) {
-            commitTable(curTable);
-            curTable.getMapContent().clear();
-        }
+        curTable.setTableSize(curTable.getTableSize() + curFile.length());
 
         Map<String, String> map = AbstractFileMap.readFile(curFile);
         curTable.putMapTable(map);
@@ -86,83 +83,76 @@ public class AbstractMultiFileHashMap extends AbstractFrame<MultiFileHashMapStat
         curFile.close();
     }
 
-    public static void commitTable(MultiFileHashMapTable curTable) throws IOException {
+    public static void saveTable(MultiFileHashMapTable curTable) throws IOException {
         if (curTable == null) {
             return;
         }
 
         curTable.setTableSize(0);
 
-        File[] directories = new File[16];
-        Map<Integer, File> files = new HashMap<Integer, File>();
-        Map<Integer, RandomAccessFile> RAFiles = new HashMap<Integer, RandomAccessFile>();
+        File[] directories = new File[curTable.getDirsNumber()];
+        Map<Integer, File> files = new HashMap<>();
+        Map<Integer, RandomAccessFile> rAFiles = new HashMap<>();
         Set<String> keySet = curTable.getMapContent().keySet();
-        boolean[] usedDirs = new boolean[16];
-        boolean[] usedFiles = new boolean[16];
 
-        for (String key : keySet) {
-            usedDirs[curTable.dirHash(key)] = true;
-        }
+        curTable.setUsedDirs();
 
-        for (int i = 0; i < DIR_COUNT; i++) {
-            directories[i] = curTable.getCurFile().toPath().resolve(i + ".dir").toFile();
+        for (int i = 0; i < curTable.getDirsNumber(); i++) {
+            directories[i] = new File(curTable.getCurTableDir(), i + ".dir");
 
-            if (!directories[i].exists() && usedDirs[i]) {
+            if (!directories[i].exists() && curTable.getBoolUsedDirs()[i]) {
                 directories[i].mkdirs();
             }
 
-            for (int j = 0; j < DIR_FILES_COUNT; j++) {
-                usedFiles[j] = false;
-            }
-
             for (String key : keySet) {
-                usedFiles[curTable.fileHash(key)] = true;
+                if (curTable.getBoolUsedDirs()[i]) {
+                    curTable.getBoolUsedFiles()[i][curTable.fileHash(key)] = true;
+                }
             }
 
-            for (int j = 0; j < DIR_FILES_COUNT; j++) {
-                if (usedFiles[j] && usedDirs[i]) {
+            for (int j = 0; j < curTable.getDirFilesNumber(); j++) {
+                if (curTable.getBoolUsedFiles()[i][j]) {
                     File curFile = new File(
-                            curTable.getCurFile().toPath().resolve(i + ".dir").resolve(j + ".dat").toFile().toString()
+                            curTable.getCurTableDir().toPath().resolve(i + ".dir").toFile(), j + ".dat"
                     );
 
-                    int numb = 16 * i + j;
+                    int numb = curTable.getDirsNumber() * i + j;
                     files.put(numb, curFile);
 
                     if (!files.get(numb).exists()) {
                         files.get(numb).createNewFile();
                     }
-
-                    RandomAccessFile curRAFile = new RandomAccessFile(files.get(numb), "rw");
-
-                    RAFiles.put(numb, curRAFile);
                 }
             }
         }
 
-        Set<String> curFileKeySet = new HashSet<String>();
-        Set<Integer> usedKeys = new HashSet<Integer>();
+        Set<String> curFileKeySet = new HashSet<>();
 
-        for (String key : keySet) {
-            if (!usedKeys.contains(curTable.keyHashFunction(key))) {
-                usedKeys.add(curTable.keyHashFunction(key));
+        for (int i = 0; i < curTable.getDirsNumber(); i++) {
+            for (int j = 0; j < curTable.getDirFilesNumber(); j++) {
+                if (curTable.getBoolUsedFiles()[i][j]) {
+                    RandomAccessFile raf = new RandomAccessFile(files.get(curTable.getDirsNumber() * i + j), "rw");
 
-                curFileKeySet.clear();
+                    curFileKeySet.clear();
 
-                RandomAccessFile raf = RAFiles.get(curTable.keyHashFunction(key));
-
-                for (String curFileKey : keySet) {
-                    if (curTable.keyHashFunction(curFileKey) ==
-                            curTable.keyHashFunction(key)) {
-                        curFileKeySet.add(curFileKey);
+                    for (String curFileKey : keySet) {
+                        if (j == curTable.fileHash(curFileKey) && i == curTable.dirHash(curFileKey)) {
+                            curFileKeySet.add(curFileKey);
+                        }
                     }
-                }
 
-                AbstractFileMap.commitFile(raf, curFileKeySet, curTable.getMapContent());
+                    AbstractFileMap.commitFile(raf, curFileKeySet, curTable.getMapContent());
+
+                    raf.close();
+                }
             }
         }
 
-        for (int i : RAFiles.keySet()) {
-            RAFiles.get(i).close();
+        curTable.clearUsedDirs();
+        curTable.clearUsedFiles();
+
+        for (int i : rAFiles.keySet()) {
+            rAFiles.get(i).close();
         }
 
         for (int i : files.keySet()) {

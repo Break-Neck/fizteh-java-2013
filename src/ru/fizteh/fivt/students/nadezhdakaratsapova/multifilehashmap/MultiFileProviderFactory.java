@@ -28,5 +28,4 @@ public class MultiFileProviderFactory implements TableProviderFactory {
             return newStorage;
         }
     }
-
 }

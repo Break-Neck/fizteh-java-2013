@@ -4,15 +4,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
-public class TableFile implements AutoCloseable {
+public class TableFile {
 
-    private RandomAccessFile tableFile;
-    private File tableFilePath;
-    private boolean writeMode;
+    private File tableFilePath = null;
 
-    public class Entry {
+    public static class Entry {
         private String key;
         private String value;
 
@@ -49,127 +49,74 @@ public class TableFile implements AutoCloseable {
                 throw new IllegalStateException("Can't create empty table file");
             }
         }
-        try {
-            this.tableFilePath = tableFilePath;
-            tableFile = new RandomAccessFile(tableFilePath, "rw");
-            setReadMode();
-        } catch (FileNotFoundException e) {
-            throw new IllegalStateException("File must exist but not found");
-        }
+        this.tableFilePath = tableFilePath;
     }
 
-    public Entry readEntry() {
-        if (!isReadMode()) {
-            throw new IllegalStateException("Attempt to read in write mode");
+    public List<Entry> readEntries() {
+        if (tableFilePath == null) {
+            throw new IllegalStateException("Table file is not initialized");
         }
-        Entry tempEntry;
-        try {
-            if (tableFile.length() == 0) {
+        List<Entry> fileData = new ArrayList<>();
+        try (RandomAccessFile file = new RandomAccessFile(tableFilePath, "r")) {
+            if (file.length() == 0) {
                 throw new IllegalStateException("Table file is empty");
             }
-            int keyLength = tableFile.readInt();
-            int valueLength = tableFile.readInt();
-            if (keyLength <= 0 || valueLength <= 0) {
-                throw new IllegalStateException("Table file is damaged");
-            }
-            if ((long) keyLength + (long) valueLength > tableFile.length() - tableFile.getFilePointer()) {
-                throw new IllegalStateException("Table file is damaged");
-            }
-            byte[] key = new byte[keyLength];
-            byte[] value = new byte[valueLength];
-            int readedBytes = 0;
-            while (readedBytes != keyLength) {
-                int nowReaded = tableFile.read(key, readedBytes, keyLength - readedBytes);
-                if (nowReaded == -1) {
-                    throw new IllegalStateException("Key was not completely readed, but EOF is reached");
+            while (file.getFilePointer() < file.length()) {
+                int keyLength = file.readInt();
+                int valueLength = file.readInt();
+                if (keyLength <= 0 || valueLength <= 0) {
+                    throw new IllegalStateException("Table file is damaged");
                 }
-                readedBytes += nowReaded;
-            }
-            readedBytes = 0;
-            while (readedBytes != valueLength) {
-                int nowReaded = tableFile.read(value, readedBytes, valueLength - readedBytes);
-                if (nowReaded == -1) {
-                    throw new IllegalStateException("Value was not completely readed, but EOF is reached");
+                if ((long) keyLength + (long) valueLength > file.length() - file.getFilePointer()) {
+                    throw new IllegalStateException("Table file is damaged");
                 }
-                readedBytes += nowReaded;
+                byte[] key = new byte[keyLength];
+                byte[] value = new byte[valueLength];
+                int readedBytes = 0;
+                while (readedBytes != keyLength) {
+                    int nowReaded = file.read(key, readedBytes, keyLength - readedBytes);
+                    if (nowReaded == -1) {
+                        throw new IllegalStateException("Key was not completely readed, but EOF is reached");
+                    }
+                    readedBytes += nowReaded;
+                }
+                readedBytes = 0;
+                while (readedBytes != valueLength) {
+                    int nowReaded = file.read(value, readedBytes, valueLength - readedBytes);
+                    if (nowReaded == -1) {
+                        throw new IllegalStateException("Value was not completely readed, but EOF is reached");
+                    }
+                    readedBytes += nowReaded;
+                }
+                fileData.add(new Entry(new String(key, StandardCharsets.UTF_8),
+                        new String(value, StandardCharsets.UTF_8)));
             }
-            tempEntry = new Entry(new String(key, Charset.forName("UTF-8")),
-                    new String(value, Charset.forName("UTF-8")));
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException("File for read not found", e);
         } catch (IOException e) {
-            throw new IllegalStateException("Can't make file operations");
+            throw new IllegalStateException("IO error while reading", e);
         }
-        return tempEntry;
+        return fileData;
     }
 
-    public boolean hasNext() {
-        if (!isReadMode()) {
-            throw new IllegalStateException("Attempt to check next in write mode");
+    public void writeEntries(List<Entry> entries) {
+        if (tableFilePath == null) {
+            throw new IllegalStateException("Table file is not initialized");
         }
-
-        long currentFilePointer;
-        long length;
-        try {
-            currentFilePointer = tableFile.getFilePointer();
-            length = tableFile.length();
-        } catch (IOException e) {
-            throw new IllegalStateException("Can't resolve hasNext");
-        }
-        return (currentFilePointer < length);
-    }
-
-    public void writeEntry(Entry newEntry) {
-        if (!isWriteMode()) {
-            throw new IllegalStateException("Attempt to write in read mode");
-        }
-        try {
-            tableFile.writeInt(newEntry.getKey().getBytes("UTF-8").length);
-            tableFile.writeInt(newEntry.getValue().getBytes("UTF-8").length);
-            tableFile.write(newEntry.getKey().getBytes("UTF-8"));
-            tableFile.write(newEntry.getValue().getBytes("UTF-8"));
-            tableFile.setLength(tableFile.getFilePointer());
-        } catch (IOException e) {
-            throw new IllegalStateException("Can't write entry in file");
-        }
-    }
-
-    public void writeEntry(String key, String value) {
-        writeEntry(new Entry(key, value));
-    }
-
-    public boolean isWriteMode() {
-        return writeMode;
-    }
-
-    public boolean isReadMode() {
-        return !writeMode;
-    }
-
-    public void setWriteMode() {
-        if (!isWriteMode()) {
-            try {
-                tableFile.setLength(0);
-                tableFile.seek(0);
-            } catch (IOException e) {
-                throw new IllegalStateException("Can't trim file to 0 length");
+        try (RandomAccessFile file = new RandomAccessFile(tableFilePath, "rw")) {
+            file.setLength(0);
+            for (Entry i : entries) {
+                file.writeInt(i.getKey().getBytes(StandardCharsets.UTF_8).length);
+                file.writeInt(i.getValue().getBytes(StandardCharsets.UTF_8).length);
+                file.write(i.getKey().getBytes(StandardCharsets.UTF_8));
+                file.write(i.getValue().getBytes(StandardCharsets.UTF_8));
+                file.setLength(file.getFilePointer());
             }
-            writeMode = true;
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException("File for writing not found", e);
+        } catch (IOException e) {
+            throw new IllegalStateException("IO error while writing", e);
         }
-    }
-
-    public void setReadMode() {
-        if (!isReadMode()) {
-            try {
-                tableFile.seek(0);
-            } catch (IOException e) {
-                throw new IllegalStateException("Can't trim file to 0 length");
-            }
-            writeMode = false;
-        }
-    }
-
-    @Override
-    public void close() throws Exception {
-        tableFile.close();
         if (tableFilePath.length() == 0) {
             if (!tableFilePath.delete()) {
                 throw new IllegalStateException("Can't delete empty file");

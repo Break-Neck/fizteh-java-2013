@@ -2,8 +2,10 @@ package ru.fizteh.fivt.students.yaninaAnastasia.filemap;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+import org.junit.rules.TemporaryFolder;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,15 +13,12 @@ import java.io.IOException;
 public class TestDatabaseFactory {
     String path;
 
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
     @Before
     public void beforeTest() {
-        path = "C:\\temp\\database_factory_test";
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testGiveNull() {
-        TableProviderFactory factory = new DatabaseTableProviderFactory();
-        factory.create(null);
+        path = folder.getRoot().getPath();
     }
 
     @Test

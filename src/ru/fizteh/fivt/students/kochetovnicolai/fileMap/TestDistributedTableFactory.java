@@ -25,19 +25,31 @@ public class TestDistributedTableFactory extends FileManager {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void createProviderEmptyShouldFail() {
+    public void createProviderEmptyShouldFail() throws IOException {
         factory.create(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void createProviderOnFileShouldFail() throws IOException {
+    public void createProviderOnFileShouldFail() throws IllegalArgumentException, IOException {
         String name = "file";
         File file = folder.newFile(name);
         factory.create(file.getAbsolutePath());
     }
 
     @Test
-    public void createProvider() {
-        Assert.assertTrue("failed create provider", factory.create(folder.getRoot().getName()) != null);
+    public void createProvider() throws IOException {
+        Assert.assertTrue("failed create provider", factory.create(folder.getRoot().getPath()) != null);
+    }
+
+    @Test
+    public void doubleCloseShouldWork() throws IOException {
+        factory.close();
+        factory.close();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldThrowExceptionAfterClose() throws IOException {
+        factory.close();
+        factory.create("");
     }
 }

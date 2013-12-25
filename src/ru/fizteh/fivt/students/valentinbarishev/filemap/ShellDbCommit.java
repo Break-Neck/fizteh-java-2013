@@ -2,6 +2,8 @@ package ru.fizteh.fivt.students.valentinbarishev.filemap;
 
 import ru.fizteh.fivt.students.valentinbarishev.shell.SimpleShellCommand;
 
+import java.io.IOException;
+
 public class ShellDbCommit extends SimpleShellCommand {
     private Context context;
 
@@ -14,10 +16,14 @@ public class ShellDbCommit extends SimpleShellCommand {
 
     @Override
     public void run() {
-        if (context.table != null) {
-            System.out.println(context.table.commit());
-        } else {
-            System.out.println("no table");
+        try {
+            if (context.table != null) {
+                System.out.println(context.table.commit());
+            } else {
+                System.out.println("no table");
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
         }
     }
 }

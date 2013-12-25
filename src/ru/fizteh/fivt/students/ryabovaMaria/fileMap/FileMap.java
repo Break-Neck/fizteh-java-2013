@@ -1,6 +1,7 @@
 package ru.fizteh.fivt.students.ryabovaMaria.fileMap;
 
 import java.io.File;
+import java.io.IOException;
 import ru.fizteh.fivt.students.ryabovaMaria.shell.Shell;
 
 public class FileMap {
@@ -16,7 +17,7 @@ public class FileMap {
             } else {
              shell.interactive();
             }
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IOException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }

@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.adanilyak.commands;
 
-import ru.fizteh.fivt.students.adanilyak.multifilehashmap.DataBaseGlobalState;
-import ru.fizteh.fivt.students.adanilyak.multifilehashmap.TableStorage;
+import ru.fizteh.fivt.students.adanilyak.multifilehashmap.MultiFileDataBaseGlobalState;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,9 +13,9 @@ import java.util.List;
 public class CmdUse implements Cmd {
     private final String name = "use";
     private final int amArgs = 1;
-    private DataBaseGlobalState workState;
+    private MultiFileDataBaseGlobalState workState = null;
 
-    public CmdUse(DataBaseGlobalState dataBaseState) {
+    public CmdUse(MultiFileDataBaseGlobalState dataBaseState) {
         workState = dataBaseState;
     }
 
@@ -33,11 +32,11 @@ public class CmdUse implements Cmd {
     @Override
     public void work(List<String> args) throws IOException {
         String useTableName = args.get(1);
-        if (workState.getTable(useTableName) == null) {
+        if (!workState.isTableExist(useTableName)) {
             System.err.println(useTableName + " not exists");
         } else {
             if (workState.getCurrentTable() != null) {
-                int amChanges = ((TableStorage)workState.currentTable).getAmountOfChanges();
+                int amChanges = workState.amountOfChanges();
                 if (amChanges != 0) {
                     System.err.println(amChanges + " unsaved changes");
                     return;

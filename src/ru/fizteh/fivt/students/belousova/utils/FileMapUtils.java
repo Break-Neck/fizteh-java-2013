@@ -53,8 +53,8 @@ public class FileMapUtils {
         while (b != 0) {
             bos.write(b);
             b = dis.readByte();
-            length ++;
-            if (length > 1024*1024) {
+            length++;
+            if (length > 1024 * 1024) {
                 throw new IOException("wrong data format");
             }
         }
@@ -71,7 +71,7 @@ public class FileMapUtils {
     }
 
     private static String readValue(DataInputStream dis, int offset1,
-            int offset2, int position, int length) throws IOException {
+                                    int offset2, int position, int length) throws IOException {
         dis.mark(length);
         dis.skip(offset1 - position);
         byte[] buffer = new byte[offset2 - offset1];

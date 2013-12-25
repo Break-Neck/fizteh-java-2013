@@ -1,14 +1,13 @@
 package ru.fizteh.fivt.students.belousova.multifilehashmap;
 
-import ru.fizteh.fivt.students.belousova.filemap.TableState;
 import ru.fizteh.fivt.students.belousova.shell.Command;
 
 import java.io.IOException;
 
 public class CommandCommit implements Command {
-    private TableState state;
+    private MultiFileShellState state;
 
-    public CommandCommit(TableState state) {
+    public CommandCommit(MultiFileShellState state) {
         this.state = state;
     }
 

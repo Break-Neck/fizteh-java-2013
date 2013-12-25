@@ -13,9 +13,9 @@ public class ShellMain {
             AbstractFrame<ShellState> shell = new AbstractShell(curDir);
 
             if (args.length != 0) {
-                shell.BatchMode(args);
+                shell.batchMode(args);
             } else {
-                shell.InteractiveMode();
+                shell.interactiveMode();
             }
         } catch (Exception e) {
             System.err.println("ERROR: directory problem\n");

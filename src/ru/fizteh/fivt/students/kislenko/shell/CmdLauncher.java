@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import ru.fizteh.fivt.students.kislenko.filemap.*;
-
 public class CmdLauncher<State> {
     private Map<String, Command<State>> commandList = new HashMap<String, Command<State>>();
 
@@ -34,7 +32,7 @@ public class CmdLauncher<State> {
         return result;
     }
 
-    public void launch(State state, String input) throws IOException {
+    public void launch(State state, String input) throws Exception {
         String command = getCommand(input.trim());
         String[] args = getArgs(input.trim());
         if (command.isEmpty()) {
@@ -44,7 +42,9 @@ public class CmdLauncher<State> {
             throw new IOException("Wrong command.");
         }
         if (args.length != commandList.get(command).getArgCount()) {
-            throw new IOException("Incorrect argument count.");
+            if (commandList.get(command).getArgCount() != -1) {
+                throw new IOException("Incorrect argument count.");
+            }
         }
         commandList.get(command).run(state, args);
     }

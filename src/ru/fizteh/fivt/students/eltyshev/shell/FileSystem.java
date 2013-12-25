@@ -44,7 +44,7 @@ public class FileSystem {
     public void remove(String fileName) throws IOException {
         File file = getPath(fileName).toFile();
         if (!file.exists()) {
-            throw new IOException(String.format("cannot remove '%s': No such file or directory", fileName));
+            throw new IOException(String.format("cannot storageRemove '%s': No such file or directory", fileName));
         }
 
         if (file.isFile()) {

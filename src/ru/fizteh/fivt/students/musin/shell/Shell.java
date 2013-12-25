@@ -1,24 +1,28 @@
 package ru.fizteh.fivt.students.musin.shell;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Shell {
 
     private HashMap<String, ShellCommand> commands;
+    private ArrayList<ShellCommand> exitFunction;
     public File currentDirectory;
-    boolean exit;
+    private boolean exit;
+    public PrintStream writer;
+    private String greeting;
 
-    public void stop() {
-        exit = true;
-    }
-
-    public Shell(String startDirectory) {
-        currentDirectory = new File(startDirectory);
-        commands = new HashMap<String, ShellCommand>();
+    public Shell(String startDirectory, PrintStream writer) {
+        if (startDirectory == null) {
+            currentDirectory = null;
+        } else {
+            currentDirectory = new File(startDirectory);
+        }
+        this.writer = writer;
+        greeting = " $ ";
+        commands = new HashMap<>();
+        exitFunction = new ArrayList<>();
         commands.put("exit", new ShellCommand("exit", new ShellExecutable() {
             @Override
             public int execute(Shell shell, ArrayList<String> args) {
@@ -28,72 +32,41 @@ public class Shell {
         }));
     }
 
+    public void setGreeting(String greeting) {
+        this.greeting = greeting;
+    }
+
+    public void stop() {
+        for (ShellCommand command : exitFunction) {
+            command.exec.execute(this, null);
+        }
+        exit = true;
+    }
+
     private int parseString(String s) {
-        ArrayList<String> comm = new ArrayList<String>();
-        int start = 0;
-        boolean quote = false;
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) == ';' && !quote) {
-                comm.add(s.substring(start, i));
-                start = i + 1;
-            }
-            if (s.charAt(i) == '"') {
-                quote ^= true;
-            }
-        }
-        if (quote) {
-            System.err.println("Wrong quotation sequence");
-            return -1;
-        }
-        if (start != s.length()) {
-            comm.add(s.substring(start, s.length()));
-        }
-        for (int i = 0; i < comm.size(); i++) {
+        String[] comm = s.split(";");
+        for (int i = 0; i < comm.length; i++) {
+            String[] tokens = comm[i].split("\\s+");
+            ArrayList<String> args = new ArrayList<>();
+            ArrayList<String> selfParseArgs = new ArrayList<>();
             String name = "";
-            ArrayList<String> args = new ArrayList<String>();
-            ArrayList<String> selfParseArgs = new ArrayList<String>();
-            boolean nameRead = false;
-            start = 0;
-            quote = false;
-            for (int j = 0; j < comm.get(i).length(); j++) {
-                if (!quote && Character.isWhitespace(comm.get(i).charAt(j))) {
-                    if (start != j) {
-                        if (!nameRead) {
-                            name = comm.get(i).substring(start, j);
-                            nameRead = true;
-                            selfParseArgs.add(comm.get(i).substring(j + 1, comm.get(i).length()));
-                        } else {
-                            args.add(comm.get(i).substring(start, j));
-                        }
+            for (int j = 0; j < tokens.length; j++) {
+                if (!tokens[j].equals("")) {
+                    if (name.equals("")) {
+                        name = tokens[j];
+                    } else {
+                        args.add(tokens[j]);
                     }
-                    start = j + 1;
-                }
-                if (comm.get(i).charAt(j) == '"') {
-                    if (!nameRead) {
-                        System.err.println("Arguments are specified, but no command was given");
-                        return -1;
-                    }
-                    if (quote) {
-                        args.add(comm.get(i).substring(start, j));
-                        if (j + 1 != comm.get(i).length() && !Character.isWhitespace(comm.get(i).charAt(j + 1))) {
-                            System.err.println("Wrong argument format (Maybe space-character is forgotten?)");
-                            return -1;
-                        }
-                    } else if (!Character.isWhitespace(comm.get(i).charAt(j - 1))) {
-                        System.err.println("Wrong argument format (Maybe space-character is forgotten?)");
-                        return -1;
-                    }
-                    quote ^= true;
-                    start = j + 1;
                 }
             }
-            if (start != comm.get(i).length()) {
-                if (!nameRead) {
-                    name = comm.get(i).substring(start, comm.get(i).length());
-                    selfParseArgs.add("");
-                } else {
-                    args.add(comm.get(i).substring(start, comm.get(i).length()));
+            for (int j = 1; j < comm[i].length(); j++) {
+                if (Character.isWhitespace(comm[i].charAt(j)) && !Character.isWhitespace(comm[i].charAt(j - 1))) {
+                    selfParseArgs.add(comm[i].substring(j, comm[i].length()).trim());
+                    break;
                 }
+            }
+            if (selfParseArgs.size() == 0) {
+                selfParseArgs.add("");
             }
             ShellCommand command = commands.get(name);
             if (command != null) {
@@ -108,7 +81,7 @@ public class Shell {
                 }
             }
             if (command == null && !name.equals("")) {
-                System.err.printf("No such command %s\n", name);
+                writer.printf("No such command %s%s", name, System.lineSeparator());
                 return -1;
             }
         }
@@ -117,6 +90,10 @@ public class Shell {
 
     public void addCommand(ShellCommand command) {
         commands.put(command.name, command);
+    }
+
+    public void addExitFunction(ShellCommand command) {
+        exitFunction.add(command);
     }
 
     public int runArgs(String[] args) {
@@ -131,15 +108,16 @@ public class Shell {
     public int run(BufferedReader br) {
         exit = false;
         while (!exit) {
-            System.out.print("$ ");
+            writer.print(greeting);
             try {
                 String str = br.readLine();
                 if (str == null) {
+                    stop();
                     return 0;
                 }
                 parseString(str);
             } catch (IOException e) {
-                System.err.println(e.getMessage());
+                writer.println(e.getMessage());
             }
         }
         return 0;

@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.eltyshev.filemap.base;
 
 import java.io.*;
-import java.util.HashMap;
 
 public class FilemapReader implements Closeable {
     private RandomAccessFile file;
@@ -15,13 +14,18 @@ public class FilemapReader implements Closeable {
             valuesOffset = 0;
             return;
         }
+
+        if (file.length() == 0) {
+            throw new IllegalArgumentException("empty file: " + filePath);
+        }
+
         // initializing beginning of value section
         skipKey();
         valuesOffset = readOffset();
         file.seek(0);
     }
 
-    public static void loadFromFile(String filePath, HashMap<String, String> data) throws IOException {
+    public static void loadFromFile(String filePath, TableBuilder builder) throws IOException {
         if (!FileMapUtils.checkFileExists(filePath)) {
             return;
         }
@@ -29,7 +33,7 @@ public class FilemapReader implements Closeable {
         while (!reader.endOfFile()) {
             String key = reader.readKey();
             String value = reader.readValue();
-            data.put(key, value);
+            builder.put(key, value);
         }
         reader.close();
     }
@@ -48,7 +52,7 @@ public class FilemapReader implements Closeable {
             stream.write(b);
             b = file.readByte();
         }
-        return new String(stream.toByteArray(), AbstractTable.CHARSET);
+        return new String(stream.toByteArray(), AbstractStorage.CHARSET);
     }
 
     private String readValue() throws IOException {
@@ -60,7 +64,7 @@ public class FilemapReader implements Closeable {
         byte[] bytes = new byte[valueLength];
         file.read(bytes, 0, valueLength);
         file.seek(currentOffset);
-        return new String(bytes, AbstractTable.CHARSET);
+        return new String(bytes, AbstractStorage.CHARSET);
     }
 
     private boolean endOfFile() {

@@ -7,6 +7,8 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.Scanner;
 
+import static ru.fizteh.fivt.students.dmitryIvanovsky.fileMap.FileMapUtils.getMessage;
+
 public class CommandLauncher {
 
     public enum Code {
@@ -79,9 +81,21 @@ public class CommandLauncher {
                         method.invoke(exampleClass, args);
                     }
                     return Code.OK;
-                } catch (Exception e) {
-                    getMessage((Exception) e.getCause());
+                } catch (NullPointerException err) {
                     return Code.ERROR;
+                } catch (Exception e) {
+                    try {
+                        if (e.getCause() != null) {
+                            Exception newErr = (Exception) e.getCause();
+                            if (newErr != null) {
+                                getMessage(newErr);
+                            }
+                            return Code.ERROR;
+                        }
+                        return Code.ERROR;
+                    } catch (Exception err) {
+                        return Code.ERROR;
+                    }
                 }
             } else {
                 errPrint("Неизвестная команда");
@@ -93,17 +107,6 @@ public class CommandLauncher {
             }
             return Code.ERROR;
         }
-    }
-
-    private void getMessage(Exception e) {
-        //errPrint(String.valueOf(e.getSuppressed().length));
-        if (e.getMessage() != null) {
-            errPrint(e.getMessage());
-        }
-        for (int i = 0; i < e.getSuppressed().length; ++i) {
-            errPrint(e.getSuppressed()[i].getMessage());
-        }
-        //e.printStackTrace();
     }
 
     public Code runCommands(String query, boolean isInteractiveMode) {
@@ -122,9 +125,10 @@ public class CommandLauncher {
         Scanner sc = new Scanner(System.in);
         while (true) {
             try {
-                System.out.print(exampleClass.startShellString());
+                System.out.flush();
+                System.out.println(exampleClass.startShellString());
+                System.out.flush();
             } catch (Exception e) {
-                //e.printStackTrace();
                 errPrint("Неправильный путь");
                 return;
             }
@@ -152,40 +156,18 @@ public class CommandLauncher {
             }
             String query = builder.toString();
             Code res = runCommands(query, false);
-            try {
-                exampleClass.exit();
-            } catch (Exception e) {
-                getMessage(e);
-                throw e;
-            }
-
             return res;
-
         } else {
-
             interactiveMode();
-
-            try {
-                exampleClass.exit();
-            } catch (Exception e) {
-                getMessage(e);
-                throw e;
-            }
-
             return Code.OK;
-
         }
     }
 
     private void errPrint(String message) {
         if (err) {
+            System.err.flush();
             System.err.println(message);
-        }
-    }
-
-    private void outPrint(String message) {
-        if (out) {
-            System.out.println(message);
+            System.err.flush();
         }
     }
 

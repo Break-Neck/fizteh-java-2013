@@ -26,23 +26,21 @@ public class AbstractFileMap extends AbstractFrame<FileMapState> {
         return content;
     }
 
-    public static void setContent(Map<String, String> map) {
-        content = map;
-    }
-
     @Override
     public Map<String, AbstractCommand> getCommands() {
-        final FileMapPutCommand PUT = new FileMapPutCommand();
-        final FileMapGetCommand GET = new FileMapGetCommand();
-        final FileMapRemoveCommand REMOVE = new FileMapRemoveCommand();
-        final FileMapExitCommand EXIT = new FileMapExitCommand();
+        final FileMapPutCommand put = new FileMapPutCommand();
+        final FileMapGetCommand get = new FileMapGetCommand();
+        final FileMapRemoveCommand remove = new FileMapRemoveCommand();
+        final FileMapExitCommand exit = new FileMapExitCommand();
 
-        return new HashMap<String, AbstractCommand>() {{
-            put(PUT.getCmdName(), PUT);
-            put(GET.getCmdName(), GET);
-            put(REMOVE.getCmdName(), REMOVE);
-            put(EXIT.getCmdName(), EXIT);
-        }};
+        return new HashMap<String, AbstractCommand>() {
+            {
+                put(put.getCmdName(), put);
+                put(get.getCmdName(), get);
+                put(remove.getCmdName(), remove);
+                put(exit.getCmdName(), exit);
+            }
+        };
     }
 
     public void checkOpenFile() throws IOException {

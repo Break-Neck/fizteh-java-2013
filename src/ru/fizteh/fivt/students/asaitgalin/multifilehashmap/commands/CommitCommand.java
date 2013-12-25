@@ -1,11 +1,11 @@
 package ru.fizteh.fivt.students.asaitgalin.multifilehashmap.commands;
 
 import ru.fizteh.fivt.students.asaitgalin.multifilehashmap.MultiFileTableState;
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
 
 import java.io.IOException;
 
-public class CommitCommand implements Command {
+public class CommitCommand extends DefaultCommand {
     private MultiFileTableState state;
 
     public CommitCommand(MultiFileTableState state) {

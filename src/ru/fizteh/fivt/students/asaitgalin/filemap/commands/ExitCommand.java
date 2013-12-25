@@ -1,11 +1,11 @@
 package ru.fizteh.fivt.students.asaitgalin.filemap.commands;
 
 import ru.fizteh.fivt.students.asaitgalin.filemap.SingleFileTable;
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
 
 import java.io.IOException;
 
-public class ExitCommand implements Command {
+public class ExitCommand extends DefaultCommand {
     private SingleFileTable storage;
 
     public ExitCommand(SingleFileTable storage) {

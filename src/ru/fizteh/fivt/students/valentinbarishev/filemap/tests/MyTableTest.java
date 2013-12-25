@@ -2,19 +2,18 @@ package ru.fizteh.fivt.students.valentinbarishev.filemap.tests;
 
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
-import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+import ru.fizteh.fivt.storage.structured.*;
 import ru.fizteh.fivt.students.valentinbarishev.filemap.MyTableProviderFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MyTableTest {
     static Table table;
     static TableProviderFactory factory;
     static TableProvider provider;
+    static List<Class<?>> types;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -28,143 +27,214 @@ public class MyTableTest {
     @Before
     public void beforeTest() throws IOException {
         provider = factory.create(folder.newFolder("folder").getCanonicalPath());
-        table = provider.createTable("new");
+        types = new ArrayList<>();
+        types.add(String.class);
+        types.add(Integer.class);
+
+        table = provider.createTable("simple", types);
+
     }
 
-    @After
-    public void afterTest() {
-        provider.removeTable("new");
-    }
-
-
-    @Test
-    public void testGetName() {
-        Assert.assertEquals(table.getName(), "new");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetNull() {
-        table.get(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testPutNull() {
-        table.put(null, "test");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testRemoveNull() {
-        table.remove(null);
-    }
-
-    @Test
-    public void testPutGetRemoveEnglish() {
-        Assert.assertNull(table.put("key", "value"));
-        Assert.assertEquals(table.get("key"), "value");
-        Assert.assertNull(table.get("value"));
-        Assert.assertEquals(table.put("key", "value_new"), "value");
-        Assert.assertEquals(table.remove("key"), "value_new");
-    }
-
-    @Test
-    public void testPutGetRemoveRussian() {
-        Assert.assertNull(table.put("МАМА", "ПАПА"));
-        Assert.assertEquals(table.get("МАМА"), "ПАПА");
-        Assert.assertNull(table.get("ПАПА"));
-        Assert.assertEquals(table.put("МАМА", "БРАТ"), "ПАПА");
-        Assert.assertEquals(table.remove("МАМА"), "БРАТ");
-    }
-
-    @Test
-    public void testSizeCommit() {
-        Assert.assertEquals(table.size(), 0);
-        int count = (Math.abs(new Random().nextInt()) % 255) + 100;
-        for (int i = 0; i < count; ++i) {
-            Assert.assertNull(table.put(Integer.toString(i), "size test"));
+    public void storeableEquals(Storeable a, Storeable b) {
+        for (int i = 0; i < table.getColumnsCount(); ++i) {
+            Assert.assertEquals(a.getColumnAt(i), b.getColumnAt(i));
         }
-        Assert.assertEquals(table.size(), count);
-        Assert.assertEquals(table.commit(), count);
-        for (int i = 0; i < count; ++i) {
-            Assert.assertEquals(table.remove(Integer.toString(i)), "size test");
-        }
-        Assert.assertEquals(table.size(), 0);
-        Assert.assertEquals(table.commit(), count);
     }
 
     @Test
-    public void testRollback() {
-        Assert.assertEquals(table.size(), 0);
-        int count = (Math.abs(new Random().nextInt()) % 255) + 100;
-        for (int i = 0; i < count; ++i) {
-            Assert.assertNull(table.put(Integer.toString(i), "rollback test"));
-        }
-        Assert.assertEquals(table.rollback(), count);
-    }
+    public void testGetPutSimple() throws IOException {
+        Storeable storeable = provider.createFor(table);
 
-    @Test
-    public void testRollbackWithNoChanges() {
-        Assert.assertNull(table.put("no_changes", "will_be_deleted_soon"));
-        Assert.assertEquals(table.remove("no_changes"), "will_be_deleted_soon");
-        Assert.assertEquals(table.rollback(), 0);
+        storeable.setColumnAt(0, "new_value");
+        storeable.setColumnAt(1, 100);
 
-        Assert.assertNull(table.put("key", "value"));
+        Storeable old = provider.createFor(table);
+        old.setColumnAt(0, "new_value");
+        old.setColumnAt(1, 100);
+
+        Assert.assertNull(table.put("simple", storeable));
+        storeableEquals(table.get("simple"), storeable);
+
         Assert.assertEquals(table.commit(), 1);
-        Assert.assertEquals(table.put("key", "value_new"), "value");
-        Assert.assertEquals(table.put("key", "value"), "value_new");
-        Assert.assertEquals(table.rollback(), 0);
-    }
+        storeable.setColumnAt(0, "very_new");
+        storeable.setColumnAt(1, null);
+        Assert.assertNull(table.put("null", storeable));
+        storeableEquals(table.get("null"), storeable);
 
-    @Test
-    public void testCommitWithNoChanges() {
-        Assert.assertNull(table.put("no_changes", "will_be_deleted_soon"));
-        Assert.assertEquals(table.remove("no_changes"), "will_be_deleted_soon");
-        Assert.assertEquals(table.commit(), 0);
+        storeableEquals(table.remove("null"), storeable);
+        storeableEquals(table.put("simple", storeable), old);
 
-        Assert.assertNull(table.put("key", "value"));
-        Assert.assertEquals(table.commit(), 1);
-        Assert.assertEquals(table.put("key", "value_new"), "value");
-        Assert.assertEquals(table.put("key", "value"), "value_new");
-        Assert.assertEquals(table.commit(), 0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testEmptyKey() {
-        table.put("   ", "empty_key");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testEmptyValue() {
-        table.put("empty_value", "   ");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testNullValue() {
-        table.put("null_value", null);
-    }
-
-    @Test
-    public void testWorkWithTable() {
-        Assert.assertNull(table.put("work", "with"));
-        Assert.assertEquals(table.get("work"), "with");
-        Assert.assertEquals(table.remove("work"), "with");
-        Assert.assertEquals(table.remove("work"), null);
-        Assert.assertEquals(table.commit(), 0);
-        Assert.assertEquals(table.rollback(), 0);
-        Assert.assertEquals(table.size(), 0);
-    }
-
-    @Test
-    public void testCommitRollback() {
-        Assert.assertNull(table.put("commit", "rollback"));
-        Assert.assertEquals(table.get("commit"), "rollback");
         Assert.assertEquals(table.rollback(), 1);
-        Assert.assertNull(table.get("commit"));
-        Assert.assertNull(table.put("commit", "rollback"));
-        Assert.assertEquals(table.get("commit"), "rollback");
+
+        storeableEquals(table.remove("simple"), old);
         Assert.assertEquals(table.commit(), 1);
-        Assert.assertEquals(table.remove("commit"), "rollback");
-        Assert.assertNull(table.put("commit", "rollback1"));
+
+        Assert.assertNull(table.put("key", old));
         Assert.assertEquals(table.commit(), 1);
-        Assert.assertEquals(table.get("commit"), "rollback1");
+
+        storeableEquals(table.put("key", old), old);
+        Assert.assertEquals(table.commit(), 0);
     }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testPutNullValue() {
+        table.put("simple", null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testPutSpasedKey() {
+        Storeable storeable = provider.createFor(table);
+
+        storeable.setColumnAt(0, "n e w_ v a lu e");
+        storeable.setColumnAt(1, 100);
+
+        table.put("  ", storeable);
+    }
+
+    @Test
+    public void testPutGet() throws IOException {
+        types = new ArrayList<>();
+        types.add(Long.class);
+        types.add(Long.class);
+
+        Table table = provider.createTable("simple13424", types);
+
+        Storeable storeable = provider.createFor(table);
+
+        storeable.setColumnAt(0, (long) 123123123);
+        storeable.setColumnAt(1, (long) 100);
+
+        Assert.assertNull(table.put("simple", storeable));
+        storeableEquals(table.get("simple"), storeable);
+    }
+
+    @Test(expected = ColumnFormatException.class)
+    public void testStoreableHasMoreLength() throws IOException {
+        List<Class<?>> types1 = new ArrayList<>();
+        types1.add(Long.class);
+        types1.add(Boolean.class);
+
+        Table table1 = provider.createTable("super1", types1);
+
+        List<Class<?>> types2 = new ArrayList<>();
+        types2.add(Long.class);
+        types2.add(Boolean.class);
+        types2.add(Byte.class);
+        Table table2 = provider.createTable("super2", types2);
+
+        Storeable storeable = provider.createFor(table1);
+
+        storeable.setColumnAt(0, (long) 123123123);
+        storeable.setColumnAt(1, true);
+
+        Assert.assertNull(table1.put("simple", storeable));
+        storeableEquals(table1.get("simple"), storeable);
+
+        storeable = provider.createFor(table2);
+
+        storeable.setColumnAt(0, 1);
+        storeable.setColumnAt(1, false);
+        storeable.setColumnAt(2, 1);
+
+        Assert.assertNull(table2.put("simple", storeable));
+        storeableEquals(table2.get("simple"), storeable);
+
+        table1.put("sdasd", storeable);
+    }
+
+    @Test(expected = ColumnFormatException.class)
+    public void testStoreableHasLessLength() throws IOException {
+        List<Class<?>> types1 = new ArrayList<>();
+        types1.add(Long.class);
+        types1.add(Boolean.class);
+
+        Table table1 = provider.createTable("super1", types1);
+
+        List<Class<?>> types2 = new ArrayList<>();
+        types2.add(Long.class);
+        types2.add(Boolean.class);
+        types2.add(Byte.class);
+        Table table2 = provider.createTable("super2", types2);
+
+        Storeable storeable = provider.createFor(table1);
+
+        storeable.setColumnAt(0, (long) 123123123);
+        storeable.setColumnAt(1, true);
+
+        Assert.assertNull(table1.put("simple", storeable));
+        storeableEquals(table1.get("simple"), storeable);
+
+        Storeable storeable2 = provider.createFor(table2);
+
+        storeable2.setColumnAt(0, 1);
+        storeable2.setColumnAt(1, false);
+        storeable2.setColumnAt(2, 1);
+
+        Assert.assertNull(table2.put("simple", storeable2));
+        storeableEquals(table2.get("simple"), storeable2);
+
+        table2.put("sdasd", storeable);
+    }
+
+    @Test
+    public void testEmptyStringInStoreable() {
+        Storeable storeable = provider.createFor(table);
+        storeable.setColumnAt(0, "");
+        Assert.assertNull(table.put("abacaba", storeable));
+        Assert.assertEquals(storeable.getStringAt(0), "");
+    }
+
+    @Test
+    public void testCommitRollback() throws IOException {
+        Storeable storeable = provider.createFor(table);
+        storeable.setColumnAt(0, "");
+        Assert.assertNull(table.put("abacaba", storeable));
+        Assert.assertEquals(table.commit(), 1);
+        Assert.assertNotNull(table.put("abacaba", storeable));
+        Assert.assertNotNull(table.get("abacaba"));
+        Assert.assertEquals(table.commit(), 0);
+        Assert.assertEquals(table.rollback(), 0);
+        storeable.setColumnAt(0, "123");
+        Assert.assertNotNull(table.put("abacaba", storeable));
+        Assert.assertEquals(table.rollback(), 1);
+        Assert.assertNotNull(table.put("abacaba", storeable));
+        Assert.assertEquals(table.commit(), 1);
+        Assert.assertNotNull(table.remove("abacaba"));
+        Assert.assertNull(table.put("abacaba", storeable));
+        Assert.assertEquals(table.commit(), 0);
+    }
+
+    @Test
+    public void testTableClose() throws Exception {
+        Storeable storeable = provider.createFor(table);
+        storeable.setColumnAt(0, "");
+        Assert.assertNull(table.put("abacaba", storeable));
+        ((AutoCloseable) table).close();
+        ((AutoCloseable) table).close();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testTableCloseGet() throws Exception {
+        ((AutoCloseable) table).close();
+        table.get("asdasd");
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testTableClosePut() throws Exception {
+        ((AutoCloseable) table).close();
+        table.put("asdasd", provider.createFor(table));
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testTableCloseSize() throws Exception {
+        ((AutoCloseable) table).close();
+        table.size();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void testTableCloseName() throws Exception {
+        ((AutoCloseable) table).close();
+        table.getName();
+    }
+
 }

@@ -1,15 +1,13 @@
 package ru.fizteh.fivt.students.belousova.multifilehashmap.tests;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
 import ru.fizteh.fivt.students.belousova.multifilehashmap.ChangesCountingTableProvider;
 import ru.fizteh.fivt.students.belousova.multifilehashmap.ChangesCountingTableProviderFactory;
-import ru.fizteh.fivt.students.belousova.multifilehashmap.MultiFileTable;
 import ru.fizteh.fivt.students.belousova.multifilehashmap.MultiFileTableProviderFactory;
-
-import java.io.File;
 
 public class MultiFileTableTest {
     private ChangesCountingTableProviderFactory tableProviderFactory = new MultiFileTableProviderFactory();

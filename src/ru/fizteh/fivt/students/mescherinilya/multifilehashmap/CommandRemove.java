@@ -2,10 +2,6 @@ package ru.fizteh.fivt.students.mescherinilya.multifilehashmap;
 
 public class CommandRemove implements Command {
 
-    public CommandRemove() {
-        super();
-    }
-
     @Override
     public int getArgsCount() {
         return 1;
@@ -13,13 +9,13 @@ public class CommandRemove implements Command {
 
     @Override
     public void execute(String[] args) {
-        if (DatabaseWorker.currentTable == null) {
+        if (MultiFileHashMap.currentTable == null) {
             System.out.println("no table");
             return;
         }
 
-        if (DatabaseWorker.storage.containsKey(args[0])) {
-            DatabaseWorker.storage.remove(args[0]);
+        if (MultiFileHashMap.currentTable.get(args[0]) != null) {
+            MultiFileHashMap.currentTable.remove(args[0]);
             System.out.println("removed");
         } else {
             System.out.println("not found");

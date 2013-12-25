@@ -1,6 +1,7 @@
 package ru.fizteh.fivt.students.eltyshev.multifilemap;
 
-import ru.fizteh.fivt.storage.strings.*;
+import ru.fizteh.fivt.storage.strings.Table;
+import ru.fizteh.fivt.storage.strings.TableProvider;
 
 import java.io.File;
 import java.util.HashMap;
@@ -15,9 +16,6 @@ public class DatabaseTableProvider implements TableProvider {
     private MultifileTable activeTable = null;
 
     public DatabaseTableProvider(String databaseDirectoryPath) {
-        if (databaseDirectoryPath == null) {
-            throw new IllegalArgumentException("database directory cannot be null");
-        }
         this.databaseDirectoryPath = databaseDirectoryPath;
         File databaseDirectory = new File(databaseDirectoryPath);
         for (final File tableFile : databaseDirectory.listFiles()) {
@@ -30,7 +28,7 @@ public class DatabaseTableProvider implements TableProvider {
     }
 
     public Table getTable(String name) throws IllegalArgumentException, IllegalStateException {
-        if (name == null || name.equals("")) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("table's name cannot be null");
         }
 
@@ -42,8 +40,8 @@ public class DatabaseTableProvider implements TableProvider {
             return table;
         }
 
-        if (activeTable != null && activeTable.getUncommitedChangesCount() > 0) {
-            throw new IllegalStateException(String.format("%d unsaved changes", activeTable.getUncommitedChangesCount()));
+        if (activeTable != null && activeTable.getUncommittedChangesCount() > 0) {
+            throw new IllegalStateException(String.format("%d unsaved changes", activeTable.getUncommittedChangesCount()));
         }
 
         activeTable = table;
@@ -51,7 +49,7 @@ public class DatabaseTableProvider implements TableProvider {
     }
 
     public Table createTable(String name) throws IllegalArgumentException, IllegalStateException {
-        if (name == null || name.equals("")) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("table's name cannot be null");
         }
 
@@ -61,13 +59,17 @@ public class DatabaseTableProvider implements TableProvider {
             return null;
         }
 
+        File tableDirectory = new File(databaseDirectoryPath, name);
+        if (!tableDirectory.exists()) {
+            tableDirectory.mkdir();
+        }
         MultifileTable table = new MultifileTable(databaseDirectoryPath, name);
         tables.put(name, table);
         return table;
     }
 
     public void removeTable(String name) throws IllegalArgumentException, IllegalStateException {
-        if (name == null || name.equals("")) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("table's name cannot be null");
         }
 

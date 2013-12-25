@@ -2,7 +2,6 @@ package ru.fizteh.fivt.students.irinaGoltsman.filemap;
 
 import ru.fizteh.fivt.students.irinaGoltsman.shell.*;
 
-
 public class DBCommands {
     public static class Use implements Command {
         protected final String name = "use";
@@ -56,7 +55,8 @@ public class DBCommands {
 
     public static class CreateTable implements Command {
         protected final String name = "create";
-        protected final int countOfArguments = 1;
+        //Название таблицы и список типов колонок
+        protected final int countOfArguments = 2;
 
         @Override
         public String getName() {

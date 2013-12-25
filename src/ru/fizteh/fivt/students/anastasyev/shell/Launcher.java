@@ -2,12 +2,12 @@ package ru.fizteh.fivt.students.anastasyev.shell;
 
 import ru.fizteh.fivt.students.anastasyev.filemap.*;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.util.Vector;
 
 public class Launcher {
-    private Vector<Command> allCommands;
+    private ArrayList<Command> allCommands;
     private State state;
 
     /*private void beforeStop() {
@@ -26,8 +26,8 @@ public class Launcher {
         boolean result = false;
         int i = 0;
         for (; i < allCommands.size(); ++i) {
-            if (allCommands.elementAt(i).commandName().equals(commands[0])) {
-                result = allCommands.elementAt(i).exec(state, commands);
+            if (allCommands.get(i).commandName().equals(commands[0])) {
+                result = allCommands.get(i).exec(state, commands);
                 break;
             }
         }

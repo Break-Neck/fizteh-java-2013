@@ -2,9 +2,6 @@ package ru.fizteh.fivt.students.kislenko.multifilemap;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.charset.StandardCharsets;
-import java.util.Set;
 
 public class MultiFilemapBuilder {
     public void build(MultiFileHashMapState state) {
@@ -14,12 +11,19 @@ public class MultiFilemapBuilder {
         }
         if (dirCreator.listFiles() != null) {
             for (File file : dirCreator.listFiles()) {
-                state.createTable(file.getName());
+                try {
+                    state.createTable(new String[]{file.getName()});
+                } catch (Exception e) {
+                    // Ignored
+                }
             }
         }
     }
 
     public void finish(MultiFileHashMapState state) throws IOException {
+        if (state.autoCommit()) {
+            state.commitCurrentTable();
+        }
         if (state.getCurrentTable() != null) {
             Utils.dumpTable(state.getCurrentTable());
         }

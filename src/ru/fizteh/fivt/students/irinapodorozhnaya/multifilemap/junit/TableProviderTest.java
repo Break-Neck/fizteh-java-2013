@@ -18,12 +18,12 @@ public class TableProviderTest {
 
     @Before
     public void setUp() throws Exception {
-        (new File(DATA_BASE_DIR)).mkdir();
+        new File(DATA_BASE_DIR).mkdirs();
         provider = new MyTableProviderFactory().create(DATA_BASE_DIR);
     }
     
     @After
-    public void thearDown() {
+    public void tearDown() {
         File f = new File(DATA_BASE_DIR);
         for (File s: f.listFiles()) {
             CommandRemove.deleteRecursivly(s);
@@ -83,4 +83,6 @@ public class TableProviderTest {
     public void testRemoveNotExistingTable() throws Exception {
         provider.removeTable("notExistingTable");
     }
+    
+    
 }

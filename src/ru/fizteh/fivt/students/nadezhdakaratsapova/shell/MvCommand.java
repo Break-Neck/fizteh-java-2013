@@ -38,17 +38,20 @@ public class MvCommand implements Command {
                 if (destination.isDirectory()) {
                     File target = new File(destination, source.getName());
                     if (target.exists()) {
-                        throw new IOException("mv: " + source.getName() + " already exists in " + destination.getName());
+                        throw new IOException("mv: " + source.getName()
+                                + " already exists in " + destination.getName());
                     }
                     Files.move(source.toPath(), target.toPath());
                 } else {
-                    throw new IOException("mv: not managed to copy File " + source.getName() + " to File " + destination.getName());
+                    throw new IOException("mv: not managed to copy File " + source.getName()
+                            + " to File " + destination.getName());
                 }
             } else {
                 if (source.getParentFile().equals(destination.getParentFile())) {
                     source.renameTo(destination);
                 } else {
-                    throw new IOException("mv: not managed to copy File " + source.getName() + " to File" + destination.getName());
+                    throw new IOException("mv: not managed to copy File " + source.getName()
+                            + " to File" + destination.getName());
                 }
             }
         } else {
@@ -62,7 +65,8 @@ public class MvCommand implements Command {
                 if (!destination.exists() && source.getParentFile().equals(destination.getParentFile())) {
                     source.renameTo(destination);
                 } else {
-                    throw new IOException("mv: not managed to copy " + source.getName() + " to " + destination.getName());
+                    throw new IOException("mv: not managed to copy " + source.getName()
+                            + " to " + destination.getName());
                 }
             }
         }
@@ -86,7 +90,7 @@ public class MvCommand implements Command {
 
     }
 
-    public int getArgsCount() {
-        return 2;
+    public boolean compareArgsCount(int inputArgsCount) {
+        return (inputArgsCount == 2);
     }
 }

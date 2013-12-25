@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.demidov.shell;
 
-import ru.fizteh.fivt.students.demidov.shell.BasicCommand;
+import ru.fizteh.fivt.students.demidov.basicclasses.BasicCommand;
 import ru.fizteh.fivt.students.demidov.shell.Shell;
 
 public class Exit implements BasicCommand {

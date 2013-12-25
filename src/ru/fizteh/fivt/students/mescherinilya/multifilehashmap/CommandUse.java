@@ -1,13 +1,6 @@
 package ru.fizteh.fivt.students.mescherinilya.multifilehashmap;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.TreeMap;
-
 public class CommandUse implements Command {
-    public CommandUse() {
-        super();
-    }
 
     @Override
     public String getName() {
@@ -22,24 +15,18 @@ public class CommandUse implements Command {
     @Override
     public void execute(String[] args) throws Exception {
 
-        //сначала закоммитим все произведенные изменения
-        if (DatabaseWorker.currentTable != null) {
-            DatabaseWorker.writeDatabase();
+        if (MultiFileHashMap.currentTable != null
+                && MultiFileHashMap.currentTable.changesCount() != 0) {
+            System.out.println(MultiFileHashMap.currentTable.changesCount() + " uncommitted changes");
+            return;
         }
 
-        //затем попробуем задать новую директорию для работы
-        File newCurrentTable = new File(MultiFileHashMap.rootDir + File.separator + args[0]);
-
-        if (!newCurrentTable.exists() || !newCurrentTable.isDirectory()) {
+        if (MultiFileHashMap.provider.getTable(args[0]) == null) {
             System.out.println(args[0] + " not exists");
             return;
         }
 
-        DatabaseWorker.currentTable = newCurrentTable;
-        DatabaseWorker.storage = new TreeMap<String, String>();
-
-        DatabaseWorker.readDatabase();
-
+        MultiFileHashMap.currentTable = MultiFileHashMap.provider.getTable(args[0]);
         System.out.println("using " + args[0]);
     }
 }

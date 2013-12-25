@@ -1,20 +1,33 @@
 package ru.fizteh.fivt.students.paulinMatavina.filemap;
 
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
+import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.students.paulinMatavina.utils.*;
 
 public class DbGet implements Command {
     @Override
     public int execute(String[] args, State state) {
         String key = args[0];
-        MultiDbState multiState = (MultiDbState) state;
-        if (!multiState.isDbChosen() || multiState.isDropped) {
+        MyTableProvider multiState = (MyTableProvider) state;
+        if (multiState.getCurrTable() == null) {
             System.out.println("no table");
             return 0;
         }
         
-        int folder = multiState.getFolderNum(key);
-        int file = multiState.getFileNum(key);
-        multiState.data[folder][file].get(args);        
+        Storeable result = multiState.getCurrTable().get(key); 
+        if (result != null) {
+            String resStr;
+            try {
+                resStr = multiState.serialize(multiState.getCurrTable(), result);
+            } catch (ColumnFormatException e) {
+                System.out.println("wrong type (" + e.getMessage() + ")");
+                return 0;
+            }
+            System.out.println("found");
+            System.out.println(resStr);            
+        } else {
+            System.out.println("not found");
+        }
         return 0;
     }
     

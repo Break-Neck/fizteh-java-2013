@@ -17,31 +17,29 @@ public class CmdUse implements Command<MultiFileHashMapState> {
     @Override
     public void executeCmd(MultiFileHashMapState inState, String[] args) throws IOException {
 
-        //если мы работали с одной таблицей, а теперь переключились на другую
-        //нужно сохранить изменения
-        //или таблица не была выбрана
         if (inState.getCurrentTable() != null) {
-            if (inState.getCurrentTable().getName() != args[0]) {
-                File fileForWrite = ((MultiFileHashMapTable) inState.getCurrentTable()).getDataFile();
-                Map<String, String> mapForWrite = ((MultiFileHashMapTable) inState.getCurrentTable()).getDataBase();
-                MultiFileHashMapUtils.write(fileForWrite, mapForWrite);
+            if (!inState.getCurrentTable().getName().equals(args[0])) {
+                int size = inState.getChangesBaseSize();
+                if (size != 0) {
+                    System.out.println(size + " unsaved changes");
+                    return;
+                }
             } else {
                 return;
             }
         }
-
 
         if (inState.getTable(args[0]) == null) {
             System.out.println(args[0] + " not exists");
             return;
         }
 
-        Map<String, String> tmpDataBase = ((MultiFileHashMapTable) inState.getTable(args[0])).getDataBase();
-        File tmpDataFile = ((MultiFileHashMapTable) inState.getTable(args[0])).getDataFile();
-        MultiFileHashMapUtils.read(tmpDataFile, tmpDataBase);
-        inState.setCurrentTable(args[0]);
+        Map<String, String> tmpDataBase = inState.getTable(args[0]).getDataBase();
+        File tmpDataFile = inState.getTable(args[0]).getDataFile();
 
-        inState.changeCurrentTable(tmpDataBase, tmpDataFile);
+        MultiFileHashMapUtils.read(tmpDataFile, tmpDataBase);
+
+        inState.setCurrentTable(args[0], tmpDataBase, tmpDataFile);
 
         System.out.println("using " + args[0]);
     }

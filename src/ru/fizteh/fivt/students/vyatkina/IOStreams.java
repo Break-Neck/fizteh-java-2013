@@ -9,13 +9,13 @@ public class IOStreams {
     public final PrintStream out;
     public final PrintStream err;
 
-    public IOStreams () {
+    public IOStreams() {
         in = System.in;
         out = System.out;
         err = System.err;
     }
 
-    public IOStreams (InputStream in, PrintStream out, PrintStream err) {
+    public IOStreams(InputStream in, PrintStream out, PrintStream err) {
         this.in = in;
         this.out = out;
         this.err = err;

@@ -3,6 +3,7 @@ package ru.fizteh.fivt.students.irinapodorozhnaya.multifilemap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.List;
 
 import ru.fizteh.fivt.students.irinapodorozhnaya.db.CommandGet;
 import ru.fizteh.fivt.students.irinapodorozhnaya.db.CommandPut;
@@ -92,7 +93,7 @@ public class MultiFileMapState extends State implements MultiDbState {
     }
 
     @Override
-    public void create(String name) throws IOException {
+    public void create(String name, List<Class<?>> types) throws IOException {
         ExtendTable table = provider.createTable(name);
         if (table == null) {
             throw new IOException(name + " exists");

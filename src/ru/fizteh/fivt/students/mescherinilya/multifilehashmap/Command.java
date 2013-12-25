@@ -2,11 +2,11 @@ package ru.fizteh.fivt.students.mescherinilya.multifilehashmap;
 
 public interface Command {
 
-    public String getName();
+    String getName();
 
-    public int getArgsCount();
+    int getArgsCount();
 
-    public void execute(String[] args) throws Exception;
+    void execute(String[] args) throws Exception;
 
 
 }

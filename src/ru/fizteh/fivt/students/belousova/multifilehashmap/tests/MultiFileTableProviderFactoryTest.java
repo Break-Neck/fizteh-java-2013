@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.belousova.multifilehashmap.tests;
 
 import junit.framework.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import ru.fizteh.fivt.storage.strings.TableProviderFactory;
 import ru.fizteh.fivt.students.belousova.multifilehashmap.MultiFileTableProviderFactory;

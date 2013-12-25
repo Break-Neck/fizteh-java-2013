@@ -2,7 +2,6 @@ package ru.fizteh.fivt.students.drozdowsky.modes;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
 public class CommandExecutor<T> {
@@ -13,12 +12,15 @@ public class CommandExecutor<T> {
 
     public boolean executeCommand(String[] args, Method command) {
         try {
-            if (Modifier.isStatic(command.getModifiers())) {
-                return (boolean) command.invoke(null, controller, args);
+            int size = command.getGenericParameterTypes().length;
+            if (args.length == size + 1) {
+                String[] newArgs = new String[args.length - 1];
+                System.arraycopy(args, 1, newArgs, 0, newArgs.length);
+                return (boolean) command.invoke(controller, newArgs);
             } else {
-                return (boolean) command.invoke(controller, new Object[]{args});
+                System.err.println("Not valid number of arguments");
             }
-        } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
+        } catch (IllegalAccessException | IllegalStateException | InvocationTargetException | IllegalArgumentException e) {
             System.err.println(e.getMessage());
         }
         return false;

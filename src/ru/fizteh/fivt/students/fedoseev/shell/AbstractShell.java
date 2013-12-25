@@ -15,24 +15,26 @@ public class AbstractShell extends AbstractFrame<ShellState> {
 
     @Override
     public Map<String, AbstractCommand> getCommands() {
-        final ShellCdCommand CD = new ShellCdCommand();
-        final ShellMkdirCommand MKDIR = new ShellMkdirCommand();
-        final ShellPwdCommand PWD = new ShellPwdCommand();
-        final ShellRmCommand RM = new ShellRmCommand();
-        final ShellCpCommand CP = new ShellCpCommand();
-        final ShellMvCommand MV = new ShellMvCommand();
-        final ShellDirCommand DIR = new ShellDirCommand();
-        final ShellExitCommand EXIT = new ShellExitCommand();
+        final ShellCdCommand cd = new ShellCdCommand();
+        final ShellMkdirCommand mkdir = new ShellMkdirCommand();
+        final ShellPwdCommand pwd = new ShellPwdCommand();
+        final ShellRmCommand rm = new ShellRmCommand();
+        final ShellCpCommand cp = new ShellCpCommand();
+        final ShellMvCommand mv = new ShellMvCommand();
+        final ShellDirCommand dir = new ShellDirCommand();
+        final ShellExitCommand exit = new ShellExitCommand();
 
-        return new HashMap<String, AbstractCommand>() {{
-            put(CD.getCmdName(), CD);
-            put(MKDIR.getCmdName(), MKDIR);
-            put(PWD.getCmdName(), PWD);
-            put(RM.getCmdName(), RM);
-            put(CP.getCmdName(), CP);
-            put(MV.getCmdName(), MV);
-            put(DIR.getCmdName(), DIR);
-            put(EXIT.getCmdName(), EXIT);
-        }};
+        return new HashMap<String, AbstractCommand>() {
+            {
+                put(cd.getCmdName(), cd);
+                put(mkdir.getCmdName(), mkdir);
+                put(pwd.getCmdName(), pwd);
+                put(rm.getCmdName(), rm);
+                put(cp.getCmdName(), cp);
+                put(mv.getCmdName(), mv);
+                put(dir.getCmdName(), dir);
+                put(exit.getCmdName(), exit);
+            }
+        };
     }
 }

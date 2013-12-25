@@ -1,10 +1,14 @@
 package ru.fizteh.fivt.students.adanilyak.tools;
 
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.Map;
 
 /**
@@ -35,6 +39,46 @@ public class WorkWithDatFiles {
             String value = new String(buffer, StandardCharsets.UTF_8);
 
             map.put(key, value);
+        }
+        dataBaseFileReader.close();
+    }
+
+    private static boolean checkKeyPlacement(int indexDir, int indexDat, String key) {
+        int hashCode = key.hashCode();
+        hashCode *= Integer.signum(hashCode);
+        int dir = hashCode % 16;
+        int dat = hashCode / 16 % 16;
+        return (dir == indexDir && dat == indexDat);
+    }
+
+    public static void readIntoStoreableMap(File dataBaseFile, Map<String, Storeable> map, Table table,
+                                            TableProvider provider, int indexDir, int indexDat)
+            throws IOException, ParseException {
+        RandomAccessFile dataBaseFileReader = new RandomAccessFile(dataBaseFile, "rw");
+        long length = dataBaseFile.length();
+        byte[] buffer;
+
+        while (length > 0) {
+            int keyLength = dataBaseFileReader.readInt();
+            length -= 4;
+            int valueLength = dataBaseFileReader.readInt();
+            length -= 4;
+
+            buffer = new byte[keyLength];
+            dataBaseFileReader.readFully(buffer);
+            length -= buffer.length;
+            String key = new String(buffer, StandardCharsets.UTF_8);
+
+            if (!checkKeyPlacement(indexDir, indexDat, key)) {
+                throw new IOException("wrong key placement");
+            }
+
+            buffer = new byte[valueLength];
+            dataBaseFileReader.readFully(buffer);
+            length -= buffer.length;
+            String value = new String(buffer, StandardCharsets.UTF_8);
+
+            map.put(key, provider.deserialize(table, value));
         }
         dataBaseFileReader.close();
     }

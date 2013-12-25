@@ -3,13 +3,33 @@ package ru.fizteh.fivt.students.chernigovsky.multifilehashmap;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import ru.fizteh.fivt.students.chernigovsky.filemap.State;
+import ru.fizteh.fivt.students.chernigovsky.filemap.FileMapState;
 
 public class MultiFileHashMapUtils {
 
-    public static void readTable(File tableFolder, State state) throws IOException {
+    public static void delete(File file) throws IOException {
+        if (!file.exists()) {
+            return;
+        }
+        if (file.isFile()) {
+            if (file.delete()) {
+                return;
+            } else {
+                throw new IOException("Delete error");
+            }
+        }
+        for (File f : file.listFiles()) {
+            delete(f);
+        }
+        if (!file.delete()) {
+            throw new IOException("Delete error");
+        }
+    }
+
+    public static void readTable(FileMapState fileMapState) throws IOException {
 
         for (Integer directoryNumber = 0; directoryNumber < 16; ++directoryNumber) {
+            File tableFolder = new File(fileMapState.getCurrentTableProvider().getDbDirectory(), fileMapState.getCurrentTable().getName());
             File directory = new File(tableFolder, directoryNumber.toString() + ".dir");
             if (!directory.exists()) {
                 continue;
@@ -60,7 +80,7 @@ public class MultiFileHashMapUtils {
 
                         String key = new String(keyBytes, "UTF-8");
                         String value = new String(valueBytes, "UTF-8");
-                        state.put(key, value);
+                        fileMapState.getCurrentTable().put(key, value);
                     }
                 } finally {
                     dataInputStream.close();
@@ -71,18 +91,20 @@ public class MultiFileHashMapUtils {
         }
     }
 
-    public static void writeTable(File tableFolder, State state) throws IOException {
+    public static void writeTable(FileMapState fileMapState) throws IOException {
 
         for (Integer directoryNumber = 0; directoryNumber < 16; ++directoryNumber) {
+            File tableFolder = new File(fileMapState.getCurrentTableProvider().getDbDirectory(), fileMapState.getCurrentTable().getName());
+            File dir = new File(tableFolder, directoryNumber.toString() + ".dir");
+
             for (Integer fileNumber = 0; fileNumber < 16; ++fileNumber) {
                 HashMap<String, String> currentMap = new HashMap<String, String>();
-                for (Map.Entry<String, String> entry : state.getEntrySet()) {
+                for (Map.Entry<String, String> entry : fileMapState.getCurrentTable().getEntrySet()) {
                     if (Math.abs(entry.getKey().getBytes("UTF-8")[0]) % 16 == directoryNumber && Math.abs(entry.getKey().getBytes("UTF-8")[0]) / 16 % 16 == fileNumber) {
                         currentMap.put(entry.getKey(), entry.getValue());
                     }
                 }
 
-                File dir = new File(tableFolder, directoryNumber.toString() + ".dir");
                 File file = new File(dir, fileNumber.toString() + ".dat");
 
                 if (currentMap.size() == 0) {
@@ -116,7 +138,12 @@ public class MultiFileHashMapUtils {
                 }
 
             }
-        }
 
+            if (dir.exists() && dir.list().length == 0) {
+                if (!dir.delete()) {
+                    throw new IOException("Delete");
+                }
+            }
+        }
     }
 }

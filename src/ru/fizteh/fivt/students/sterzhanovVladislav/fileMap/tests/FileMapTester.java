@@ -1,17 +1,34 @@
 package ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.tests;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import ru.fizteh.fivt.storage.strings.Table;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.FileMap;
+import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableRow;
 
 public class FileMapTester {
-    static Table table;
+    Table table;
+    List<Class<?>> sampleSignature;
+    Storeable sampleValue;
+    Storeable otherValue;
 
     @Before
     public void init() {
-        table = new FileMap("Tested Table");
+        sampleSignature = new ArrayList<Class<?>>();
+        sampleSignature.add(String.class);
+        List<String> values = new ArrayList<String>();
+        values.add("Some string");
+        sampleValue = new StoreableRow(sampleSignature, values);
+        values = new ArrayList<String>();
+        values.add("Other string");
+        otherValue = new StoreableRow(sampleSignature, values);
+        table = new FileMap("Tested Table", sampleSignature);
     }
     
     @Test
@@ -20,42 +37,32 @@ public class FileMapTester {
     }
     
     @Test
-    public void noOpCommitTest() {
-        table.put("key", "value");
+    public void noOpCommitTest() throws IOException {
+        table.put("key", sampleValue);
         table.remove("key");
         assertEquals(table.commit(), 0);
     }
     
     @Test
-    public void rollbackTest() {
-        table.put("key", "value");
+    public void rollbackTest() throws IOException {
+        table.put("key", sampleValue);
         table.commit();
-        table.put("key", "other value");
-        table.put("new_key", "new value");
+        table.put("key", otherValue);
+        table.put("new_key", sampleValue);
         table.remove("non-existent_key");
         assertEquals(table.rollback(), 2);
-        assertEquals(table.get("key"), "value");
+        assertEquals(table.get("key"), sampleValue);
         assertEquals(table.size(), 1);
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void illegalKeyShouldFail() {
-        table.put("bad key", "value");
-    }
-    
-    @Test(expected = IllegalArgumentException.class)
-    public void emptyValueShouldFail() {
-        table.put("key", "");
-    }
-    
-    @Test
-    public void legalValue() {
-        table.put("key", "value with spaces inside");
+        table.put("bad key", sampleValue);
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void nullKeyShouldFail() {
-        table.put(null, "value");
+        table.put(null, sampleValue);
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -65,17 +72,17 @@ public class FileMapTester {
 
     @Test
     public void overWriteTest() {
-        table.put("key", "old value");
-        assertEquals(table.put("key", "new value"), "old value");
+        table.put("key", sampleValue);
+        assertEquals(table.put("key", otherValue), sampleValue);
     }
     
     @Test
-    public void putGetRemoveSizeCommitTest() {
-        table.put("key", "value");
-        assertEquals(table.get("key"), "value");
+    public void putGetRemoveSizeCommitTest() throws IOException {
+        table.put("key", sampleValue);
+        assertEquals(table.get("key"), sampleValue);
         assertEquals(table.size(), 1);
         assertEquals(table.commit(), 1);
-        assertEquals(table.remove("key"), "value");
+        assertEquals(table.remove("key"), sampleValue);
         assertNull(table.remove("key"));
         assertEquals(table.size(), 0);
     }

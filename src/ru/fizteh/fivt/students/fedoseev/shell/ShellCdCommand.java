@@ -18,8 +18,8 @@ public class ShellCdCommand extends AbstractCommand<ShellState> {
         File newDir = new File(toCanPath.toString());
 
         if (!newDir.isDirectory()) {
-            throw new FileNotFoundException("CD ERROR: not existing directory \"" + input[0] +
-                    "\" in current directory");
+            throw new FileNotFoundException("CD ERROR: not existing directory \"" + input[0]
+                    + "\" in current directory");
         }
 
         state.setCurState(toCanPath.toFile());

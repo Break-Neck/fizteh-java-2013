@@ -6,6 +6,9 @@ public class StringUtils {
         StringBuilder sb = new StringBuilder();
         boolean isFirst = true;
         for (Object o : objects) {
+            if (o == null) {
+                continue;
+            }
             if (!isFirst) {
                 sb.append(separator);
             } else {

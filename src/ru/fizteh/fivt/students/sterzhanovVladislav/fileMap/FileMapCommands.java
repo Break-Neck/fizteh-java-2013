@@ -2,7 +2,12 @@ package ru.fizteh.fivt.students.sterzhanovVladislav.fileMap;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 import ru.fizteh.fivt.students.sterzhanovVladislav.shell.CommandParser;
 import ru.fizteh.fivt.students.sterzhanovVladislav.shell.DefaultCommandParser;
 
@@ -90,7 +95,35 @@ public class FileMapCommands {
     public static class Create extends FileMapCommand {
         @Override
         public void innerExecute(String[] args) throws Exception {
-            dbContext.createTable(args[1]);
+            if (args.length < 3) {
+                throw new IllegalArgumentException("wrong type (Not enough arguments)");
+            }
+            List<Class<?>> typeList = new ArrayList<Class<?>>();
+            for (int i = 2; i < args.length; ++i) {
+                String className = args[i];
+                if (i == 2) {
+                    Matcher firstTypeMatcher = Pattern.compile("^\\s*\\(\\s*(.+)\\s*").matcher(className);
+                    if (firstTypeMatcher.find()) {
+                        className = firstTypeMatcher.group(1);
+                    } else {
+                        throw new IllegalArgumentException("wrong type (Wrong command, expected 'create name (args)')");
+                    }
+                }
+                if (i == args.length - 1) {
+                    Matcher lastTypeMatcher = Pattern.compile("\\s*(.+)\\s*\\)\\s*").matcher(className);
+                    if (lastTypeMatcher.find()) {
+                        className = lastTypeMatcher.group(1);
+                    } else {
+                        throw new IllegalArgumentException("wrong type (Wrong command, expected 'create name (args)')");
+                    }
+                }
+                Class<?> type = StoreableUtils.resolveClass(className);
+                if (type == null) {
+                    throw new IllegalArgumentException("wrong type (Illegal class given: " + className + ")");
+                }
+                typeList.add(type);
+            }
+            dbContext.createTable(args[1], typeList);
             parentShell.out.println("created");
         }
         
@@ -100,7 +133,7 @@ public class FileMapCommands {
         }
         
         Create() {
-            super(2);
+            super(-1);
         }
     }
     

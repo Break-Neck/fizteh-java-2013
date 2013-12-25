@@ -1,13 +1,13 @@
 package ru.fizteh.fivt.students.asaitgalin.shell.commands;
 
-import ru.fizteh.fivt.students.asaitgalin.shell.Command;
+import ru.fizteh.fivt.students.asaitgalin.shell.DefaultCommand;
 import ru.fizteh.fivt.students.asaitgalin.shell.FilesystemController;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-public class MvCommand implements Command {
+public class MvCommand extends DefaultCommand {
     private FilesystemController controller;
 
     public MvCommand(FilesystemController controller) {

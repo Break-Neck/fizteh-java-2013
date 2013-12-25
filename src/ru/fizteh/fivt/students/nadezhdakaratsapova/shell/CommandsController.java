@@ -17,8 +17,8 @@ public class CommandsController {
             if (cmd == null) {
                 throw new IOException(command[0] + ": unknown command");
             } else {
-                if ((command.length - 1) != cmd.getArgsCount()) {
-                    throw new IOException(cmd.getName() + ": wrong number of arguments. It should be " + cmd.getArgsCount());
+                if (!cmd.compareArgsCount(command.length - 1)) {
+                    throw new IOException(cmd.getName() + ": wrong number of arguments.");
                 } else {
                     cmd.execute(command);
                 }

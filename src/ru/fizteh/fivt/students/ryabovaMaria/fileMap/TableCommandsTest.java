@@ -2,43 +2,45 @@ package ru.fizteh.fivt.students.ryabovaMaria.fileMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
-import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
+import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.TableProviderFactory;
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.storage.structured.TableProvider;
 
 public class TableCommandsTest {
-    TableProviderFactory tempFactory = new MyTableProviderFactory();
+    TableProviderFactory tempFactory;
     TableProvider tempTableProvider;
     Table tempTable;
     File createdFolder;
     HashMap<String, String> tempMap = new HashMap<String, String>();
     String firstKey;
     String firstValue;
+    List<Class<?>> types;
     int length;
     
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
     
     @Before
-    public void initTempTableProvider() throws IOException {
+    public void initTempTable() throws IOException {
+        tempFactory = new MyTableProviderFactory();
         createdFolder = tempFolder.newFolder("workFolder");
         tempTableProvider = tempFactory.create(createdFolder.toString());
-        assertNotNull("Object of TableProvider shouldn't be null",tempTableProvider);
-        tempTable = tempTableProvider.createTable("table");
+        assertNotNull("Object of TableProvider shouldn't be null", tempTableProvider);
+        types = new ArrayList();
+        types.add(String.class);
+        types.add(boolean.class);
+        tempTable = tempTableProvider.createTable("table", types);
         assertNotNull("Object of Table shouldn't be null", tempTable);
-    }
-    
-    @After
-    public void deleteAll() {
-        createdFolder.delete();
     }
     
     @Test
@@ -53,33 +55,53 @@ public class TableCommandsTest {
     
     @Test
     public void getNotExistsKey() {
-        String value = tempTable.get("notExists");
+        Storeable value = tempTable.get("notExists");
         assertNull("Value should be null", value);
     }
     
     @Test (expected = IllegalArgumentException.class)
     public void putKeyEmpty() {
-        tempTable.put("", "value");
-    }
-    
-    @Test (expected = IllegalArgumentException.class)
-    public void putValueEmpty() {
-        tempTable.put("key", "");
+        List<Object> values = new ArrayList();
+        values.add("value");
+        values.add(true);
+        Storeable tempStoreable = new StoreableCommands(values, types);
+        tempTable.put("", tempStoreable);
     }
     
     @Test (expected = IllegalArgumentException.class)
     public void putIllegalKey() {
-        tempTable.put("\n  ", "value");
+        List<Object> values = new ArrayList();
+        values.add("value");
+        values.add(true);
+        Storeable tempStoreable = new StoreableCommands(values, types);
+        tempTable.put("\n  ", tempStoreable);
     }
     
-    @Test (expected = IllegalArgumentException.class)
-    public void putIllegalValue() {
-        tempTable.put("key", "new \n value");
+    @Test (expected = IndexOutOfBoundsException.class)
+    public void putLessInValue() {
+        List<Object> values = new ArrayList();
+        values.add(true);
+        Storeable tempStoreable = new StoreableCommands(values, types);
+        tempTable.put("key", tempStoreable);
+    }
+    
+    @Test (expected = IndexOutOfBoundsException.class)
+    public void putMoreInValue() {
+        List<Object> values = new ArrayList();
+        values.add("value");
+        values.add(true);
+        values.add(55);
+        Storeable tempStoreable = new StoreableCommands(values, types);
+        tempTable.put("key", tempStoreable);
     }
     
     @Test (expected = IllegalArgumentException.class)
     public void putKeyNull() {
-        tempTable.put(null, "value");
+        List<Object> values = new ArrayList();
+        values.add("value");
+        values.add(true);
+        Storeable tempStoreable = new StoreableCommands(values, types);
+        tempTable.put(null, tempStoreable);
     }
     
     @Test (expected = IllegalArgumentException.class)
@@ -89,20 +111,30 @@ public class TableCommandsTest {
     
     @Test
     public void putCorretArgs() {
-        String result = tempTable.put("key", "value");
+        List<Object> values = new ArrayList();
+        values.add("value");
+        values.add(true);
+        Storeable tempStoreable = new StoreableCommands(values, types);
+        Storeable result = tempTable.put("key", tempStoreable);
         assertNull("Result should be null", result);
-        String value = tempTable.get("key");
-        assertTrue("Not exists", value.equals("value"));
     }
     
     @Test
     public void putKeyExists() {
-        tempTable.put("good", "night");
-        String last = tempTable.put("good", "day");
-        assertTrue("Result should be \"night\"", last.equals("night"));
+        List<Object> valuesOne = new ArrayList();
+        valuesOne.add("night");
+        valuesOne.add(true);
+        Storeable tempStoreableOne = new StoreableCommands(valuesOne, types);
+        tempTable.put("good", tempStoreableOne);
+        List<Object> valuesTwo = new ArrayList();
+        valuesTwo.add("day");
+        valuesTwo.add(true);
+        Storeable tempStoreableTwo = new StoreableCommands(valuesTwo, types);
+        Storeable last = tempTable.put("good", tempStoreableTwo);
+        String lastString = last.getStringAt(0);
+        assertTrue("Result should be \"night\"", lastString.equals("night"));
     }
     
-    @Test
     public void removeKeyNotExists() {
         assertNull("Result should be null", tempTable.remove("notExists"));
     }
@@ -114,7 +146,11 @@ public class TableCommandsTest {
     
     @Test
     public void removeCorrectArgs() {
-        tempTable.put("key", "value");
+        List<Object> values = new ArrayList();
+        values.add("value");
+        values.add(true);
+        Storeable tempStoreable = new StoreableCommands(values, types);
+        tempTable.put("key", tempStoreable);
         tempTable.remove("key");
         assertNull("Value should be null", tempTable.get("key"));
     }
@@ -123,7 +159,7 @@ public class TableCommandsTest {
         Random rand = new Random();
         StringBuilder tempString = new StringBuilder();
         for (int i = 0; i < 10; i++) {
-            char c = (char)(rand.nextInt((int)(Character.MAX_VALUE)));
+            char c = (char) (rand.nextInt((int) (Character.MAX_VALUE)));
             tempString.append(c);
         }
         return tempString.toString();
@@ -135,8 +171,11 @@ public class TableCommandsTest {
         length = rand.nextInt(100);
         for (int i = 0; i < length; ++i) {
             String key = generateString();
-            String value = generateString();
-            tempTable.put(key, value);
+            List<Object> values = new ArrayList();
+            values.add("value");
+            values.add(true);
+            Storeable tempStoreable = new StoreableCommands(values, types);
+            tempTable.put(key, tempStoreable);
         }
         assertTrue("Incorrect size", tempTable.size() == length);
     }
@@ -146,19 +185,22 @@ public class TableCommandsTest {
         Random rand = new Random();
         length = rand.nextInt(20);
         firstKey = generateString();
-        firstValue = generateString();
+        List<Object> values = new ArrayList();
+        values.add("value");
+        values.add(true);
+        Storeable tempStoreable = new StoreableCommands(values, types);
         tempMap.put(firstKey, firstValue);
-        tempTable.put(firstKey, firstValue);
+        tempTable.put(firstKey, tempStoreable);
         for (int i = 0; i < length; ++i) {
             String key = generateString();
             String value = generateString();
-            tempTable.put(key, value);
-            tempMap.put(key, value);
+            tempTable.put(key, tempStoreable);
+            tempMap.put(key, "[\"value\",true]");
         }
     }
     
     @Test
-    public void commitTestPutAndRemoveOneKey() {
+    public void commitTestPutAndRemoveOneKey() throws IOException {
         generateTable();
         tempMap.remove(firstKey);
         tempTable.remove(firstKey);
@@ -166,22 +208,26 @@ public class TableCommandsTest {
     }
     
     @Test
-    public void commitTestPutOneKeyTwice() {
+    public void commitTestPutOneKeyTwice() throws IOException {
         generateTable();
-        tempMap.put(firstKey, " ");
-        tempTable.put(firstKey, " ");
+        List<Object> values = new ArrayList();
+        values.add(" ");
+        values.add(true);
+        Storeable tempStoreable = new StoreableCommands(values, types);
+        tempMap.put(firstKey, "[\" \",true]");
+        tempTable.put(firstKey, tempStoreable);
         assertTrue("Commit error", tempMap.size() == tempTable.commit());
     }
     
     @Test
-    public void rollbackTestRandom() {
+    public void rollbackTestRandom() throws IOException {
         commitTestPutAndRemoveOneKey();
         generateTable();
         assertTrue("Rollback error", tempTable.rollback() == (length + 1));
     }
     
     @Test
-    public void rollbackTestNoChanges() {
+    public void rollbackTestNoChanges() throws IOException {
         commitTestPutAndRemoveOneKey();
         assertTrue("Rollback error", tempTable.rollback() == 0);
     }

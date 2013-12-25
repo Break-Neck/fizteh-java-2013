@@ -18,25 +18,22 @@ public class MakeDirectory implements Commands {
         currentStatus = cs;
     }
 
-    public void changeCurrentStatus (Object obj){
-        currentStatus = (CurrentStatus)obj;
-    }
 
     public String getName() {
         return name;
     }
 
 
-    public void perform(String[] array) throws MyException, IOException {
+    public void perform(String[] array) throws IOException {
         if (array.length != 2) {
-            throw new MyException(new Exception("Wrong arguments! Usage ~ mkdir <name of new directory>"));
+            throw new IOException("Wrong arguments! Usage ~ mkdir <name of new directory>");
         }
         File f = new File(array[1]);
         if (!f.isAbsolute()) {
             f = new File(currentStatus.getCurrentDirectory(), array[1]);
         }
-        if (!f.mkdirs()){
-            throw new MyException(new Exception("Unable to create this directory - " + f.getCanonicalPath()));
+        if (!f.mkdirs()) {
+            throw new IOException("Unable to create this directory - " + f.getCanonicalPath());
         }
     }
 }

@@ -11,9 +11,9 @@ public class HelpCommand<State> extends AbstractCommand<State> {
         super("help", "help");
     }
 
-    public HelpCommand(List<Command> commands) {
+    public HelpCommand(List<Command<?>> commands) {
         super("help", "help");
-        for (final Command command : commands) {
+        for (final Command<?> command : commands) {
             this.commands.put(command.getCommandName(), command);
         }
     }

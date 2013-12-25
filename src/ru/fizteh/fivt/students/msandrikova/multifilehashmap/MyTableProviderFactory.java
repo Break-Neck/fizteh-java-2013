@@ -1,26 +1,22 @@
 package ru.fizteh.fivt.students.msandrikova.multifilehashmap;
 
 import java.io.File;
-import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.storage.strings.TableProviderFactory;
 
-public class MyTableProviderFactory implements TableProviderFactory {
-	
+import ru.fizteh.fivt.students.msandrikova.shell.Utils;
 
-	public MyTableProviderFactory() {}
-
-	@Override
-	public TableProvider create(String dir) throws IllegalArgumentException {
-		if(dir == null) {
-			throw new IllegalArgumentException("Directory can not be null.");
-		}
-		TableProvider newTableProvider = null;
-		try {
-			newTableProvider = new MyTableProvider(new File(dir));
-		} catch (IllegalArgumentException e) {
-			throw e;
-		}
-		return newTableProvider;
-	}
+public class MyTableProviderFactory implements ChangesCountingTableProviderFactory {
+    @Override
+    public ChangesCountingTableProvider create(String dir) throws IllegalArgumentException {
+        if (Utils.isEmpty(dir)) {
+            throw new IllegalArgumentException("Directory can not be null.");
+        }
+        ChangesCountingTableProvider newTableProvider = null;
+        try {
+            newTableProvider = new MyTableProvider(new File(dir));
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
+        return newTableProvider;
+    }
 
 }

@@ -1,31 +1,26 @@
 package ru.fizteh.fivt.students.vyatkina.database.commands;
 
+import ru.fizteh.fivt.students.vyatkina.TimeToFinishException;
+import ru.fizteh.fivt.students.vyatkina.WrappedIOException;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseCommand;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseState;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-
 public class ExitDatabaseCommand extends DatabaseCommand {
 
-    public ExitDatabaseCommand (DatabaseState state) {
-        super (state);
+    public ExitDatabaseCommand(DatabaseState state) {
+        super(state);
         this.name = "exit";
         this.argsCount = 0;
     }
 
     @Override
-    public void execute (String[] args) throws ExecutionException {
+    public void execute(String[] args) {
         try {
-            if (state.getTable () == null) {
-                System.exit (0);
-            } else {
-                state.getTable ().commit ();
-            }
+            state.databaseAdapter.saveChangesOnExit();
+        } catch (WrappedIOException e) {
+            state.printErrorMessage(e.getMessage());
+        } finally {
+            throw new TimeToFinishException();
         }
-        catch (IllegalArgumentException e) {
-            throw new ExecutionException (e.fillInStackTrace ());
-        }
-        System.exit (0);
     }
 }

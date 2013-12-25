@@ -1,79 +1,49 @@
 package ru.fizteh.fivt.students.msandrikova.multifilehashmap;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import ru.fizteh.fivt.storage.strings.Table;
-import ru.fizteh.fivt.storage.strings.TableProvider;
-import ru.fizteh.fivt.students.msandrikova.filemap.DBMap;
+import ru.fizteh.fivt.students.msandrikova.filemap.DatabaseMap;
 import ru.fizteh.fivt.students.msandrikova.shell.Utils;
+import ru.fizteh.fivt.students.msandrikova.storeable.StoreableTableProviderFactory;
 
 public class State {
-	private boolean isMultiFileHashMap;
-	private boolean isFileMap;
-	private TableProvider currentTableProvider;
-	private DBMap currentDBMap;
-	private Table currentTable;
-	
-	public State() {
-		this.isMultiFileHashMap = false;
-		this.isFileMap = false;
-		this.currentDBMap = null;
-		this.currentTableProvider = null;
-		this.currentTable = null;
-	}
-	
-	public void setIsMultiFileHashMap(boolean isMultiFileHashMap) {
-		this.isMultiFileHashMap = isMultiFileHashMap;
-	}
-	
-	public void setIsFileMap(boolean isFileMap) {
-		this.isFileMap = isFileMap;
-	}
-	
-	public void setTableProvider(TableProvider currentTableProvider) {
-		this.currentTableProvider = currentTableProvider;
-	}
-	
-	
-	public void setDBMap(File currentDirectory) {
-		try {
-			this.currentDBMap = new DBMap(currentDirectory, "db.dat");
-		} catch (FileNotFoundException e) {
-			Utils.generateAnError("Fatal error during reading.", "DBMap", false);
-		} catch (IOException e) {
-			Utils.generateAnError("Fatal error during reading.", "DBMap", false);
-		}
-	}
-	
-	public Table setCurrentTable(Table currentTable) {
-		Table oldTable = null;
-		if(this.currentTable != null) {
-			oldTable = this.currentTable;
-		}
-		this.currentTable = currentTable;
-		return oldTable;
-	}
-	
-	public boolean getIsMultiFileHashMap() {
-		return this.isMultiFileHashMap;
-	}
-	
-	public boolean getIsFileMap() {
-		return this.isFileMap;
-	}
-	
-	public TableProvider getTableProvider() {
-		return this.currentTableProvider;
-	}
-	
-	public DBMap getDBMap() {
-		return this.currentDBMap;
-	}
-	
-	public Table getCurrentTable() {
-		return this.currentTable;
-	}
-	
+    public boolean isMultiFileHashMap;
+    public boolean isStoreable;
+    public ru.fizteh.fivt.students.msandrikova.multifilehashmap.ChangesCountingTable currentTable;
+    public ru.fizteh.fivt.students.msandrikova.multifilehashmap.ChangesCountingTableProvider tableProvider;
+    public ru.fizteh.fivt.students.msandrikova.storeable.ChangesCountingTable currentStoreableTable;
+    public ru.fizteh.fivt.students.msandrikova.storeable.ChangesCountingTableProvider storeableTableProvider;
+    
+    public State(boolean isMultiHashFileMap, boolean isStoreable, String dir) {
+        this.isMultiFileHashMap = isMultiHashFileMap;
+        this.isStoreable = isStoreable;
+        if (this.isMultiFileHashMap) {
+            this.currentTable = null;
+            ru.fizteh.fivt.students.msandrikova.multifilehashmap.ChangesCountingTableProviderFactory 
+            factory = new MyTableProviderFactory();
+            try { 
+                this.tableProvider = factory.create(dir);
+            } catch (IllegalArgumentException e) {
+                Utils.generateAnError(e.getMessage(), "state", false);
+            }
+        } else if (this.isStoreable) {
+             this.currentStoreableTable = null;
+             ru.fizteh.fivt.students.msandrikova.storeable.ChangesCountingTableProviderFactory 
+             storeableFactory = new StoreableTableProviderFactory();
+                try {
+                    this.storeableTableProvider = storeableFactory.create(dir);
+                } catch (IllegalArgumentException | IOException e) {
+                    Utils.generateAnError(e.getMessage(), "state", false);
+                }
+             
+        } else {
+            this.currentTable = new DatabaseMap(new File(dir), "db.dat");
+            this.tableProvider = null;
+        }
+    }
+    
+    
+    
+    
 }
