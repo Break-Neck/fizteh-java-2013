@@ -15,11 +15,11 @@ public class ServletRollback extends HttpServlet {
     }
 
     private boolean isValid(String id) {
-        if (id.length() >= 6) {
+        if (id.length() != 5) {
             return false;
         }
         for (int i = 0; i < id.length(); ++i) {
-            if (!(id.charAt(i) >= '0' && id.charAt(i) <= '9')) {
+            if (!(Character.isDigit(id.charAt(i)))) {
                 return false;
             }
         }

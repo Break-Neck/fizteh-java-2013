@@ -19,7 +19,7 @@ public class ServletBegin extends HttpServlet {
             throws ServletException, IOException {
         String name = request.getParameter("table");
         if (name == null) {
-            String text = "no such table " + name;
+            String text = "no table";
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, text);
             return;
         } // run transaction

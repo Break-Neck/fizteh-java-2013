@@ -25,8 +25,10 @@ public class TransactionManager {
             String numTrans;
             if (numberOfTransactions == 99999) {
                 numTrans = "00000";
+                numberOfTransactions = 0;
             } else {
                 numTrans = (new Integer(numberOfTransactions)).toString();
+                ++numberOfTransactions;
             }
             int transLen = numTrans.length();
             while (transLen < 5) {
@@ -34,7 +36,6 @@ public class TransactionManager {
                 ++transLen;
             }
             builder.append(numTrans);
-            ++numberOfTransactions;
         } finally {
             lock.writeLock().unlock();
         }
