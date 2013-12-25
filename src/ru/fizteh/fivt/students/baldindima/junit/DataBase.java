@@ -143,8 +143,10 @@ public class DataBase implements Table, AutoCloseable {
                 int nFile = j;
                 int nDir = i;
                 files.put(nDir * 16 + nFile, new DataBaseFile(getFullName(i, j), i, j, provider, this));
-
-                sizeTable += files.get(nDir * 16 + nFile).mapFromFile.size();
+                if (files.get(nDir * 16 + nFile) != null){
+                	sizeTable += files.get(nDir * 16 + nFile).mapFromFile.size();
+                }
+                
             }
         }
         return sizeTable;
@@ -220,19 +222,7 @@ public class DataBase implements Table, AutoCloseable {
         try {
         	
             if ((files.containsKey(nFileInMap)) && (files.get(nFileInMap) != null) ) {
-                /*if (keyString == null){
-                	throw new NullPointerException("111111111111111111111111111111111111");
-                }
-                if (files == null){
-                	throw new NullPointerException("222222222222222222222222222222222222");
-                }
-                if (files.get(nFileInMap) == null){
-                	throw new NullPointerException("333333333333333333333333333333333333");
-                }
-                if (files.get(nFileInMap).mapFromFile == null){
-                	throw new NullPointerException("444444444444444444444444444444444444");
-                }*/
-            	result = files.get(nFileInMap).mapFromFile.get(keyString);
+               	result = files.get(nFileInMap).mapFromFile.get(keyString);
             } else {
                 try {
                     files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
