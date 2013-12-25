@@ -27,6 +27,7 @@ public class TableProviderImplementation implements TableProvider {
     private ReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
     private Lock writeLock = readWriteLock.writeLock();
     private Lock readLock =  readWriteLock.readLock();
+    private TransactionPool transactionPool = new TransactionPool();
 
     private HashMap<String, Table> existingTables = new HashMap<>();
     static final Class[] ALLOWED_TYPES = new Class[]{
@@ -58,7 +59,8 @@ public class TableProviderImplementation implements TableProvider {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
             for (Path entry : stream) {
                 String tableName = entry.toFile().getName();
-                TableImplementation currentTable = new TableImplementation(tableName, this);
+                TableImplementation currentTable = new TableImplementation(tableName, this,
+                        transactionPool.createTransaction(tableName));
                 existingTables.put(tableName, currentTable);
             }
         } catch (IOException e) {
@@ -75,6 +77,10 @@ public class TableProviderImplementation implements TableProvider {
 
     boolean isProviderLoading() {
         return isLoading;
+    }
+
+    TransactionPool getTransactionPool() {
+        return transactionPool;
     }
 
     @Override
@@ -127,7 +133,7 @@ public class TableProviderImplementation implements TableProvider {
 
             Table newTable;
             try {
-                newTable = new TableImplementation(name, this, columnTypes);
+                newTable = new TableImplementation(name, this, columnTypes, transactionPool.createTransaction(name));
             } catch (Exception e) {
                 throw new IOException("Fail to create database", e);
             }
