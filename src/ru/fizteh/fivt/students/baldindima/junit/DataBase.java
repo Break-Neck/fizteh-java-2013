@@ -219,11 +219,12 @@ public class DataBase implements Table, AutoCloseable {
         int nDir = getnDir(keyString);
         int nFile = getnFile(keyString);
         int nFileInMap = getnFileInMap(keyString);
-        readLock.lock();
+        writeLock.lock();
         try {
         	
             if ((files.containsKey(nFileInMap)) && (files != null) && (files.get(nFileInMap) != null) && (files.get(nFileInMap).mapFromFile != null)) {
-               	result = files.get(nFileInMap).mapFromFile.get(keyString);
+               	
+            	result = files.get(nFileInMap).mapFromFile.get(keyString);
             } else {
                 try {
                     files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
@@ -238,7 +239,7 @@ public class DataBase implements Table, AutoCloseable {
                 }
             }
         } finally {
-            readLock.unlock();
+            writeLock.unlock();
         }
         return result;
     }
