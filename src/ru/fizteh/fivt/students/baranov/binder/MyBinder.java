@@ -22,10 +22,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 public class MyBinder<T> implements Binder<T> {
-    private String ls = System.lineSeparator();
-    private String tab = "\t";
-
-    private IdentityHashMap<Object, Boolean> mapOfObjects = new IdentityHashMap<>();
     private Class clazz;
     private Field[] fields;
     private HashMap<String, Field> fieldMap;
@@ -66,7 +62,7 @@ public class MyBinder<T> implements Binder<T> {
             }
             return result;
         } catch (Exception e) {
-            throw new IOException("XML parsing error: " + e.getMessage());
+            throw new IOException("XML parsing error");
         }
     }
 
@@ -110,6 +106,7 @@ public class MyBinder<T> implements Binder<T> {
             throw new IllegalArgumentException("output is null");
         }
         try {
+            IdentityHashMap<Object, Boolean> mapOfObjects = new IdentityHashMap<>();
             if (circularLinks(valueOfClass, mapOfObjects)) {
                 throw new IllegalStateException("class has circular links");
             }
@@ -119,34 +116,52 @@ public class MyBinder<T> implements Binder<T> {
         if (clazz.isPrimitive() || clazz.equals(String.class) || clazz.isEnum()) {
             output.write(("<" + clazz.getName() + ">").getBytes());
             output.write((valueOfClass.toString()).getBytes());
-            output.write(("</" + clazz.getName() + ">" + ls).getBytes());
+            output.write(("</" + clazz.getName() + ">").getBytes());
             return;
         }
-        output.write(("<" + clazz.getName() + ">" + ls).getBytes());
+        output.write(("<" + clazz.getName() + ">").getBytes());
         for (Field field : fields) {
             String fieldName = field.getName();
             boolean needPrintField = true;
             Annotation[] annotations = field.getAnnotations();
-            Name nameAnnotation = field.getAnnotation(Name.class);
             for (Annotation annotation : annotations) {
                 if (annotation.annotationType().equals(Name.class)) {
+                    Name nameAnnotation = field.getAnnotation(Name.class);
                     fieldName = nameAnnotation.value();
                 } else if (annotation.annotationType().equals(DoNotBind.class)) {
                     needPrintField = false;
-                    continue;
                 }
             }
+
+            field.setAccessible(true);
+            try {
+                if (field.get(valueOfClass) == null) {
+                    needPrintField = false;
+                }
+            } catch (IllegalAccessException e) {
+                //
+            }
+
+
             if (needPrintField) {
                 printField(valueOfClass, field, fieldName, output);
             }
         }
-        output.write(("</" + clazz.getName() + ">" + ls).getBytes());
+        output.write(("</" + clazz.getName() + ">").getBytes());
     }
 
     private HashMap<String, Field> getMap(Field[] fields) {
         HashMap<String, Field> result = new HashMap<>();
         for (int i = 0; i < fields.length; ++i) {
-            result.put(fields[i].getName(), fields[i]);
+            String fieldName = fields[i].getName();
+            Annotation[] annotations = fields[i].getAnnotations();
+            for (Annotation annotation : annotations){
+                if (annotation.annotationType().equals(Name.class)) {
+                    Name nameAnnotation = fields[i].getAnnotation(Name.class);
+                    fieldName = nameAnnotation.value();
+                }
+            }
+            result.put(fieldName, fields[i]);
         }
         return result;
     }
@@ -176,35 +191,33 @@ public class MyBinder<T> implements Binder<T> {
         boolean needPrintField = true;
         Annotation[] annotations = field.getAnnotations();
         for (Annotation annotation : annotations) {
-            if (annotation.equals(Name.class)) {
-                try {
-                    fieldName = Name.class.getField("value").toString();
-                } catch (NoSuchFieldException e) {
-                    //
-                }
-            } else if (annotation.equals(DoNotBind.class)) {
+            if (annotation.annotationType().equals(Name.class)) {
+                Name nameAnnotation = field.getAnnotation(Name.class);
+                fieldName = nameAnnotation.value();
+            } else if (annotation.annotationType().equals(DoNotBind.class)) {
                 needPrintField = false;
-                continue;
             }
         }
+
+        field.setAccessible(true);
+        try {
+            field.get(valueOfClass);
+        } catch (Exception e) {
+            needPrintField = false;
+        }
+
         if (needPrintField) {
             output.write(("<" + fieldName + ">").getBytes());
             Class typeOfField = field.getType();
             if (typeOfField.isPrimitive() || typeOfField.equals(String.class) || typeOfField.isEnum()) {
-                field.setAccessible(true);
                 try {
                     output.write(field.get(valueOfClass).toString().getBytes());
                 } catch (IllegalAccessException e) {
                     //
-                } catch (NullPointerException e) {
-                    output.write("'value = null'".getBytes());
-                    //throw new IllegalArgumentException("field is null");
                 }
-                output.write(("</" + fieldName + ">" + ls).getBytes());
+                output.write(("</" + fieldName + ">").getBytes());
             } else {
-                output.write(ls.getBytes());
                 Object objectOfField = null;
-                field.setAccessible(true);
                 try {
                     objectOfField = field.get(valueOfClass);
                 } catch (Exception e) {
@@ -213,7 +226,7 @@ public class MyBinder<T> implements Binder<T> {
                 MyBinderFactory factory = new MyBinderFactory();
                 MyBinder binder = factory.create(typeOfField);
                 binder.serialize(objectOfField, output);
-                output.write(("</" + fieldName + ">" + ls).getBytes());
+                output.write(("</" + fieldName + ">").getBytes());
             }
         }
     }
@@ -250,7 +263,7 @@ public class MyBinder<T> implements Binder<T> {
     }
 
     private static Set<Class<?>> getWrapperTypes() {
-        Set<Class<?>> ret = new HashSet<Class<?>>();
+        Set<Class<?>> ret = new HashSet<>();
         ret.add(Boolean.class);
         ret.add(Character.class);
         ret.add(Byte.class);

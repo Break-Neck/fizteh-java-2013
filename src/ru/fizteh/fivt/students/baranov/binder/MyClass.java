@@ -1,5 +1,6 @@
 package ru.fizteh.fivt.students.baranov.binder;
 
+import org.junit.Test;
 import ru.fizteh.fivt.binder.DoNotBind;
 import ru.fizteh.fivt.binder.Name;
 
@@ -18,3 +19,4 @@ public class MyClass {
     String xyu;
     MyClass2 ololo;
 }
+

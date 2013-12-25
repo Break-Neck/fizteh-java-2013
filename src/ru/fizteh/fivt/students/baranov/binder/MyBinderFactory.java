@@ -14,7 +14,7 @@ public class MyBinderFactory implements BinderFactory {
 
     public <T> MyBinder<T> create(Class<T> clazz) {
         if (clazz == null) {
-            throw new IllegalArgumentException("class " + clazz.getName() + " is null");
+            throw new IllegalArgumentException("class is null");
         }
         if (clazz.isPrimitive() || clazz.equals(String.class)) {
             return new MyBinder(clazz);
