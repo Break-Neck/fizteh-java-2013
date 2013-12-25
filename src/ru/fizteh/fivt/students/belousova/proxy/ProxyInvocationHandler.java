@@ -10,12 +10,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
+import java.util.concurrent.locks.Lock;
 
 public class ProxyInvocationHandler implements InvocationHandler {
     private final Writer writer;
     private final Object implementation;
-    private JSONObject jsonObject;
-    private IdentityHashMap<Object, Boolean> objects;
 
     public ProxyInvocationHandler(Writer writer, Object implementation) {
         this.writer = writer;
@@ -24,20 +23,20 @@ public class ProxyInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        jsonObject = new JSONObject();
-        objects = new IdentityHashMap<>();
+        JSONObject jsonObject = new JSONObject();
+        IdentityHashMap<Object, Boolean> objects = new IdentityHashMap<>();
 
         jsonObject.put("timestamp", System.currentTimeMillis());
         jsonObject.put("class", implementation.getClass().getName());
         jsonObject.put("method", method.getName());
-        writeArguments(args);
+        writeArguments(args, jsonObject, objects);
 
         Object methodResult = null;
 
         try {
             methodResult = method.invoke(implementation, args);
             if (!method.getReturnType().getName().equals("void")) {
-                writeResult(methodResult);
+                writeResult(methodResult, jsonObject, objects);
             }
         } catch (InvocationTargetException e) {
             jsonObject.put("thrown", e.getTargetException().toString());
@@ -52,31 +51,34 @@ public class ProxyInvocationHandler implements InvocationHandler {
         return methodResult;
     }
 
-    private void writeArguments(Object[] args) throws JSONException {
+    private void writeArguments(Object[] args, JSONObject jsonObject,
+                                IdentityHashMap<Object, Boolean> objects) throws JSONException {
         if (args == null) {
             jsonObject.put("arguments", new JSONArray());
         } else {
-            jsonObject.put("arguments", makeJSONArray(Arrays.asList(args)));
+            jsonObject.put("arguments", makeJSONArray(Arrays.asList(args), jsonObject, objects));
             objects.clear();
         }
     }
 
-    private void writeResult(Object result) throws JSONException {
+    private void writeResult(Object result, JSONObject jsonObject,
+                             IdentityHashMap<Object, Boolean> objects) throws JSONException {
         Object resultValue;
         if (result != null) {
             if (result instanceof Iterable) {
-                resultValue = makeJSONArray((Iterable) result);
+                resultValue = makeJSONArray((Iterable) result, jsonObject, objects);
             } else {
                 resultValue = result;
             }
         } else {
             resultValue = JSONObject.NULL;
         }
-        jsonObject = jsonObject.put("returnValue", resultValue);
+        jsonObject.put("returnValue", resultValue);
         objects.clear();
     }
 
-    private JSONArray makeJSONArray(Iterable collection) {
+    private JSONArray makeJSONArray(Iterable collection, JSONObject jsonObject,
+                                    IdentityHashMap<Object, Boolean> objects) {
         JSONArray jsonArray = new JSONArray();
         for (Object value : collection) {
             if (value == null) {
@@ -105,7 +107,7 @@ public class ProxyInvocationHandler implements InvocationHandler {
             objects.put(value, true);
 
             if (isContainer) {
-                jsonArray.put(makeJSONArray((Iterable) value));
+                jsonArray.put(makeJSONArray((Iterable) value, jsonObject, objects));
                 continue;
             }
 

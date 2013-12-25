@@ -181,10 +181,16 @@ public abstract class AbstractTable<KeyType, ValueType> implements AutoCloseable
 
     @Override
     public void close() throws Exception {
-        if (!isClosed.get()) {
-            rollback();
-            isClosed.set(true);
+        tableTransactionsLock.lock();
+        try {
+            if (!isClosed.get()) {
+                rollback();
+                isClosed.set(true);
+            }
+        } finally {
+            tableTransactionsLock.unlock();
         }
+
     }
 
     public void checkIfClosed() {
