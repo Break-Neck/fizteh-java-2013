@@ -31,7 +31,7 @@ public class DataBaseFile {
         mapFromFile = new HashMap<>();
 
         read();
-        check();
+        //check();
 
     }
 
