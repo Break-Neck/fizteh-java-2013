@@ -181,15 +181,18 @@ public class MyBinder<T> implements Binder<T> {
             for (int i = 0; i < list.getLength(); ++i) {
                 Node n = list.item(i);
                 if (n.hasChildNodes()) {
-                    Node child = n.getFirstChild();
-                    Field f = map.get(child.getNodeName());
-                    Class fClass = f.getType();
-                    if (fClass.isPrimitive() || fClass.equals(String.class) || fClass.isEnum()) {
-                        String value = child.getTextContent();
-                        f.setAccessible(true);
-                        f.set(obj, casting(f, value));
-                    } else {
-                        goThroughNode(child, fClass, f, obj);
+                    NodeList innerList = n.getChildNodes();
+                    for (int j = 0; j < innerList.getLength(); ++j) {
+                        Node child = innerList.item(j);
+                        Field f = map.get(child.getNodeName());
+                        Class fClass = f.getType();
+                        if (fClass.isPrimitive() || fClass.equals(String.class) || fClass.isEnum()) {
+                            String value = child.getTextContent();
+                            f.setAccessible(true);
+                            f.set(obj, casting(f, value));
+                        } else {
+                            goThroughNode(child, fClass, f, obj);
+                        }
                     }
                 }
             }

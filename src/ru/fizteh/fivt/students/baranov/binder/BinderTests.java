@@ -50,8 +50,8 @@ public class BinderTests {
 
     @Test(expected = IllegalArgumentException.class)
     public void serializeOutputNull() throws IOException {
-        MyBinder binder = factory.create(User.class);
-        User object = new User();
+        MyBinder binder = factory.create(MyUser.class);
+        MyUser object = new MyUser();
         object.name = "anton";
         object.id = 42;
         object.howOldAreYou = 19;
@@ -61,8 +61,8 @@ public class BinderTests {
 
     @Test(expected = IllegalStateException.class)
     public void serializeCircularLink() throws IOException {
-        MyBinder binder = factory.create(User.class);
-        User object = new User();
+        MyBinder binder = factory.create(MyUser.class);
+        MyUser object = new MyUser();
         object.name = "Vasya";
         object.parent = object;
         output = new ByteArrayOutputStream();
@@ -78,67 +78,67 @@ public class BinderTests {
 
     @Test
     public void serializeSimpleTest() throws IOException {
-        MyBinder binder = factory.create(User.class);
-        User user = new User();
+        MyBinder binder = factory.create(MyUser.class);
+        MyUser user = new MyUser();
         user.name = "Anton";
         user.id = 1;
         user.howOldAreYou = 19;
         output = new ByteArrayOutputStream();
         binder.serialize(user, output);
-        String expectedResult = "<User>" +
+        String expectedResult = "<MyUser>" +
                 "<name>Anton</name>" +
                 "<age>19</age>" +
-                "</User>";
+                "</MyUser>";
         assertEquals("serialize: ", expectedResult, output.toString());
     }
 
     @Test
     public void serializeTest() throws IOException {
-        MyBinder binder = factory.create(User.class);
-        User user = new User();
+        MyBinder binder = factory.create(MyUser.class);
+        MyUser user = new MyUser();
         user.name = "Vasya";
         user.id = 1;
         user.howOldAreYou = 1;
-        user.parent = new User();
+        user.parent = new MyUser();
         user.parent.name = "mamka";
         output = new ByteArrayOutputStream();
         binder.serialize(user, output);
-        String expectedResult = "<User>" +
+        String expectedResult = "<MyUser>" +
                 "<name>Vasya</name>" +
                 "<age>1</age>" +
                 "<parent>" +
-                "<User>" +
+                "<MyUser>" +
                 "<name>mamka</name>" +
                 "<age>0</age>" +
-                "</User>" +
+                "</MyUser>" +
                 "</parent>" +
-                "</User>";
+                "</MyUser>";
         assertEquals("serialize: ", expectedResult, output.toString());
     }
 
     @Test
     public void deserializeEqualsSerialize() throws IOException {
-        MyBinder binder = factory.create(User.class);
-        User expectedUser = new User();
+        MyBinder binder = factory.create(MyUser.class);
+        MyUser expectedUser = new MyUser();
         expectedUser.name = "Vasya";
         expectedUser.id = 1;
         expectedUser.howOldAreYou = 1;
-        expectedUser.parent = new User();
+        expectedUser.parent = new MyUser();
         expectedUser.parent.name = "mamka";
-        String before = "<User>" +
+        String before = "<MyUser>" +
                 "<name>Vasya</name>" +
                 "<age>1</age>" +
                 "<parent>" +
-                "<User>" +
+                "<MyUser>" +
                 "<name>mamka</name>" +
                 "<age>0</age>" +
-                "</User>" +
+                "</MyUser>" +
                 "</parent>" +
-                "</User>";
+                "</MyUser>";
 
         input = new ByteArrayInputStream(before.getBytes());
         output = new ByteArrayOutputStream();
-        User user = (User) binder.deserialize(input);
+        MyUser user = (MyUser) binder.deserialize(input);
         binder.serialize(user, output);
 
         assertEquals("results: ", before, output.toString());
@@ -147,8 +147,8 @@ public class BinderTests {
     @Test(expected = IOException.class)
     public void parsingXMLError() throws IOException {
         try {
-            MyBinder binder = factory.create(User.class);
-            String before = "<User>" +
+            MyBinder binder = factory.create(MyUser.class);
+            String before = "<MyUser>" +
                     "<name>Vasya</name>" +
                     "<age>1</age>" +
                     "<parent>";
@@ -184,8 +184,8 @@ class UselessClass {
     int something;
 }
 
-class User {
-    public User() {
+class MyUser {
+    public MyUser() {
     }
 
     String name;
@@ -193,7 +193,7 @@ class User {
     int id;
     @Name("age")
     int howOldAreYou;
-    User parent;
+    MyUser parent;
 }
 
 class WithArray {
