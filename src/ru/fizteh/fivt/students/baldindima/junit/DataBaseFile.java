@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import ru.fizteh.fivt.storage.structured.TableProvider;
 
 
@@ -28,7 +30,7 @@ public class DataBaseFile {
         dataBaseFile = new File(fileName);
         fileNumber = nFileNumber;
         directoryNumber = nDirectoryNumber;
-        mapFromFile = new HashMap<>();
+        mapFromFile = new ConcurrentHashMap<>();
 
         read();
         check();
