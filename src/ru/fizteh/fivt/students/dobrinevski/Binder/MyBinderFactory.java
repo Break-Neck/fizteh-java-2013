@@ -22,7 +22,7 @@ public class MyBinderFactory implements BinderFactory {
             throw new IllegalArgumentException("incorrect class");
         }
 
-        if (clazz.isArray() || clazz.isInterface()) {
+        if (clazz.isArray() || clazz.isInterface() || clazz.isEnum()) {
             throw new IllegalArgumentException(clazz.getName() + " is incorrect");
         }
 
