@@ -4,11 +4,21 @@ import ru.fizteh.fivt.binder.Binder;
 import ru.fizteh.fivt.binder.BinderFactory;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 public class MyBinderFactory implements BinderFactory {
 
     public <T> Binder<T> create(Class<T> clazz) throws IllegalArgumentException {
+        if (clazz == null) {
+            throw new IllegalArgumentException("input is null");
+        }
+
+        if (clazz.isPrimitive() || clazz.isEnum()) {
+            throw new IllegalArgumentException("incorrect class");
+        }
+
+
         check(clazz);
         return new MyBinder<T>(clazz);
     }
@@ -18,11 +28,11 @@ public class MyBinderFactory implements BinderFactory {
             throw new IllegalArgumentException("input is null");
         }
 
-        if (clazz.isPrimitive()) {
-            throw new IllegalArgumentException("incorrect class");
+        if (clazz.isPrimitive() || clazz.isEnum() || clazz == String.class) {
+            return;
         }
 
-        if (clazz.isArray() || clazz.isInterface() || clazz.isEnum()) {
+        if (clazz.isArray() || clazz.isInterface()) {
             throw new IllegalArgumentException(clazz.getName() + " is incorrect");
         }
 
@@ -36,8 +46,10 @@ public class MyBinderFactory implements BinderFactory {
         }   catch (SecurityException e) {
             throw new IllegalArgumentException("SecurityException in " + clazz.getName() + " : " + e.toString());
         }
-
-
-}
+        Field[] flds = clazz.getDeclaredFields();
+        for (Field fld : flds) {
+            check(fld.getType());
+        }
+    }
 }
 

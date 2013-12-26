@@ -25,6 +25,7 @@ public class MyBinder<T> implements Binder<T> {
             throw new IllegalArgumentException("input is null");
         }
         JSONObject jsonObject = new JSONObject(new JSONTokener(input));
+
         try {
             T answer = tClass.getDeclaredConstructor().newInstance();
             recDec(answer, jsonObject);
@@ -43,7 +44,9 @@ public class MyBinder<T> implements Binder<T> {
     }
 
     private void recDec(Object obj, JSONObject jsonObject) {
-
+        if (obj == null) {
+            throw new IllegalArgumentException("bad constructor");
+        }
         try {
             for (Object i : jsonObject.keySet()) {
                 if (i == null) {
@@ -110,7 +113,7 @@ public class MyBinder<T> implements Binder<T> {
                 }
 
                 if (field.isEnumConstant()) {
-                    field.set(obj, Enum.valueOf(Enum.class, jsonObject.get(i.toString()).toString()).name());
+                    field.set(obj, Enum.valueOf(((Class<Enum>) field.getType()), jsonObject.get(i.toString()).toString()).name());
                     continue;
                 }
 
