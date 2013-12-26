@@ -176,6 +176,7 @@ public class DataBase implements Table, AutoCloseable {
 
             }
         }
+        
     }
 
     private void deleteEmptyDirectory(final String name) throws IOException {

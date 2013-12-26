@@ -14,7 +14,7 @@ import ru.fizteh.fivt.storage.structured.TableProvider;
 
 
 public class DataBaseFile {
-    public final Map<String, String> mapFromFile;
+    public Map<String, String> mapFromFile;
     protected File dataBaseFile;
     protected String fileName;
     private TableProvider provider;
