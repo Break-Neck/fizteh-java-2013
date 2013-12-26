@@ -4,6 +4,9 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class TransactionPool {
     private Map<Integer, String> transactionTableName = new HashMap<>();
@@ -11,37 +14,67 @@ public class TransactionPool {
     private int lastId = 0;
     private static final int MAX_TRANSACTION_ID = 100000; // id in range [0, MaxTransaction)
 
+    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
+    private final Lock writeLock = readWriteLock.writeLock();
+    private final Lock readLock = readWriteLock.readLock();
+
+
     public static int getMaxTransactionId() {
         return MAX_TRANSACTION_ID;
     }
 
     public Map<String, Storeable> getDiffTable(int transactionId) {
-        return transactionDiff.get(transactionId);
+        readLock.lock();
+        try {
+            return transactionDiff.get(transactionId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     public String getTableName(int transactionId) {
-        return transactionTableName.get(transactionId);
+        readLock.lock();
+        try {
+            return transactionTableName.get(transactionId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     public boolean transactionExists(int transactionId) {
-        return transactionDiff.containsKey(transactionId);
+        readLock.lock();
+        try {
+            return transactionDiff.containsKey(transactionId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     public int createTransaction(String tableName) {
+        writeLock.lock();
         int prevLast =  lastId;
-        while (transactionDiff.containsKey(lastId)) {
-            lastId = (lastId + 1) % MAX_TRANSACTION_ID;
-            if (lastId == prevLast) {
-                throw new RuntimeException("All transactions are used");
+        try {
+            while (transactionDiff.containsKey(lastId)) {
+                lastId = (lastId + 1) % MAX_TRANSACTION_ID;
+                if (lastId == prevLast) {
+                    throw new RuntimeException("All transactions are used");
+                }
             }
+            transactionDiff.put(lastId, new HashMap<String, Storeable>());
+            transactionTableName.put(lastId, tableName);
+        } finally {
+            writeLock.unlock();
         }
-        transactionDiff.put(lastId, new HashMap<String, Storeable>());
-        transactionTableName.put(lastId, tableName);
         return  lastId;
     }
 
     public void deleteTransaction(int transactionId) {
-        transactionDiff.remove(transactionId);
-        transactionTableName.remove(transactionId);
+        writeLock.lock();
+        try {
+            transactionDiff.remove(transactionId);
+            transactionTableName.remove(transactionId);
+        } finally {
+            writeLock.unlock();
+        }
     }
 }

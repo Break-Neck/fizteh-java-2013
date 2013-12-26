@@ -182,7 +182,6 @@ public class TableImplementation implements Table {
         }
         checkTableState();
         Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
-        //todo synctonize currentChanges
         if (currentChangesMap.containsKey(key)) {
             return currentChangesMap.get(key);
         } else {
@@ -209,7 +208,6 @@ public class TableImplementation implements Table {
         checkTableState();
         StoreableUtils.checkStoreableBelongsToTable(this, value);
 
-        //todo sync changes
         Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
         Storeable toReturn = get(key, transactionId);
@@ -229,7 +227,6 @@ public class TableImplementation implements Table {
         }
         checkTableState();
 
-        //todo sync changes
         Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
 
@@ -249,7 +246,6 @@ public class TableImplementation implements Table {
         try {
             int tableSize = savedMap.size();
 
-            //todo sync changes
             Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
             for (Map.Entry<String, Storeable> entry : currentChangesMap.entrySet()) {
@@ -283,7 +279,6 @@ public class TableImplementation implements Table {
         try {
             int changesNumber = 0;
             boolean[] changedTableHash = new boolean[16];
-            //todo sync changes
             Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
             for (Map.Entry<String, Storeable> entry : currentChangesMap.entrySet()) {
@@ -353,7 +348,6 @@ public class TableImplementation implements Table {
     public int rollback(int transactionId, boolean needToFinishTransaction) {
         checkTableState();
         int toReturn;
-        //todo sync changes
         Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
         readLock.lock();

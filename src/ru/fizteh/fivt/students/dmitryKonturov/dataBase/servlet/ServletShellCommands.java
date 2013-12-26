@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.dmitryKonturov.dataBase.Servlet;
+package ru.fizteh.fivt.students.dmitryKonturov.dataBase.servlet;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;

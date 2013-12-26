@@ -1,5 +1,6 @@
-package ru.fizteh.fivt.students.dmitryKonturov.dataBase.Servlet;
+package ru.fizteh.fivt.students.dmitryKonturov.dataBase.servlet;
 
+import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.students.dmitryKonturov.dataBase.databaseImplementation.TableImplementation;
 import ru.fizteh.fivt.students.dmitryKonturov.dataBase.databaseImplementation.TableProviderImplementation;
 import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellEmulator;
@@ -9,10 +10,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class ServletSize extends HttpServlet {
+public class ServletGet extends HttpServlet {
     TableProviderImplementation provider;
 
-    public ServletSize(TableProviderImplementation provider) {
+    public ServletGet(TableProviderImplementation provider) {
         this.provider = provider;
     }
 
@@ -39,11 +40,22 @@ public class ServletSize extends HttpServlet {
             return;
         }
 
-        int size;
+        String key = request.getParameter("key");
+        if (key == null) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "no key as parametr");
+            return;
+        }
+
+        String value;
         try {
             String tableName = provider.getTransactionPool().getTableName(transactionId);
             TableImplementation table = (TableImplementation) provider.getTable(tableName);
-            size = table.size(transactionId);
+            Storeable storeable = table.get(key, transactionId);
+            if (storeable == null) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "key not found");
+                return;
+            }
+            value = provider.serialize(table, storeable);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, ShellEmulator.getNiceMessage(e));
             return;
@@ -52,6 +64,6 @@ public class ServletSize extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("text/plain");
         response.setCharacterEncoding("UTF8");
-        response.getWriter().println(size);
+        response.getWriter().println(value);
     }
 }

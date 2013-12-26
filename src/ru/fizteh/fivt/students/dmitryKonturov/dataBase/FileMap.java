@@ -1,6 +1,6 @@
 package ru.fizteh.fivt.students.dmitryKonturov.dataBase;
 
-import ru.fizteh.fivt.students.dmitryKonturov.dataBase.shellEnvironment.StoreableFileMapShell;
+import ru.fizteh.fivt.students.dmitryKonturov.dataBase.servlet.ServletShell;
 import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellEmulator;
 import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellException;
 
@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileMap {
-
     public static void main(String[] args) {
         String dbDir = System.getProperty("fizteh.db.dir");
         //String dbDir = "/home/kontr/testDir/myTest";
@@ -19,7 +18,7 @@ public class FileMap {
             System.exit(1);
         }
 
-        StoreableFileMapShell shell = null;
+        ServletShell shell = null;
         try {
             Path dbDirPath = Paths.get(dbDir);
             if (Files.notExists(dbDirPath)) {
@@ -28,8 +27,8 @@ public class FileMap {
                     Files.createDirectory(dbDirPath);
                 }
             }
-            shell = new StoreableFileMapShell(dbDirPath);
-        } catch (IOException|IllegalArgumentException e) {
+            shell = new ServletShell(dbDirPath);
+        } catch (IOException |IllegalArgumentException e) {
             System.err.println("Unable to launch shell:  " + e.toString());
             System.exit(1);
         } catch (Exception e) {
