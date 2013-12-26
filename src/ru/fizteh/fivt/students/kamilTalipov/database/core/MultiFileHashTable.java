@@ -25,7 +25,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private final HashMap<String, Storeable>[][] table;
     private final ThreadLocal<TransactionHandler> transaction;
     private final TransactionManager manager;
-    //private final ThreadLocal<HashMap<String, Storeable>> newValues;
 
     private final ArrayList<Class<?>> types;
 
@@ -48,11 +47,10 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private static final int MAX_VALUE_LEN = 1 << 24;
 
     private static final String SIGNATURE_FILE_NAME = "signature.tsv";
-    private static final String TABLE_SIZE_FILE_NAME = "size.tsv";
 
-    private MultiFileHashTable(String workingDirectory, String tableName,
+    public MultiFileHashTable(String workingDirectory, String tableName,
                                MultiFileHashTableProvider myTableProvider,
-                               List<Class<?>> types, int tableSize) throws DatabaseException, IOException {
+                               List<Class<?>> types) throws DatabaseException, IOException {
         if (workingDirectory == null) {
             throw new IllegalArgumentException("Working directory path must be not null");
         }
@@ -93,7 +91,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         }
 
         writeSignatureFile();
-        writeTableSize(tableSize);
 
         table = new HashMap[ALL_DIRECTORIES][FILES_IN_DIRECTORY];
         transaction = new ThreadLocal<TransactionHandler>() {
@@ -103,13 +100,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             }
         };
         readTable();
-    }
-
-    public MultiFileHashTable(String workingDirectory, String tableName,
-                              MultiFileHashTableProvider myTableProvider,
-                              List<Class<?>> types) throws DatabaseException, IOException {
-        this(workingDirectory, tableName, myTableProvider,
-                types, readTableSize(workingDirectory, tableName));
     }
 
     public MultiFileHashTable(String workingDirectory, String tableName,
@@ -289,7 +279,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
 
             try {
                 writeChanges(changesFile);
-                writeTableSize(tableSize);
             } catch (DatabaseException e) {
                 throw new IOException("Database io error", e);
             }
@@ -383,7 +372,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         File[] innerFiles = tableDirectory.listFiles();
         for (File file : innerFiles) {
             if (!file.isDirectory()) {
-                if (file.getName().equals(SIGNATURE_FILE_NAME) || file.getName().equals(TABLE_SIZE_FILE_NAME)) {
+                if (file.getName().equals(SIGNATURE_FILE_NAME)) {
                     continue;
                 }
             }
@@ -428,42 +417,6 @@ public class MultiFileHashTable implements Table, AutoCloseable {
                     output.write(value);
                 }
             }
-        }
-    }
-
-    private static int readTableSize(String tableDirectory) throws IOException {
-        File tableSizeFile = new File(tableDirectory + File.separator + TABLE_SIZE_FILE_NAME);
-        if (!tableSizeFile.exists()) {
-            return 0;
-        }
-
-        try (FileInputStream tableSizeStream = new FileInputStream(tableSizeFile);
-             Scanner tableSizeScanner = new Scanner(tableSizeStream)) {
-            if (!tableSizeScanner.hasNextInt()) {
-                throw new IOException("Table size file is empty");
-            }
-
-            return tableSizeScanner.nextInt();
-        }
-    }
-
-    private static int readTableSize(String workingDirectory, String tableName) throws IOException {
-        return readTableSize(workingDirectory + File.separator + tableName);
-    }
-
-    private void writeTableSize(int tableSize) throws IOException {
-        if (tableSize < 0) {
-            throw new IllegalArgumentException("Table size must be not negative");
-        }
-
-        File tableSizeFile = new File(tableDirectory.getAbsolutePath() + File.separator + TABLE_SIZE_FILE_NAME);
-        if (tableSizeFile.exists()) {
-            tableSizeFile.delete();
-        }
-
-        tableSizeFile = FileUtils.makeFile(tableDirectory.getAbsolutePath(), TABLE_SIZE_FILE_NAME);
-        try (FileOutputStream output = new FileOutputStream(tableSizeFile)) {
-            output.write(ByteBuffer.allocate(4).putInt(tableSize).array());
         }
     }
 
@@ -586,11 +539,15 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     private int getTableSize() {
-        try {
-            return readTableSize(tableDirectory.getAbsolutePath());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        int size = 0;
+        for (int i = 0; i < ALL_DIRECTORIES; ++i) {
+            for (int j = 0; j < FILES_IN_DIRECTORY; ++j) {
+                if (table[i][j] != null) {
+                    size += table[i][j].size();
+                }
+            }
         }
+        return size;
     }
 
     private Storeable getFromTable(String key) {
@@ -689,8 +646,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
                 throw new DatabaseException("At table '" + tableName
                         + "': directory contain redundant files");
             }
-            if (!file.isDirectory() && !file.getName().equals(SIGNATURE_FILE_NAME)
-                    && !file.getName().equals(TABLE_SIZE_FILE_NAME)) {
+            if (!file.isDirectory() && !file.getName().equals(SIGNATURE_FILE_NAME)) {
                 throw new DatabaseException("At table '" + tableName
                         + "': directory contain redundant files");
             }

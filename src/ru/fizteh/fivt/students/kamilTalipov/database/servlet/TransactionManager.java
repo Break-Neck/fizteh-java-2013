@@ -6,19 +6,22 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 public class TransactionManager  {
     private HashMap<String, TransactionData> transactions;
 
     private Queue<Integer> availableId;
-    private int idLength;
+    private final int idLength;
 
-    private ReadWriteLock lock;
+    private final ReadWriteLock lock;
 
     public TransactionManager(int idLength) {
         this.idLength = idLength;
+        transactions = new HashMap<>();
         availableId = new LinkedList<>();
+        lock = new ReentrantReadWriteLock();
 
         int maxId = getMaxId();
         for (int id = 0; id <= maxId; ++id) {
@@ -46,7 +49,7 @@ public class TransactionManager  {
             }
 
             int transactionId = availableId.remove();
-            String formatString = "\"%0" + idLength + "d\"";
+            String formatString = "%0" + idLength + "d";
             String id = String.format(formatString, transactionId);
             transactions.put(id, new TransactionData(table));
             return id;
