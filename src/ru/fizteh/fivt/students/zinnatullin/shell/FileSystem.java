@@ -73,16 +73,16 @@ public class FileSystem {
     
     public static boolean recursiveCopy(File source, File dest, String command) {
         
-		String errorPrefix = command + ": \'" + dest.getAbsolutePath() + "\':";
-		if (source.isDirectory()) {
+        String errorPrefix = command + ": \'" + dest.getAbsolutePath() + "\':";
+        if (source.isDirectory()) {
             try {
                 if (!dest.mkdir()) {
-					String error = errorPrefix + " couldn't create directory";
+                    String error = errorPrefix + " couldn't create directory";
                     System.out.println(error);
                     return false;
                 }
             } catch (SecurityException e) {
-				String error = errorPrefix + " haven't rights to create directory";
+                String error = errorPrefix + " haven't rights to create directory";
                 System.out.println(error);
                 return false;
             }
@@ -99,22 +99,22 @@ public class FileSystem {
             try {
                 if (!dest.createNewFile()) {
                     String error = errorPrefix + " couldn't create file";
-					System.out.println(error);
+                    System.out.println(error);
                     return false;
                 }
                 if (!dest.canWrite() || !source.canRead()) {
                     String error = errorPrefix + " haven't rights to create file";
-					Shell.printMessage(error);
+                    Shell.printMessage(error);
                     return false;
                 }
                 return copy(source, dest, command);
             } catch (SecurityException e) {
                 String error = errorPrefix + " haven't rights to create file";
-				System.out.println(error);
+                System.out.println(error);
                 return false;
             } catch (IOException e) {
                 String error = errorPrefix + " couldn't create file";
-				System.out.println(error);
+                System.out.println(error);
                 return false;
             }
         }
@@ -130,8 +130,8 @@ public class FileSystem {
             System.out.println(command + ": invalid destination path");
         } else if (!destination.getParentFile().exists()) {
             System.out.println(command + ": destination path doesn't exists");
-        } else if (destination.getParent().equals(source.getParent()) && 
-				destination.getName().equals(source.getName())) {
+        } else if (destination.getParent().equals(source.getParent())
+				&& destination.getName().equals(source.getName())) {
             System.out.println(command + ": source path is part of destination path");
         } else {
             return recursiveCopy(source, destination, command);
@@ -141,7 +141,7 @@ public class FileSystem {
     
     public static boolean recursiveRemove(File removable, String command) {
         if (removable.isDirectory()) {
-            File files[] = removable.listFiles();
+            File[] files = removable.listFiles();
             if (files != null) {
                 for (File file : files) {
                     if (!recursiveRemove(file, command)) {
