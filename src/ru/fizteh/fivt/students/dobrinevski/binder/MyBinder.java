@@ -26,7 +26,7 @@ public class MyBinder<T> implements Binder<T> {
         }
         JSONObject jsonObject = new JSONObject(new JSONTokener(input));
         try {
-            T answer = tClass.getConstructor().newInstance();
+            T answer = tClass.getDeclaredConstructor().newInstance();
             recDec(answer, jsonObject);
             return answer;
         }   catch (NoSuchMethodException e) {
@@ -43,6 +43,7 @@ public class MyBinder<T> implements Binder<T> {
     }
 
     private void recDec(Object obj, JSONObject jsonObject) {
+
         try {
             for (Object i : jsonObject.keySet()) {
                 if (i == null) {
@@ -168,7 +169,7 @@ public class MyBinder<T> implements Binder<T> {
                 }
 
                 if (one.isEnumConstant()) {
-                    jsonWriter.value(Enum.valueOf(Enum.class, objBuf.toString()).name());
+                    jsonWriter.value(((Enum) objBuf).name());
                     continue;
                 }
 
