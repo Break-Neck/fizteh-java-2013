@@ -95,7 +95,7 @@ public class Table {
         HashMap dirMap = (HashMap) data.get(nDir);
         HashMap fileMap = (HashMap) dirMap.get(nFile);
         if (!fileMap.isEmpty()) {
-            for (Iterator it = fileMap.entrySet().iterator(); it.hasNext();) {
+            for (Iterator it = fileMap.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
                 String key = entry.getKey();
                 String value = entry.getValue();

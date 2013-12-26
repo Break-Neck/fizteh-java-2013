@@ -101,12 +101,12 @@ public class Database {
             throw new Exception("Table not select");
         }
         if (!table.data.isEmpty()) {
-            for (Iterator it = table.data.entrySet().iterator(); it.hasNext();) {
+            for (Iterator it = table.data.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>) it.next();
                 String nDir = entry.getKey();
                 HashMap dirMap = entry.getValue();
                 if (!dirMap.isEmpty()) {
-                    for (it = dirMap.entrySet().iterator(); it.hasNext();) {
+                    for (it = dirMap.entrySet().iterator(); it.hasNext(); ) {
                         String nFile = entry.getKey();
                         try {
                             table.saveData(nDir, nFile);

@@ -103,12 +103,12 @@ public class DBTable implements Table{
         }
         int count = 0;
         if (!data.isEmpty()) {
-            for (Iterator it = data.entrySet().iterator(); it.hasNext();) {
+            for (Iterator it = data.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>) it.next();
                 String nDir = entry.getKey();
                 HashMap dirMap = entry.getValue();
                 if (!dirMap.isEmpty()) {
-                    for (Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
+                    for (Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext(); ) {
                         Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>) it1.next();
                         String nFile = entry1.getKey();
                         HashMap value = entry1.getValue();
@@ -123,12 +123,12 @@ public class DBTable implements Table{
     @Override
     public int commit() {
         if (!data.isEmpty()) {
-            for (Iterator it = data.entrySet().iterator(); it.hasNext();) {
+            for (Iterator it = data.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>) it.next();
                 String nDir = entry.getKey();
                 HashMap dirMap = entry.getValue();
                 if (!dirMap.isEmpty()) {
-                    for (Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
+                    for (Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext(); ) {
                         Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>) it1.next();
                         String nFile = entry1.getKey();
                         saveData(nDir, nFile);
@@ -234,7 +234,7 @@ public class DBTable implements Table{
             HashMap dirMap = (HashMap) data.get(nDir);
             HashMap fileMap = (HashMap) dirMap.get(nFile);
             if (!fileMap.isEmpty()) {
-                for (Iterator it = fileMap.entrySet().iterator(); it.hasNext();) {
+                for (Iterator it = fileMap.entrySet().iterator(); it.hasNext(); ) {
                     Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
                     String key = entry.getKey();
                     String value = entry.getValue();
