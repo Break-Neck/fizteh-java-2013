@@ -18,11 +18,7 @@ import java.util.IdentityHashMap;
 
 public class MyBinder<T> implements Binder<T> {
     Class<T> tClass;
-    public final Integer grey;
-    public final Integer black;
     public MyBinder(Class<T> clazz) {
-        grey = -1;
-        black = 1;
         tClass = clazz;
     }
 
@@ -51,77 +47,41 @@ public class MyBinder<T> implements Binder<T> {
 
     private void recDec(Object obj, JSONObject jsonObject, Class<?> clazz) {
         try {
-            for (Object i : jsonObject.keySet()) {
-                if (i == null) {
-                    throw new IllegalArgumentException("key is null");
-                }
-                if (i.toString().equals("")) {
-                    throw new IllegalArgumentException("key is empty");
-                }
-                if (jsonObject.get(i.toString()) == null) {
-                    continue;
-                }
-                Field field = null;
-                Field[] fields = clazz.getDeclaredFields();
-                for (Field f : fields) {
-                    if (!f.isAnnotationPresent(DoNotBind.class)) {
-                        if (f.getName().equals(i.toString())) {
-                            if (field == null) {
-                                field = f;
-                            } else {
-                                throw new IllegalArgumentException("2 field with equal name");
-                            }
-                        }
-                        if (f.isAnnotationPresent(Name.class)) {
-                            if (f.getAnnotation(Name.class).value().equals(i.toString())) {
-                                if (field == null) {
-                                    field = f;
-                                } else {
-                                    throw new IllegalArgumentException("2 field with equal name");
-                                }
-                            }
+            String name;
+            for (Field one : obj.getClass().getDeclaredFields()) {
+                one.setAccessible(true);
+                try {
+                    if (one.isAnnotationPresent(DoNotBind.class)) {
+                        continue;
+                    }
+
+                    if (one.isAnnotationPresent(Name.class)) {
+                        name = one.getAnnotation(Name.class).value();
+                    } else {
+                        name = one.getName();
+                    }
+                    if (name == null || name.equals("") || name.contains("\n")) {
+                        throw new IllegalArgumentException("Field name is incorrect");
+                    }
+                    Object geted = jsonObject.get(name);
+                    if (geted == null || geted.getClass().isPrimitive()
+                            || geted.getClass().getSimpleName().equals("String")
+                            || geted.getClass().isEnum()) {
+                        one.set(obj, geted);
+                    }
+                    if (one.get(obj) == null) {
+                        try {
+                            one.set(obj, one.getType().newInstance());
+                        } catch (InstantiationException e) {
+                            throw new IllegalArgumentException("Cannot create");
                         }
                     }
+                    recDec(one.get(obj), (JSONObject) geted, one.getType());
+                } catch (IllegalAccessException e) {
+                    throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
+                } catch (JSONException e) {
+                    throw new IllegalArgumentException("json fail: " + e.getMessage());
                 }
-
-                if (field == null) {
-                    throw new IllegalArgumentException("No field with name " + i.toString());
-                }
-
-                field.setAccessible(true);
-                if (field.getType().isPrimitive()) {
-                    if (field.getType().getSimpleName().equals("int")) {
-                        field.set(obj, Integer.parseInt(jsonObject.get(i.toString()).toString()));
-                    } else if (field.getType().getSimpleName().equals("double")) {
-                        field.set(obj, Double.parseDouble(jsonObject.get(i.toString()).toString()));
-                    } else if (field.getType().getSimpleName().equals("float")) {
-                        field.set(obj, Float.parseFloat(jsonObject.get(i.toString()).toString()));
-                    } else if (field.getType().getSimpleName().equals("long")) {
-                        field.set(obj, Long.parseLong(jsonObject.get(i.toString()).toString()));
-                    } else if (field.getType().getSimpleName().equals("boolean")) {
-                        field.set(obj, Boolean.parseBoolean(jsonObject.get(i.toString()).toString()));
-                    } else if (field.getType().getSimpleName().equals("short")) {
-                        field.set(obj, Short.parseShort(jsonObject.get(i.toString()).toString()));
-                    } else if (field.getType().getSimpleName().equals("byte")) {
-                        field.set(obj, Byte.parseByte(jsonObject.get(i.toString()).toString()));
-                    } else if (field.getType().getSimpleName().equals("char")) {
-                        field.set(obj, jsonObject.get(i.toString()).toString().charAt(0));
-                    }
-                    continue;
-                }
-
-                if (field.getType().getSimpleName().equals("String")) {
-                    field.set(obj, jsonObject.get(i.toString()).toString());
-                    continue;
-                }
-
-                if (field.isEnumConstant()) {
-                    field.set(obj, Enum.valueOf(((Class<Enum>) field.getType()),
-                            jsonObject.get(i.toString()).toString()).name());
-                    continue;
-                }
-
-                recDec(field.get(obj), (JSONObject) jsonObject.get(i.toString()), field.getType());
             }
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException("illegal access " + e.getMessage());
