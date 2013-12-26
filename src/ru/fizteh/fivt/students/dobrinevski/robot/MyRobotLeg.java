@@ -22,15 +22,16 @@ public class MyRobotLeg extends RobotLeg {
         if (step == 0) {
             return false;
         }
-        LOCK.tryLock();
         try {
             if (getType() == RobotLegType.RIGHT && !turn) {
+                LOCK.lock();
                 makeStep();
                 step--;
                 turn = !turn;
                 return true;
             }
             if (getType() == RobotLegType.LEFT && turn) {
+                LOCK.lock();
                 makeStep();
                 step--;
                 turn = !turn;
