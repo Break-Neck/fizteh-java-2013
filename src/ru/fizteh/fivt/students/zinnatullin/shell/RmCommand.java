@@ -3,7 +3,7 @@ package ru.fizteh.fivt.students.zinnatullin.shell;
 import java.io.File;
 
 public class RmCommand implements ShellCommand {
-    public boolean execute(String args[]) {
+    public boolean execute(String[] args) {
         if (args.length != 2) {
             System.out.println(args[0] + ": invalid number of arguments in the \'" + args[0] + "\' command");
             return false;

@@ -9,7 +9,7 @@ public class RollbackCommand implements ShellCommand {
 	}
 	
 	@Override
-    public boolean execute(String args[]) {
+    public boolean execute(String[] args) {
         assert (args.length != 0);
         if (args.length != 1) {
             Shell.printMessage(args[0] + ": invalid number of arguments in the \'" + args[0] + "\' command");

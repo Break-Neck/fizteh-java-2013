@@ -9,7 +9,7 @@ public class PutCommand implements ShellCommand {
 	}
 	
 	@Override
-	public boolean execute(String args[]) {
+	public boolean execute(String[] args) {
         assert (args.length != 0);
         if (args.length != 3) {
             System.out.println(args[0] + ": invalid number of arguments in the \'" + args[0] + "\' command");
