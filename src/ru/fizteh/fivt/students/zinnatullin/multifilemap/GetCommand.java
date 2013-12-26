@@ -11,7 +11,7 @@ public class GetCommand implements ShellCommand {
     @Override
     public boolean execute(String[] args) {
         assert (args.length != 0);
-        if (args.length != 2 ) {
+        if (args.length != 2) {
             Shell.printMessage(args[0] + ": invalid number of arguments in the \'" + args[0] + "\' command");
             return false;
         }

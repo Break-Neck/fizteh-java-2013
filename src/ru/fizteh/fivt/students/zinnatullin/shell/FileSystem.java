@@ -19,7 +19,7 @@ public class FileSystem {
             }
         } 
         newPath = new File(currentPath.getAbsolutePath());
-        String directories[] = path.split("\\" + File.separator);
+        String[] directories = path.split("\\" + File.separator);
         for (String directory : directories) {
             if (!directory.equals(".")) {
                 if (directory.equals("..")) {
