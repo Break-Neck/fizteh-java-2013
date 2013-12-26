@@ -202,6 +202,9 @@ public class TableImplementation implements Table {
     }
 
     public Storeable put(String key, Storeable value, int transactionId) throws IllegalArgumentException {
+        if (transactionId >= 0) {
+            throw new RuntimeException("ololo ya voditel nlo: transaction positive");
+        }
         checkKey(key);
         if (value == null) {
             throw new IllegalArgumentException("Empty value");
