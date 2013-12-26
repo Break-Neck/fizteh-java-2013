@@ -327,6 +327,10 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         close(true);
     }
 
+    public int uncommittedChanges() {
+        return uncommittedChanges(transaction.get().getDiff());
+    }
+
     public int uncommittedChanges(HashMap<String, Storeable> diff) {
         checkState();
         readLock.lock();
