@@ -79,7 +79,6 @@ public class BinderTester {
     public static class ClassWithEnum {
         Enu a;
         public ClassWithEnum() {
-            a = Enu.LEFT;
         }
     }
 
@@ -131,10 +130,10 @@ public class BinderTester {
     public void testEnum() throws IOException {
         bind = bf.create(ClassWithEnum.class);
         bind.serialize(new ClassWithEnum(), outStream);
-        assertEquals("{\"a\":\"LEFT\"}", outStream.toString());
+        assertEquals("{\"a\":null}", outStream.toString());
         ClassWithEnum a = (ClassWithEnum)
-                bind.deserialize(new ByteArrayInputStream("{\"a\":\"LEFT\"}".getBytes(StandardCharsets.UTF_8)));
-        assertEquals(a.a, Enu.LEFT);
+                bind.deserialize(new ByteArrayInputStream("{\"a\":null}".getBytes(StandardCharsets.UTF_8)));
+        assertEquals(a.a, null);
     }
 }
 

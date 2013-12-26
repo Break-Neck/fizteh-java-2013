@@ -68,8 +68,9 @@ public class MyBinder<T> implements Binder<T> {
                 }
 
                 Object got = jsonObject.get(name);
-                if (got == null) {
+                if (got == null || got == JSONObject.NULL) {
                     one.set(obj, null);
+                    continue;
                 }
                 if (one.getType().isPrimitive()) {
                     if (one.getType().getSimpleName().equals("int")) {
