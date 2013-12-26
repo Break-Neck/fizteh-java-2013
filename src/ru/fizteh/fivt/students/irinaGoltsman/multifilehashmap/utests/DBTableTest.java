@@ -63,6 +63,21 @@ public class DBTableTest {
         table.remove("newTestKey");
     }
 
+    @Test
+    public void putWork() throws IOException {
+        Storeable row1 = new DBStoreable(columnTypes);
+        Storeable row2 = new DBStoreable(columnTypes);
+        row1.setColumnAt(0, 1);
+        row2.setColumnAt(0, 2);
+        Assert.assertNull(table.put("key", row1));
+        Assert.assertTrue(((DBTable) table).checkStoreableForEquality(row1, table.put("key", row2)));
+        Assert.assertTrue(((DBTable) table).checkStoreableForEquality(row2, table.put("key", row2)));
+        Assert.assertEquals(1, table.commit());
+        Assert.assertTrue(((DBTable) table).checkStoreableForEquality(row2, table.put("key", row2)));
+        Assert.assertTrue(((DBTable) table).checkStoreableForEquality(row2, table.remove("key")));
+        Assert.assertEquals(1, table.commit());
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void putNullKey() {
         List<Class<?>> types = new ArrayList<>();
@@ -118,6 +133,17 @@ public class DBTableTest {
         table.remove("2");
         table.remove("3");
         Assert.assertEquals(0, table.size());
+        table.commit();
+    }
+
+    @Test
+    public void commitSimpleWork() throws IOException {
+        List<Class<?>> types = new ArrayList<>();
+        types.add(Integer.class);
+        Storeable row = new DBStoreable(types);
+        table.put("0", row);
+        table.commit();
+        table.remove("0");
         table.commit();
     }
 
@@ -198,6 +224,59 @@ public class DBTableTest {
         table.remove("old");
         table.remove("oldWhichWillRemoved");
         table.commit();
+    }
+
+    @Test
+    public void putRemoveRollback() throws IOException {
+        Storeable row1 = new DBStoreable(columnTypes);
+        Storeable row2 = new DBStoreable(columnTypes);
+        row1.setColumnAt(0, 524);
+        row2.setColumnAt(0, 110);
+        table.put("key110", row1);
+        table.remove("key110");
+        Assert.assertEquals(0, table.rollback());
+
+        table.put("key110", row1);
+        Assert.assertEquals(1, table.commit());
+        Assert.assertEquals(0, table.rollback());
+
+        table.put("key110", row2);
+        Assert.assertEquals(1, table.rollback());
+
+        table.put("key110", row2);
+        table.remove("key110");
+        Assert.assertEquals(1, table.rollback());
+    }
+
+    @Test
+    public void countTheNumberOfChanges() throws IOException {
+        Storeable row1 = new DBStoreable(columnTypes);
+        Storeable row2 = new DBStoreable(columnTypes);
+        row1.setColumnAt(0, 1);
+        row2.setColumnAt(0, 2);
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        table.put("key01", row1);
+        Assert.assertEquals(1, ((DBTable) table).countTheNumberOfChanges());
+        table.remove("key01");
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+
+        table.put("key01", row1);
+        Assert.assertEquals(1, ((DBTable) table).countTheNumberOfChanges());
+        Assert.assertEquals(1, table.commit());
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        table.put("key01", row1);
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        table.put("key01", row2);
+        Assert.assertEquals(1, ((DBTable) table).countTheNumberOfChanges());
+        Assert.assertEquals(1, table.commit());
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        table.remove("key01");
+        Assert.assertEquals(1, ((DBTable) table).countTheNumberOfChanges());
+        table.put("key01", row2);
+        Assert.assertEquals(0, ((DBTable) table).countTheNumberOfChanges());
+        Assert.assertEquals(0, table.commit());
+        table.remove("key01");
+        Assert.assertEquals(1, table.commit());
     }
 
     @Test(expected = IllegalStateException.class)

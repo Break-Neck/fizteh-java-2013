@@ -79,13 +79,12 @@ public class UTests {
 
     @Test
     public void consoleApp() throws IOException {
-        String[] args = new String[6];
+        String[] args = new String[5];
         args[0] = "create check (String int long boolean float double byte String);";
         args[1] = "use check;";
         args[2] = "put keyX [\"keyX\",1024,1025,true,1024.1,1024.1,null,\"05bf9c3c5d9031e21babab85fd3bbb3cзначение\"];";
-        args[3] = "commit;";
-        args[4] = "put keyZ [\"keyZ\",40,41,true,40.1,40.1,null,\"8a14e407cadf8d9b8863ba0f93ee7b50значение\"];";
-        args[5] = "exit";
+        args[3] = "put keyZ [\"keyZ\",40,41,true,40.1,40.1,null,\"8a14e407cadf8d9b8863ba0f93ee7b50значение\"];";
+        args[4] = "commit;";
 
         try {
             tableProvider.removeTable("check");
@@ -97,29 +96,96 @@ public class UTests {
         try (PrintStream st = new PrintStream(output)) {
             System.setOut(st);
             System.setErr(st);
-
             Shell.shell(args);
-            Scanner scan = new Scanner(output);
-            Assert.assertEquals(true, scan.hasNext());
-            String out = scan.nextLine();
-            Assert.assertEquals("created", out);
-            Assert.assertEquals(true, scan.hasNext());
-            out = scan.nextLine();
-            Assert.assertEquals("using check", out);
-            Assert.assertEquals(true, scan.hasNext());
-            out = scan.nextLine();
-            Assert.assertEquals("new", out);
-            Assert.assertEquals(true, scan.hasNext());
-            out = scan.nextLine();
-            Assert.assertEquals("1", out);
-            Assert.assertEquals(true, scan.hasNext());
-            out = scan.nextLine();
-            Assert.assertEquals("new", out);
-            Assert.assertEquals(false, scan.hasNext());
-
             System.setOut(System.out);
             System.setErr(System.err);
+
+            try (Scanner scan = new Scanner(output)) {
+                Assert.assertEquals(true, scan.hasNext());
+                String out = scan.nextLine();
+                Assert.assertEquals("created", out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals("using check", out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals("new", out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals("new", out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals("2", out);
+                Assert.assertEquals(false, scan.hasNext());
+            }
         }
         dataBase.closeDB();
+        //Часть 2
+        args[0] = "use check;";
+        args[1] = "get keyX;";
+        args[2] = "get keyZ;";
+        args[3] = "get key;";
+        args[4] = "get key2;";
+
+        output.delete();
+        output.createNewFile();
+        try (PrintStream st = new PrintStream(output)) {
+            System.setOut(st);
+            System.setErr(st);
+            Shell.shell(args);
+            System.setOut(System.out);
+            System.setErr(System.err);
+            try (Scanner scan = new Scanner(output)) {
+                Assert.assertEquals(true, scan.hasNext());
+                String out = scan.nextLine();
+                Assert.assertEquals("using check", out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals("found", out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals(
+                        "[\"keyX\",1024,1025,true,1024.1,1024.1,null,\"05bf9c3c5d9031e21babab85fd3bbb3cзначение\"]",
+                        out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals("found", out);
+                out = scan.nextLine();
+                Assert.assertEquals(
+                        "[\"keyZ\",40,41,true,40.1,40.1,null,\"8a14e407cadf8d9b8863ba0f93ee7b50значение\"]", out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals("not found", out);
+                Assert.assertEquals(true, scan.hasNext());
+                out = scan.nextLine();
+                Assert.assertEquals("not found", out);
+                Assert.assertEquals(false, scan.hasNext());
+            }
+        }
+        dataBase.closeDB();
+
+        output.delete();
+        output.createNewFile();
+        String[] args2 = new String[1];
+        args2[0] = "use check;";
+        try (PrintStream st = new PrintStream(output)) {
+            System.setOut(st);
+            System.setErr(st);
+            Shell.shell(args2);
+            System.setOut(System.out);
+            System.setErr(System.err);
+            try (Scanner scan = new Scanner(output)) {
+                Assert.assertEquals(true, scan.hasNext());
+                String out = scan.nextLine();
+                Assert.assertEquals("using check", out);
+                Assert.assertEquals(false, scan.hasNext());
+            }
+        }
+        dataBase.closeDB();
+        try {
+            tableProvider.removeTable("check");
+        } catch (IllegalStateException e) {
+            //ignore
+        }
     }
 }

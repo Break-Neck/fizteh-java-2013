@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 public class FileManager {
 
@@ -22,6 +23,21 @@ public class FileManager {
             this.length = length;
             this.key = key;
             this.value = value;
+        }
+    }
+
+    private static class SizeOfTable {
+        public int removedKeys = 0;
+        public int changes = 0;
+        public int addedKeys = 0;
+
+        public SizeOfTable() {
+        }
+
+        public SizeOfTable(int removed, int added, int ch) {
+            this.removedKeys = removed;
+            this.addedKeys = added;
+            this.changes = ch;
         }
     }
 
@@ -106,13 +122,14 @@ public class FileManager {
         return bytes;
     }
 
-    private static void readFromDisk(RandomAccessFile datFile, HashMap<String, String> storage,
-                                     int dirIndex, int fileIndex) throws IOException {
+    private static void readDatFileFromDisk(RandomAccessFile datFile, HashMap<String, String> storage,
+                                            int dirIndex, int fileIndex) throws IOException {
         long length;
         length = datFile.length();
         if (length == 0) {
             return;
         }
+        datFile.seek(0);
         while (length > 0) {
             LineOfDB line = readLineOfDatFile(datFile, length, dirIndex, fileIndex);
             length -= line.length;
@@ -141,7 +158,8 @@ public class FileManager {
                     continue;
                 }
                 try (RandomAccessFile fileIndexDat = new RandomAccessFile(currentFile, "rw")) {
-                    readFromDisk(fileIndexDat, tableStorage, index, fileIndex);
+                    readDatFileFromDisk(fileIndexDat, tableStorage, index, fileIndex);
+                    fileIndexDat.close();
                 } catch (FileNotFoundException e) {
                     continue;
                 }
@@ -155,21 +173,59 @@ public class FileManager {
                 if (!dir.delete()) {
                     throw new IOException("File: " + dir.toString() + " can't be deleted");
                 }
+            } else {
+                for (File datFile : dir.listFiles()) {
+                    if (!datFile.getName().matches("(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15)\\.dat")) {
+                        throw new IOException(String.format("illegal name of file %s inside dir %s ",
+                                datFile.getName(), dir.getName()));
+                    } else {
+                        if (datFile.length() == 0) {
+                            if (!datFile.delete()) {
+                                throw new IOException("File: " + datFile.toString() + " can't be deleted");
+                            }
+                        }
+                    }
+                }
+                if (dir.listFiles().length == 0) {
+                    if (!dir.delete()) {
+                        throw new IOException("File: " + dir.toString() + " can't be deleted");
+                    }
+                }
             }
         }
     }
 
-    private static void parseStorage(HashMap<String, String>[][] parsedStorage, HashMap<String, String> storage) {
+    private static int getIndexOfDir(String key) {
+        int hashCode = key.hashCode();
+        int indexOfDir = hashCode % 16;
+        if (indexOfDir < 0) {
+            indexOfDir *= -1;
+        }
+        return indexOfDir;
+    }
+
+    private static int getIndexOfDatFile(String key) {
+        int hashCode = key.hashCode();
+        int indexOfDat = hashCode / 16 % 16;
+        if (indexOfDat < 0) {
+            indexOfDat *= -1;
+        }
+        return indexOfDat;
+    }
+
+    private static void parseStorage(HashMap<String, String>[][] parsedStorage, HashMap<String, String> storage,
+                                     Set<String> removedKeys) {
+        for (String key : removedKeys) {
+            int indexOfDir = getIndexOfDir(key);
+            int indexOfDat = getIndexOfDatFile(key);
+            if (parsedStorage[indexOfDir][indexOfDat] == null) {
+                parsedStorage[indexOfDir][indexOfDat] = new HashMap<>();
+            }
+            parsedStorage[indexOfDir][indexOfDat].put(key, null);
+        }
         for (String key : storage.keySet()) {
-            int hashCode = key.hashCode();
-            int indexOfDir = hashCode % 16;
-            if (indexOfDir < 0) {
-                indexOfDir *= -1;
-            }
-            int indexOfDat = hashCode / 16 % 16;
-            if (indexOfDat < 0) {
-                indexOfDat *= -1;
-            }
+            int indexOfDir = getIndexOfDir(key);
+            int indexOfDat = getIndexOfDatFile(key);
             if (parsedStorage[indexOfDir][indexOfDat] == null) {
                 parsedStorage[indexOfDir][indexOfDat] = new HashMap<>();
             }
@@ -177,39 +233,110 @@ public class FileManager {
         }
     }
 
-    public static void writeToDatFile(RandomAccessFile datFile, HashMap<String, String> storage) throws IOException {
-        try {
-            datFile.seek(0);
-            datFile.setLength(0);
-            for (String key : storage.keySet()) {
-                byte[] bytesOfKey = key.getBytes("UTF-8");
-                byte[] bytesOfValue = storage.get(key).getBytes("UTF-8");
-                datFile.writeInt(bytesOfKey.length);
-                datFile.writeInt(bytesOfValue.length);
-                datFile.write(bytesOfKey);
-                datFile.write(bytesOfValue);
-            }
-        } catch (Exception e) {
-            try {
+    public static SizeOfTable writeToDatFile(File dir, int dirIndex, File dat, int datIndex,
+                                             HashMap<String, String> tableOfChanges) throws IOException {
+        int countOfChanges = 0;
+        int countOfRemovedKeys = 0;
+        int addedKeys = 0;
+        if (dat.length() == 0) {
+            try (RandomAccessFile datFile = new RandomAccessFile(dat, "rw")) {
+                for (String key : tableOfChanges.keySet()) {
+                    String value = tableOfChanges.get(key);
+                    if (value == null) {
+                        continue;
+                    }
+                    countOfChanges++;
+                    addedKeys++;
+                    byte[] bytesOfKey = key.getBytes("UTF-8");
+                    byte[] bytesOfValue = value.getBytes("UTF-8");
+                    datFile.writeInt(bytesOfKey.length);
+                    datFile.writeInt(bytesOfValue.length);
+                    datFile.write(bytesOfKey);
+                    datFile.write(bytesOfValue);
+                }
                 datFile.close();
-            } catch (Exception e2) {
-                throw new IOException(e + "\n" + e2);
+            }
+        } else {
+            File tmpFile = new File(dir, "tmp.dat");
+            try (RandomAccessFile oldDatFile = new RandomAccessFile(dat, "rw")) {
+                oldDatFile.seek(0);
+                try (RandomAccessFile newDatFile = new RandomAccessFile(tmpFile, "rw")) {
+                    long length = oldDatFile.length();
+                    while (length > 0) {
+                        LineOfDB line = readLineOfDatFile(oldDatFile, length, dirIndex, datIndex);
+                        length -= line.length;
+                        if (tableOfChanges.containsKey(line.key)) {
+                            String value = tableOfChanges.get(line.key);
+                            tableOfChanges.remove(line.key);
+                            if (value == null) {
+                                countOfChanges++;
+                                countOfRemovedKeys++;
+                                continue;
+                            }
+                            if (!value.equals(line.value)) {
+                                countOfChanges++;
+                                byte[] bytesOfKey = line.key.getBytes("UTF-8");
+                                byte[] bytesOfValue = value.getBytes("UTF-8");
+                                newDatFile.writeInt(bytesOfKey.length);
+                                newDatFile.writeInt(bytesOfValue.length);
+                                newDatFile.write(bytesOfKey);
+                                newDatFile.write(bytesOfValue);
+                                continue;
+                            }
+                        }
+                        byte[] bytesOfKey = line.key.getBytes("UTF-8");
+                        byte[] bytesOfValue = line.value.getBytes("UTF-8");
+                        newDatFile.writeInt(bytesOfKey.length);
+                        newDatFile.writeInt(bytesOfValue.length);
+                        newDatFile.write(bytesOfKey);
+                        newDatFile.write(bytesOfValue);
+                    }
+                    for (String key : tableOfChanges.keySet()) {
+                        String value = tableOfChanges.get(key);
+                        if (value == null) {
+                            continue;
+                        }
+                        countOfChanges++;
+                        addedKeys++;
+                        byte[] bytesOfKey = key.getBytes("UTF-8");
+                        byte[] bytesOfValue = value.getBytes("UTF-8");
+                        newDatFile.writeInt(bytesOfKey.length);
+                        newDatFile.writeInt(bytesOfValue.length);
+                        newDatFile.write(bytesOfKey);
+                        newDatFile.write(bytesOfValue);
+                    }
+                    newDatFile.close();
+                }
+                oldDatFile.close();
+            }
+            if (!dat.delete()) {
+                throw new IOException("Error while commit: file '" + dat.getName() + "' can't be deleted");
+            }
+            if (!tmpFile.renameTo(dat)) {
+                throw new IOException("Error while commit: file '" + tmpFile.getName() + "' can't be renamed");
             }
         }
+        return new SizeOfTable(countOfRemovedKeys, addedKeys, countOfChanges);
     }
 
-    public static void writeTableOnDisk(File tableDirectory, HashMap<String, String> tableStorage) throws IOException {
+    //Возвращает число записанных изменений
+    public static int writeTableOnDisk(File tableDirectory, HashMap<String, String> tableOfChanges,
+                                       Set<String> removedKeys) throws IOException {
         if (tableDirectory == null) {
             throw new IOException("Error! You try to write in null file.");
         }
         HashMap<String, String>[][] parsedStorage = new HashMap[16][16];
-        parseStorage(parsedStorage, tableStorage);
+        parseStorage(parsedStorage, tableOfChanges, removedKeys);
+        SizeOfTable size;
+        int countOfChanges = 0;
+        int countOfRemovedKeys = 0;
+        int countOfAddedKeys = 0;
         for (int indexOfDir = 0; indexOfDir < 16; indexOfDir++) {
             File dir = new File(tableDirectory, indexOfDir + ".dir");
             for (int indexOfDatFile = 0; indexOfDatFile < 16; indexOfDatFile++) {
                 File datFile = new File(dir, indexOfDatFile + ".dat");
                 if (parsedStorage[indexOfDir][indexOfDatFile] == null) {
-                    if (datFile.exists()) {
+                    if (datFile.exists() && datFile.length() == 0) {
                         if (!datFile.delete()) {
                             throw new IOException("File: " + datFile.toString() + " can't be deleted");
                         }
@@ -226,14 +353,22 @@ public class FileManager {
                         throw new IOException("File " + datFile.toString() + " can't be created");
                     }
                 }
-                try (RandomAccessFile currentFile = new RandomAccessFile(datFile, "rw")) {
-                    writeToDatFile(currentFile, parsedStorage[indexOfDir][indexOfDatFile]);
-                } catch (FileNotFoundException e) {
-                    throw new IOException("This error is my fail. Check 'writeTableOnDisk' function");
-                }
+                size = writeToDatFile(dir, indexOfDir, datFile, indexOfDatFile,
+                        parsedStorage[indexOfDir][indexOfDatFile]);
+                countOfChanges += size.changes;
+                countOfAddedKeys += size.addedKeys;
+                countOfRemovedKeys += size.removedKeys;
             }
             cleanEmptyDir(dir);
         }
+        //Значит размер изменился и нужно его обновить в size.tsv
+        if (countOfAddedKeys - countOfRemovedKeys != 0) {
+            int oldSize = readSize(tableDirectory);
+            int newSize = oldSize + countOfAddedKeys - countOfRemovedKeys;
+            File sizeFile = new File(tableDirectory, "size.tsv");
+            writeSizeFile(sizeFile, newSize);
+        }
+        return countOfChanges;
     }
 
     public static List<Class<?>> readTableSignature(File tableDirectory) throws IOException {
@@ -244,6 +379,7 @@ public class FileManager {
         if (!signature.exists()) {
             throw new IOException("signature file not exist: " + signature.getCanonicalPath());
         }
+
         Scanner scan = new Scanner(signature);
         if (!scan.hasNext()) {
             throw new IOException("empty signature: " + signature.getCanonicalPath());
@@ -284,7 +420,9 @@ public class FileManager {
         }
     }
 
-    public static void checkTableDir(File tableDir) throws IOException {
+    //Если в таблице не было файла size.tsv - дописывает его уже с правильным числом внутри
+    //Возвращает реальный размер таблицы
+    public static int checkTable(File tableDir) throws IOException {
         if (!tableDir.exists()) {
             throw new IOException(String.format("DBTable: table dir %s does not exist", tableDir));
         }
@@ -295,6 +433,8 @@ public class FileManager {
         if (listFiles.length == 0) {
             throw new IOException("empty dir");
         }
+        int realSize = 0;
+        boolean isSizeFile = false;
         for (File dirFile : listFiles) {
             if (dirFile.isDirectory()) {
                 if (!dirFile.getName().matches("(0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15)\\.dir")) {
@@ -313,14 +453,134 @@ public class FileManager {
                             if (datFiles.length() == 0) {
                                 throw new IOException("empty file " + datFiles.getName());
                             }
+                            realSize += checkKeysInDatFileOnRightHashCode(dirFile, datFiles);
                         }
                     }
                 }
             } else {
-                if (!dirFile.getName().equals("signature.tsv")) {
+                if (!dirFile.getName().equals("signature.tsv") && !dirFile.getName().equals("size.tsv")) {
                     throw new IOException("illegal file " + dirFile.getName());
+                }
+                if (dirFile.getName().equals("size.tsv")) {
+                    isSizeFile = true;
                 }
             }
         }
+        if (!isSizeFile) {
+            File sizeFile = new File(tableDir, "size.tsv");
+            if (!sizeFile.createNewFile()) {
+                throw new IOException("failed to create new size.tsv: probably a file with such name already exists");
+            }
+            writeSizeFile(sizeFile, realSize);
+        } else {
+            checkTableSize(tableDir, realSize);
+        }
+        return realSize;
+    }
+
+    public static void writeSizeFile(File sizeFile, int size) throws IOException {
+        try (RandomAccessFile sizeRAFile = new RandomAccessFile(sizeFile, "rw")) {
+            sizeRAFile.setLength(0);
+            sizeRAFile.seek(0);
+            sizeRAFile.write(Integer.toString(size).getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    public static int readSize(File tableDirectory) throws IOException {
+        File sizeFile = new File(tableDirectory, "size.tsv");
+        if (!sizeFile.exists()) {
+            throw new IOException("no file size.tsv");
+        }
+        int size = -1;
+        try (RandomAccessFile sizeRAFile = new RandomAccessFile(sizeFile, "r")) {
+            if (sizeRAFile.length() == 0) {
+                throw new IOException("empty file size.tsv");
+            }
+            byte[] bytes = new byte[64];
+            sizeRAFile.read(bytes);
+            String sizeAsString = new String(bytes, "UTF-8");
+            sizeAsString = sizeAsString.trim();
+            size = Integer.parseInt(sizeAsString);
+        }
+        return size;
+    }
+
+    private static void checkTableSize(File tableDirectory, int realSize) throws IOException {
+        File sizeFile = new File(tableDirectory, "size.tsv");
+        if (!sizeFile.exists()) {
+            if (!sizeFile.createNewFile()) {
+                throw new IOException("failed to create new size.tsv");
+            }
+            writeSizeFile(sizeFile, realSize);
+        } else {
+            boolean needRewriteSizeFile = false;
+            try (RandomAccessFile sizeRAFile = new RandomAccessFile(sizeFile, "r")) {
+                if (sizeRAFile.length() == 0) {
+                    needRewriteSizeFile = true;
+                }
+                byte[] bytes = new byte[64];
+                sizeRAFile.read(bytes);
+                String sizeAsString = new String(bytes, "UTF-8");
+                sizeAsString = sizeAsString.trim();
+                int sizeInFile = Integer.parseInt(sizeAsString);
+                if (sizeInFile != realSize) {
+                    needRewriteSizeFile = true;
+                }
+            }
+            if (needRewriteSizeFile) {
+                writeSizeFile(sizeFile, realSize);
+            }
+        }
+    }
+
+    //Возвращает количество ключей в dat файле
+    private static int checkKeysInDatFileOnRightHashCode(File dirFile, File datFile) throws IOException {
+        String dirIndex = dirFile.getName();
+        int last = dirIndex.lastIndexOf('.');
+        dirIndex = dirIndex.substring(0, last);
+        String datIndex = datFile.getName();
+        last = datIndex.lastIndexOf('.');
+        datIndex = datIndex.substring(0, last);
+        int countOfKeys = 0;
+        try (RandomAccessFile fileIndexDat = new RandomAccessFile(datFile, "rw")) {
+            long length = datFile.length();
+            fileIndexDat.seek(0);
+            while (length > 0) {
+                //Внутри readLineOfDatFile вызывается метод checkKeyOnRightHashCode
+                LineOfDB line = readLineOfDatFile(fileIndexDat, length,
+                        Integer.parseInt(dirIndex), Integer.parseInt(datIndex));
+                length -= line.length;
+                countOfKeys++;
+            }
+            fileIndexDat.close();
+        }
+        return countOfKeys;
+    }
+
+    public static String loadValueByKey(String key, File tableDir) throws IOException {
+        int indexDir = getIndexOfDir(key);
+        int indexDat = getIndexOfDatFile(key);
+        File dir = new File(tableDir, Integer.toString(indexDir) + ".dir");
+        if (!dir.exists()) {
+            return null;
+        }
+        File dat = new File(dir, Integer.toString(indexDat) + ".dat");
+        if (!dat.exists()) {
+            return null;
+        }
+        try (RandomAccessFile datFile = new RandomAccessFile(dat, "rw")) {
+            long length;
+            length = datFile.length();
+            datFile.seek(0);
+            while (length > 0) {
+                LineOfDB line = readLineOfDatFile(datFile, length, indexDir, indexDat);
+                length -= line.length;
+                if (line.key.equals(key)) {
+                    return line.value;
+                }
+            }
+            datFile.close();
+        }
+        return null;
     }
 }
