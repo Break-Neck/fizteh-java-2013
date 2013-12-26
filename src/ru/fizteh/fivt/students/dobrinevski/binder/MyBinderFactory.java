@@ -6,6 +6,7 @@ import ru.fizteh.fivt.binder.BinderFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.IdentityHashMap;
 
 public class MyBinderFactory implements BinderFactory {
 
@@ -19,11 +20,11 @@ public class MyBinderFactory implements BinderFactory {
         }
 
 
-        check(clazz);
+        check(clazz, new IdentityHashMap<Class<?>, Boolean>());
         return new MyBinder<T>(clazz);
     }
 
-    private void check(Class<?> clazz) throws IllegalArgumentException {
+    private void check(Class<?> clazz, IdentityHashMap<Class<?>, Boolean> idHashMap) throws IllegalArgumentException {
         if (clazz == null) {
             throw new IllegalArgumentException("input is null");
         }
@@ -48,7 +49,12 @@ public class MyBinderFactory implements BinderFactory {
         }
         Field[] flds = clazz.getDeclaredFields();
         for (Field fld : flds) {
-            check(fld.getType());
+            Class<?> cls = fld.getType();
+            if (idHashMap.get(cls) != null) {
+                continue;
+            }
+            idHashMap.put(cls, true);
+            check(fld.getType(), idHashMap);
         }
     }
 }
