@@ -165,7 +165,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             throw new ColumnFormatException("Storeable incorrect value");
         }
 
-        Storeable oldValue = get(key);
+        Storeable oldValue = get(key, diff);
         diff.put(key, value);
 
         return oldValue;
@@ -189,7 +189,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         Storeable oldValue;
         readLock.lock();
         try {
-            oldValue = get(key);
+            oldValue = get(key, diff);
         } finally {
             readLock.unlock();
         }
