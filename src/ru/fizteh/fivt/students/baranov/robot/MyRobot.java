@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.baranov.robot;
 
 import ru.fizteh.fivt.robot.Robot;
-import ru.fizteh.fivt.robot.RobotLegType;
 
 
 public class MyRobot extends Robot {

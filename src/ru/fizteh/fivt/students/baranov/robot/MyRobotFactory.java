@@ -6,13 +6,6 @@ import ru.fizteh.fivt.robot.RobotLegType;
 
 import java.io.OutputStream;
 
-/**
- * Created with IntelliJ IDEA.
- * User: anton
- * Date: 12/26/13
- * Time: 3:48 AM
- * To change this template use File | Settings | File Templates.
- */
 public class MyRobotFactory implements RobotFactory {
     @Override
     public MyRobot createRobot(OutputStream output, int steps, RobotLegType firstStepLeg) {
@@ -22,7 +15,7 @@ public class MyRobotFactory implements RobotFactory {
         if (steps < 0) {
             throw new IllegalArgumentException("steps should be positive number");
         }
-        if (firstStepLeg != RobotLegType.LEFT || firstStepLeg != RobotLegType.RIGHT) {
+        if (firstStepLeg != RobotLegType.LEFT && firstStepLeg != RobotLegType.RIGHT) {
             throw new IllegalArgumentException("wrong first step leg");
         }
 
@@ -37,8 +30,6 @@ public class MyRobotFactory implements RobotFactory {
             rightLeg.changeMode(0);
         }
 
-        MyRobot result = new MyRobot(leftLeg, rightLeg, steps);
-
-        return result;
+        return new MyRobot(leftLeg, rightLeg, steps);
     }
 }
