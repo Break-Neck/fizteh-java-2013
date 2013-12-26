@@ -311,7 +311,7 @@ public class TableImplementation implements Table {
             }
 
             currentChangesMap.clear();
-            if (needToFinishTransaction) {
+            if (needToFinishTransaction && transactionId >= 0) {
                 tableProvider.getTransactionPool().deleteTransaction(transactionId);
             }
 
@@ -363,7 +363,7 @@ public class TableImplementation implements Table {
             readLock.unlock();
         }
         currentChangesMap.clear();
-        if (needToFinishTransaction) {
+        if (needToFinishTransaction && transactionId >= 0) {
             tableProvider.getTransactionPool().deleteTransaction(transactionId);
         }
         return toReturn;
