@@ -2,13 +2,13 @@ package ru.fizteh.fivt.students.zinnatullin.multifilemap;
 
 public class UseCommand implements ShellCommand {
 
-	String name;
+    String name;
 
-	public UseCommand() {
-		this.name = "use";
-	}
-	
-	@Override
+    public UseCommand() {
+        this.name = "use";
+    }
+    
+    @Override
     public boolean execute(String[] args) {
         assert (args.length != 0);
         if (args.length != 2 ) {
@@ -16,17 +16,17 @@ public class UseCommand implements ShellCommand {
             return false;
         }
 
-		boolean result = Shell.getInstance().getDB().useTable(args[1]);
+        boolean result = Shell.getInstance().getDB().useTable(args[1]);
         if (result) {
-			Shell.printMessage("use " + args[1]);
-			return true;
-		} else {
-			Shell.printMessage(args[1] + " not exists");
-			return false;
-		}
+            Shell.printMessage("use " + args[1]);
+            return true;
+        } else {
+            Shell.printMessage(args[1] + " not exists");
+            return false;
+        }
     }
-	
-	@Override
+    
+    @Override
     public String getName() {
         return name;
     }

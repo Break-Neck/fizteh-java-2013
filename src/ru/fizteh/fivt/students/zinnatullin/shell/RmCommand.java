@@ -9,14 +9,14 @@ public class RmCommand implements ShellCommand {
             return false;
         }
 
-	 	File file = FileSystem.resolvePath(args[1]);
+         File file = FileSystem.resolvePath(args[1]);
         if (file.exists()) {
-			return FileSystem.recursiveRemove(file, args[0]);
-		}
-		System.out.println(args[0] + ": cannot remove \'" + args[1] + "\': No such file or directory");
+            return FileSystem.recursiveRemove(file, args[0]);
+        }
+        System.out.println(args[0] + ": cannot remove \'" + args[1] + "\': No such file or directory");
         return false;
     }
-	
+    
     public static String getName() {
         return "rm";
     }

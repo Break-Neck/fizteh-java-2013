@@ -10,10 +10,10 @@ public class CpCommand implements ShellCommand {
         }
         File source = FileSystem.resolvePath(args[1]);
         File destination = FileSystem.resolvePath(args[2]);
-		
+        
         return FileSystem.safeCopy(source, destination, getName());
     }
-	
+    
     public static String getName() {
         return "cp";
     }

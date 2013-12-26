@@ -8,13 +8,13 @@ public class MkdirCommand implements ShellCommand {
             return false;
         }
         if (!(new File(FileSystem.currentPath.getAbsolutePath() + File.separator + args[1]).mkdir())) {
-			System.out.println(args[0] + ": \'" + args[1] + "\': couldn't create directory");
-			return false;
+            System.out.println(args[0] + ": \'" + args[1] + "\': couldn't create directory");
+            return false;
         }
         return true;
         
     }
-	
+    
     public static String getName() {
         return "mkdir";
     }

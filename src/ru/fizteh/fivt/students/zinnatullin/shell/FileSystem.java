@@ -6,10 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class FileSystem {
-	
-	protected static File currentPath = new File("").getAbsoluteFile();
-	
-	public static File resolvePath(String path) {
+    
+    protected static File currentPath = new File("").getAbsoluteFile();
+    
+    public static File resolvePath(String path) {
         File newPath = new File(path);
         if (newPath.exists() && newPath.isAbsolute()) {
             try {
@@ -34,7 +34,7 @@ public class FileSystem {
         }
         return newPath;
     }
-	
+    
     public static boolean copy(File source, File destination, String command) {
         FileInputStream inputStream = null;
         FileOutputStream outputStream = null;
@@ -70,7 +70,7 @@ public class FileSystem {
         }
         return false;
     }
-	
+    
     public static boolean recursiveCopy(File source, File destination, String command) {
         if (source.isDirectory()) {
             try {
@@ -112,7 +112,7 @@ public class FileSystem {
         }
         return true;
     }
-	
+    
     public static boolean safeCopy(File source, File destination, String command) {
         if (source == null) {
             System.out.println(command + ": invalid source path");
@@ -129,7 +129,7 @@ public class FileSystem {
         }
         return false;
     }
-	
+    
     public static boolean recursiveRemove(File removable, String command) {
         if (removable.isDirectory()) {
             File files[] = removable.listFiles();
@@ -151,5 +151,5 @@ public class FileSystem {
         }
         return false;
     }
-	
+    
 }

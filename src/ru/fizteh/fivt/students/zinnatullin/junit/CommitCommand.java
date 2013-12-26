@@ -2,13 +2,13 @@ package ru.fizteh.fivt.students.zinnatullin.junit;
 
 public class CommitCommand implements ShellCommand {
 
-	String name;
+    String name;
 
-	public CommitCommand() {
-		name = "commit";
-	}
-	
-	@Override
+    public CommitCommand() {
+        name = "commit";
+    }
+    
+    @Override
     public boolean execute(String[] args) {
         assert (args.length != 0);
         if (args.length != 1) {
@@ -16,19 +16,19 @@ public class CommitCommand implements ShellCommand {
             return false;
         }
 
-		if (Shell.getInstance().table == null) {
-			Shell.printMessage("empty table");
-			return false;
-		}
-		
-		int operations = 0;
-		operations = Shell.getInstance().table.commit();
-		Shell.printMessage("operations: " + operations);
+        if (Shell.getInstance().table == null) {
+            Shell.printMessage("empty table");
+            return false;
+        }
+        
+        int operations = 0;
+        operations = Shell.getInstance().table.commit();
+        Shell.printMessage("operations: " + operations);
         return true;
     }
-	
-	@Override
-	public String getName() {
-		return name;
-	}
+    
+    @Override
+    public String getName() {
+        return name;
+    }
 }
