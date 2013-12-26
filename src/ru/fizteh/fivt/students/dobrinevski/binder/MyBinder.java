@@ -164,8 +164,8 @@ public class MyBinder<T> implements Binder<T> {
                     continue;
                 }
 
-                if (one.isEnumConstant()) {
-                    jsonWriter.value(((Enum) objBuf).name());
+                if (one.getType().isEnum()) {
+                    jsonWriter.value(((Enum) objBuf).toString());
                     continue;
                 }
 

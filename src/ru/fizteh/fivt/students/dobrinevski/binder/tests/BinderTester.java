@@ -72,6 +72,16 @@ public class BinderTester {
         @Name("a")
         int b;
     }
+    public static enum Enu{
+        LEFT,
+        RIGHT
+    }
+    public static class ClassWithEnum {
+        Enu a;
+        public ClassWithEnum() {
+            a = Enu.LEFT;
+        }
+    }
 
 
     @Before
@@ -115,6 +125,16 @@ public class BinderTester {
         bind = bf.create(Outer.class);
         bind.serialize(new Outer(), outStream);
         assertEquals("{\"i\":{},\"i1\":{},\"i2\":{}}", outStream.toString());
+    }
+
+    @Test
+    public void testEnum() throws IOException {
+        bind = bf.create(ClassWithEnum.class);
+        bind.serialize(new ClassWithEnum(), outStream);
+        assertEquals("{\"a\":\"LEFT\"}", outStream.toString());
+        ClassWithEnum a = (ClassWithEnum)
+                bind.deserialize(new ByteArrayInputStream("{\"a\":\"LEFT\"}".getBytes(StandardCharsets.UTF_8)));
+        assertEquals(a.a, Enu.LEFT);
     }
 }
 
