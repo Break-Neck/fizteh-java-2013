@@ -71,25 +71,25 @@ public class FileSystem {
         return false;
     }
     
-    public static boolean recursiveCopy(File source, File destination, String command) {
+    public static boolean recursiveCopy(File source, File dest, String command) {
         if (source.isDirectory()) {
             try {
-                if (!destination.mkdir()) {
+                if (!dest.mkdir()) {
                     System.out.println(
-							command + ": \'" + destination.getAbsolutePath() + "\': couldn't create directory"
+							command + ": \'" + dest.getAbsolutePath() + "\': couldn't create directory"
 					);
                     return false;
                 }
             } catch (SecurityException e) {
                 System.out.println(
-						command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create directory"
+						command + ": \'" + dest.getAbsolutePath() + "\': haven't rights to create directory"
 				);
                 return false;
             }
             File[] files = source.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    File newFile = new File(destination.getAbsolutePath() + File.separator + file.getName());
+                    File newFile = new File(dest.getAbsolutePath() + File.separator + file.getName());
                     if (!recursiveCopy(file, newFile, command)) {
                         return false;
                     }
@@ -97,28 +97,24 @@ public class FileSystem {
             }
         } else {
             try {
-                if (!destination.createNewFile()) {
-                    System.out.println(
-							command + ": \'" + destination.getAbsolutePath() + "\': couldn't create file"
-					);
+                if (!dest.createNewFile()) {
+                    String error = command + ": \'" + dest.getAbsolutePath() + "\': couldn't create file";
+					System.out.println(error);
                     return false;
                 }
-                if (!destination.canWrite() || !source.canRead()) {
-                    Shell.printMessage(
-							command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create file"
-					);
+                if (!dest.canWrite() || !source.canRead()) {
+                    String error = command + ": \'" + dest.getAbsolutePath() + "\': haven't rights to create file";
+					Shell.printMessage(error);
                     return false;
                 }
-                return copy(source, destination, command);
+                return copy(source, dest, command);
             } catch (SecurityException e) {
-                System.out.println(
-						command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create file"
-				);
+                String error = command + ": \'" + dest.getAbsolutePath() + "\': haven't rights to create file";
+				System.out.println(error);
                 return false;
             } catch (IOException e) {
-                System.out.println(
-						command + ": \'" + destination.getAbsolutePath() + "\': couldn't create file"
-				);
+                String error = command + ": \'" + dest.getAbsolutePath() + "\': couldn't create file";
+				System.out.println(error);
                 return false;
             }
         }
