@@ -35,9 +35,27 @@ public class MyBinderTest {
         binder.serialize(new Valid(), null);
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void circular() throws IOException {
+        Circular c1 = new Circular();
+        c1.sub = new SubCircular();
+        c1.sub.circ = c1;
+        binder.serialize(new Valid(), null);
+    }
+
     @Test
     public void mainTestSerDeser() throws IOException {
         binder.serialize(new Valid(), output);
     }
 
+}
+
+class Circular {
+    private int a;
+    public SubCircular sub;
+}
+
+class SubCircular {
+    public float a;
+    public Circular circ;
 }
