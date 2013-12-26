@@ -27,7 +27,7 @@ public class MyBinderFactory implements BinderFactory {
         }
 
         try {
-            Constructor<?> cons = clazz.getConstructor();
+            Constructor<?> cons = clazz.getDeclaredConstructor();
             if (!Modifier.isPublic(cons.getModifiers())) {
                 throw new IllegalArgumentException(clazz.getName() + " constructor isn't public");
             }
