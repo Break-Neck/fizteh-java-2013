@@ -1,6 +1,4 @@
-package ru.fizteh.fivt.students.zinnatullin.storable.commands;
-
-import ru.fizteh.fivt.students.zinnatullin.storable.*;
+package ru.fizteh.fivt.students.zinnatullin.storable;
 
 public class ExitCommand implements ShellCommand {
     

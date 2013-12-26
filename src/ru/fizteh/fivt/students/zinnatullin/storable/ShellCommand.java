@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.zinnatullin.storable.commands;
+package ru.fizteh.fivt.students.zinnatullin.storable;
 
 public interface ShellCommand {
 
