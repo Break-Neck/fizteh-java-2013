@@ -18,7 +18,7 @@ public class RemoveCommand implements ShellCommand {
 		
 		String value = "";
 		value = Shell.getInstance().getDB().remove(args[1]);
-		if(value != ""){
+		if(value != "") {
 			System.out.println("removed");
 			System.out.println(value);
 		} else {
@@ -28,7 +28,7 @@ public class RemoveCommand implements ShellCommand {
     }
 	
 	@Override
-	public String getName(){
+	public String getName() {
 		return name;
 	}
 }

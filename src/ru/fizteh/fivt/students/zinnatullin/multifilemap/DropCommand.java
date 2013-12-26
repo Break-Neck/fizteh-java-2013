@@ -17,7 +17,7 @@ public class DropCommand implements ShellCommand {
         }
 
 		boolean result = Shell.getInstance().getDB().dropTable(args[1]);
-        if(result){
+        if(result) {
 			Shell.printMessage("dropped");
 			return true;
 		} else {

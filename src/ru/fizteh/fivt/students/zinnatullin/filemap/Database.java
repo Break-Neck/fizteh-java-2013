@@ -24,7 +24,7 @@ public class Database {
 		//data.put("surname", "Ivanov");
 	}
 	
-	public Database setFilename(String path, String file){
+	public Database setFilename(String path, String file) {
 		this.path = path;
 		this.file = file;
 		return this;
@@ -35,31 +35,31 @@ public class Database {
 		File inputFile = new File(path, file);
 		FileInputStream fis = new FileInputStream(inputFile);
 
-		while(fis.available() > 0){
+		while(fis.available() > 0) {
 			byte[] keyLenBytes = new byte[4];
 			fis.read(keyLenBytes);
-			if(keyLenBytes.length == 0){
+			if(keyLenBytes.length == 0) {
 				continue;
 			}
 			int keyLen = Integer.parseInt(new String(keyLenBytes, "UTF-8"), 16);
 			
 			byte[] valueLenBytes = new byte[4];
 			fis.read(valueLenBytes);
-			if(valueLenBytes.length == 0){
+			if(valueLenBytes.length == 0) {
 				continue;
 			}
 			int valueLen = Integer.parseInt(new String(valueLenBytes, "UTF-8"), 16);
 			
 			byte[] keyBytes = new byte[keyLen];
 			fis.read(keyBytes);
-			if(keyBytes.length == 0){
+			if(keyBytes.length == 0) {
 				continue;
 			}
 			String key = new String(keyBytes, "UTF-8");
 			
 			byte[] valueBytes = new byte[valueLen];
 			fis.read(valueBytes);
-			if(valueBytes.length == 0){
+			if(valueBytes.length == 0) {
 				continue;
 			}
 			String value = new String(valueBytes, "UTF-8");
@@ -82,7 +82,7 @@ public class Database {
 			byte[] keyLenBytes;
 			String keyLenHex = "";
 			int keyLenHexSize = Long.toHexString(key.length()).getBytes().length;
-			if(keyLenHexSize < 4){
+			if(keyLenHexSize < 4) {
 				for (int i = 0; i < (4 - keyLenHexSize); i++) {
 					keyLenHex += Long.toHexString(0);
 				}
@@ -94,7 +94,7 @@ public class Database {
 			byte[] valueLenBytes;
 			String valueLenHex = "";
 			int valueLenHexSize = Long.toHexString(value.length()).getBytes().length;
-			if(valueLenHexSize < 4){
+			if(valueLenHexSize < 4) {
 				for (int i = 0; i < (4 - valueLenHexSize); i++) {
 					valueLenHex += Long.toHexString(0);
 				}
@@ -117,24 +117,24 @@ public class Database {
 		return this;
 	}
 		
-	public String get(String key){
+	public String get(String key) {
 		String value = "";
 		try {
 			this.getData();
 		} catch (IOException ex) {
 			Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
 		}
-		if(data.containsKey(key)){
+		if(data.containsKey(key)) {
 			value = data.get(key);
 		}
 		return value;
 	}
 	
-	public String put(String key, String value){
+	public String put(String key, String value) {
 		String oldValue = "";
 		try {
 			this.getData();
-			if(data.containsKey(key)){
+			if(data.containsKey(key)) {
 				oldValue = data.get(key);
 			}
 			data.put(key, value);
@@ -145,11 +145,11 @@ public class Database {
 		return oldValue;
 	}
 	
-	public String remove(String key){
+	public String remove(String key) {
 		String oldValue = "";
 		try {
 			this.getData();
-			if(data.containsKey(key)){
+			if(data.containsKey(key)) {
 				oldValue = data.get(key);
 				data.remove(key);
 			}

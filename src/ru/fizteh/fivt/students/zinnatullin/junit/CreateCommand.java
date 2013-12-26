@@ -17,7 +17,7 @@ public class CreateCommand implements ShellCommand {
         }
 
 		DBTable table = (DBTable)Shell.getInstance().provider.createTable(args[1]);
-        if(table != null){
+        if(table != null) {
 			Shell.printMessage("created");
 			return true;
 		} else {
@@ -27,7 +27,7 @@ public class CreateCommand implements ShellCommand {
     }
 	
 	@Override
-	public String getName(){
+	public String getName() {
 		return name;
 	}
 }

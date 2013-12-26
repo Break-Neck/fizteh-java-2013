@@ -16,13 +16,13 @@ public class DropCommand implements ShellCommand {
             return false;
         }
 
-		if(Shell.getInstance().table.getName().equals(args[1]) && Shell.getInstance().table.getOperations() > 0){
+		if(Shell.getInstance().table.getName().equals(args[1]) && Shell.getInstance().table.getOperations() > 0) {
 			Shell.printMessage(Shell.getInstance().table.getOperations() + " unsaved changes");
 			return false;
 		}
 		
 		DBTable table = (DBTable)Shell.getInstance().provider.getTable(args[1]);
-        if(table != null){
+        if(table != null) {
 			Shell.getInstance().provider.removeTable(args[1]);
 			Shell.printMessage("dropped");
 			return true;
@@ -33,7 +33,7 @@ public class DropCommand implements ShellCommand {
     }
 	
 	@Override
-	public String getName(){
+	public String getName() {
 		return name;
 	}
 }

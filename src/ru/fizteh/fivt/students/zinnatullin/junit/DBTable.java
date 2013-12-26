@@ -30,15 +30,15 @@ public class DBTable implements Table{
 	public String get(String key) {
 		String nDir = getNDir(key);
 		String nFile = getNFile(key);
-		if(data == null){
+		if(data == null) {
 			readData();
 		}
 		String value = null;
-		if(data != null){
+		if(data != null) {
 			HashMap dirMap = (HashMap)data.get(nDir);
-			if(dirMap != null){
+			if(dirMap != null) {
 				HashMap fileMap = (HashMap)dirMap.get(nFile);
-				if(fileMap != null && fileMap.containsKey(key)){
+				if(fileMap != null && fileMap.containsKey(key)) {
 					value = (String)fileMap.get(key);
 				}
 			}
@@ -51,26 +51,26 @@ public class DBTable implements Table{
 		String oldValue = null;
 		String nDir = getNDir(key);
 		String nFile = getNFile(key);
-		if(data == null){
+		if(data == null) {
 			readData();
 		}
-		if(data != null){
+		if(data != null) {
 			HashMap dirMap = (HashMap)data.get(nDir);
-			if(dirMap == null){
+			if(dirMap == null) {
 				dirMap = new HashMap();
 			}	
 			HashMap fileMap = (HashMap)dirMap.get(nFile);
-			if(fileMap == null){
+			if(fileMap == null) {
 				fileMap = new HashMap();
 			}
-			if(fileMap.containsKey(key)){
+			if(fileMap.containsKey(key)) {
 				oldValue = (String)fileMap.get(key);
 			}
 			fileMap.put(key, value);
 			dirMap.put(nFile, fileMap);
 			data.put(nDir, dirMap);
 		}
-		if(oldValue != null && !oldValue.equals(value)){
+		if(oldValue != null && !oldValue.equals(value)) {
 			operations++;
 		}
 		return oldValue;
@@ -81,12 +81,12 @@ public class DBTable implements Table{
 		String oldValue = "";
 		String nDir = getNDir(key);
 		String nFile = getNFile(key);
-		if(data == null){
+		if(data == null) {
 			readData();
 		}
 		HashMap dirMap = (HashMap)data.get(nDir);
 		HashMap fileMap = (HashMap)dirMap.get(nFile);
-		if(fileMap.containsKey(key)){
+		if(fileMap.containsKey(key)) {
 			oldValue = (String)fileMap.get(key);
 			fileMap.remove(key);
 			dirMap.put(nFile, fileMap);
@@ -98,17 +98,17 @@ public class DBTable implements Table{
 
 	@Override
 	public int size() {
-		if(data == null){
+		if(data == null) {
 			readData();
 		}
 		int count = 0;
-		if(!data.isEmpty()){
+		if(!data.isEmpty()) {
 			for (Iterator it = data.entrySet().iterator(); it.hasNext();) {
 				Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>)it.next();
 				String nDir = entry.getKey();
 				HashMap dirMap = entry.getValue();
-				if(!dirMap.isEmpty()){
-					for(Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();){
+				if(!dirMap.isEmpty()) {
+					for(Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
 						Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>)it1.next();
 						String nFile = entry1.getKey();
 						HashMap value = entry1.getValue();
@@ -122,13 +122,13 @@ public class DBTable implements Table{
 
 	@Override
 	public int commit() {
-		if(!data.isEmpty()){
+		if(!data.isEmpty()) {
 			for (Iterator it = data.entrySet().iterator(); it.hasNext();) {
 				Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>)it.next();
 				String nDir = entry.getKey();
 				HashMap dirMap = entry.getValue();
-				if(!dirMap.isEmpty()){
-					for(Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();){
+				if(!dirMap.isEmpty()) {
+					for(Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
 						Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>)it1.next();
 						String nFile = entry1.getKey();
 						saveData(nDir, nFile);
@@ -149,44 +149,44 @@ public class DBTable implements Table{
 		return countOperations;
 	}
 	
-	public DBTable readData(){
+	public DBTable readData() {
 		data = new HashMap();
-		for(File dir : path.listFiles()){
-			if(dir.isDirectory()){
+		for(File dir : path.listFiles()) {
+			if(dir.isDirectory()) {
 				String nDir = dir.getName();
-				for(File inputFile : dir.listFiles()){
-					if(inputFile.isFile()){
+				for(File inputFile : dir.listFiles()) {
+					if(inputFile.isFile()) {
 						String nFile = inputFile.getName();
 						
 						try{
 							FileInputStream fis = new FileInputStream(inputFile);
 
 							HashMap<String, String> data = new HashMap();
-							while(fis.available() > 0){
+							while(fis.available() > 0) {
 								byte[] keyLenBytes = new byte[4];
 								fis.read(keyLenBytes);
-								if(keyLenBytes.length == 0){
+								if(keyLenBytes.length == 0) {
 									continue;
 								}
 								int keyLen = Integer.parseInt(new String(keyLenBytes, "UTF-8"), 16);
 
 								byte[] valueLenBytes = new byte[4];
 								fis.read(valueLenBytes);
-								if(valueLenBytes.length == 0){
+								if(valueLenBytes.length == 0) {
 									continue;
 								}
 								int valueLen = Integer.parseInt(new String(valueLenBytes, "UTF-8"), 16);
 
 								byte[] keyBytes = new byte[keyLen];
 								fis.read(keyBytes);
-								if(keyBytes.length == 0){
+								if(keyBytes.length == 0) {
 									continue;
 								}
 								String key = new String(keyBytes, "UTF-8");
 
 								byte[] valueBytes = new byte[valueLen];
 								fis.read(valueBytes);
-								if(valueBytes.length == 0){
+								if(valueBytes.length == 0) {
 									continue;
 								}
 								String value = new String(valueBytes, "UTF-8");
@@ -194,7 +194,7 @@ public class DBTable implements Table{
 								data.put(key, value);
 							}
 
-							if(!this.data.containsKey(nDir)){
+							if(!this.data.containsKey(nDir)) {
 								HashMap filemap = new HashMap();
 								filemap.put(nFile, data);
 								this.data.put(nDir, filemap);
@@ -204,7 +204,7 @@ public class DBTable implements Table{
 								this.data.put(nDir, dirMap);
 								fis.close();
 							}
-						} catch(Exception ex){
+						} catch(Exception ex) {
 							System.err.println("Error read database data");
 						}
 					}
@@ -215,13 +215,13 @@ public class DBTable implements Table{
 		return this;
 	}
 	
-	public DBTable saveData(String nDir, String nFile){
+	public DBTable saveData(String nDir, String nFile) {
 		File nPath = new File(path, nDir);
-		if(!nPath.exists()){
+		if(!nPath.exists()) {
 			nPath.mkdir();
 		}
 		File outputFile = new File(nPath, nFile);
-		if(!outputFile.exists()){
+		if(!outputFile.exists()) {
 			try {
 				outputFile.createNewFile();
 			} catch (IOException ex) {
@@ -233,7 +233,7 @@ public class DBTable implements Table{
 
 			HashMap dirMap = (HashMap)data.get(nDir);
 			HashMap fileMap = (HashMap)dirMap.get(nFile);
-			if(!fileMap.isEmpty()){
+			if(!fileMap.isEmpty()) {
 				for (Iterator it = fileMap.entrySet().iterator(); it.hasNext();) {
 					Map.Entry<String, String> entry = (Map.Entry<String, String>)it.next();
 					String key = entry.getKey();
@@ -241,7 +241,7 @@ public class DBTable implements Table{
 					byte[] keyLenBytes;
 					String keyLenHex = "";
 					int keyLenHexSize = Long.toHexString(key.getBytes().length).getBytes().length;
-					if(keyLenHexSize < 4){
+					if(keyLenHexSize < 4) {
 						for (int i = 0; i < (4 - keyLenHexSize); i++) {
 							keyLenHex += Long.toHexString(0);
 						}
@@ -252,7 +252,7 @@ public class DBTable implements Table{
 					byte[] valueLenBytes;
 					String valueLenHex = "";
 					int valueLenHexSize = Long.toHexString(value.getBytes().length).getBytes().length;
-					if(valueLenHexSize < 4){
+					if(valueLenHexSize < 4) {
 						for (int i = 0; i < (4 - valueLenHexSize); i++) {
 							valueLenHex += Long.toHexString(0);
 						}
@@ -270,22 +270,22 @@ public class DBTable implements Table{
 			}
 			fos.flush();
 			fos.close();
-		} catch(Exception ex){
+		} catch(Exception ex) {
 			return null;
 		}
 		return this;
 	}
 	
-	public int getOperations(){
+	public int getOperations() {
 		return operations;
 	}
 	
-	public static String getNDir(String key){
+	public static String getNDir(String key) {
 		int hash = Math.abs(key.hashCode()%16);
 		return new Integer(hash).toString();
 	}
 	
-	public static String getNFile(String key){
+	public static String getNFile(String key) {
 		int hash = Math.abs(key.hashCode()/16%16);
 		return hash + ".data";
 	}

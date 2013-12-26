@@ -22,7 +22,7 @@ public class GetCommand implements ShellCommand {
 			Shell.printMessage(ex.getMessage());
 			return false;
 		}
-		if(value != null){
+		if(value != null) {
 			System.out.println("found");
 			System.out.println(value);
 		} else {

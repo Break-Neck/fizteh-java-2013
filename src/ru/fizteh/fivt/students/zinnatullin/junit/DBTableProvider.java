@@ -15,7 +15,7 @@ public class DBTableProvider implements TableProvider{
 	@Override
 	public Table getTable(String name) {
 		File tablePath = new File(path, name);
-		if(tablePath.exists() && tablePath.isDirectory()){
+		if(tablePath.exists() && tablePath.isDirectory()) {
 			return new DBTable(name, tablePath);
 		}
 		return null;
@@ -24,10 +24,10 @@ public class DBTableProvider implements TableProvider{
 	@Override
 	public Table createTable(String name) {
 		File tablePath = new File(path, name);
-		if(tablePath.exists() && tablePath.isDirectory()){
+		if(tablePath.exists() && tablePath.isDirectory()) {
 			return null;
 		}
-		if(!tablePath.isDirectory()){
+		if(!tablePath.isDirectory()) {
 			tablePath.delete();
 		}
 		tablePath.mkdir();
@@ -37,7 +37,7 @@ public class DBTableProvider implements TableProvider{
 	@Override
 	public void removeTable(String name) {
 		File tablePath = new File(path, name);
-		if(tablePath.exists() && tablePath.isDirectory()){
+		if(tablePath.exists() && tablePath.isDirectory()) {
 			tablePath.delete();
 		}
 	}

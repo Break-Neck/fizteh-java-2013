@@ -4,11 +4,11 @@ import java.io.File;
 
 public class TableProvider {
 	
-	public static Table get(File path, String name){
+	public static Table get(File path, String name) {
 		Table table = null;
 		
 		File tablePath = new File(path, name);
-		if(tablePath.exists() && tablePath.isDirectory()){
+		if(tablePath.exists() && tablePath.isDirectory()) {
 			return new Table(path, name);
 		}
 		
@@ -44,12 +44,12 @@ public class TableProvider {
 		return false;
 	}
 	
-	public static String getNDir(String key){
+	public static String getNDir(String key) {
 		int hash = Math.abs(key.hashCode()%16);
 		return new Integer(hash).toString();
 	}
 	
-	public static String getNFile(String key){
+	public static String getNFile(String key) {
 		int hash = Math.abs(key.hashCode()/16%16);
 		return hash + ".data";
 	}

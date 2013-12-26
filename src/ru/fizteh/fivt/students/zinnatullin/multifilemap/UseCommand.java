@@ -17,7 +17,7 @@ public class UseCommand implements ShellCommand {
         }
 
 		boolean result = Shell.getInstance().getDB().useTable(args[1]);
-        if(result){
+        if(result) {
 			Shell.printMessage("use " + args[1]);
 			return true;
 		} else {
