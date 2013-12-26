@@ -15,10 +15,10 @@ public class MyRobotLeg extends RobotLeg {
     }
 
     public boolean step() {
-        if (master.numberOfMadeSteps == master.maxNumberOfSteps) {
-            return false;
-        }
         synchronized (master.maxNumberOfSteps) {
+            if (master.numberOfMadeSteps == master.maxNumberOfSteps) {
+                return false;
+            }
             if (master.numberOfMadeSteps % 2 == mode) {
                 try {
                     master.maxNumberOfSteps.wait();
