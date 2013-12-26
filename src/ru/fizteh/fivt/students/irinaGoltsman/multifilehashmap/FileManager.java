@@ -159,6 +159,7 @@ public class FileManager {
                 }
                 try (RandomAccessFile fileIndexDat = new RandomAccessFile(currentFile, "rw")) {
                     readDatFileFromDisk(fileIndexDat, tableStorage, index, fileIndex);
+                    fileIndexDat.close();
                 } catch (FileNotFoundException e) {
                     continue;
                 }
@@ -540,16 +541,18 @@ public class FileManager {
         String datIndex = datFile.getName();
         last = datIndex.lastIndexOf('.');
         datIndex = datIndex.substring(0, last);
-        RandomAccessFile fileIndexDat = new RandomAccessFile(datFile, "rw");
-        long length = datFile.length();
         int countOfKeys = 0;
-        fileIndexDat.seek(0);
-        while (length > 0) {
-            //Внутри readLineOfDatFile вызывается метод checkKeyOnRightHashCode
-            LineOfDB line = readLineOfDatFile(fileIndexDat, length,
-                    Integer.parseInt(dirIndex), Integer.parseInt(datIndex));
-            length -= line.length;
-            countOfKeys++;
+        try (RandomAccessFile fileIndexDat = new RandomAccessFile(datFile, "rw")) {
+            long length = datFile.length();
+            fileIndexDat.seek(0);
+            while (length > 0) {
+                //Внутри readLineOfDatFile вызывается метод checkKeyOnRightHashCode
+                LineOfDB line = readLineOfDatFile(fileIndexDat, length,
+                        Integer.parseInt(dirIndex), Integer.parseInt(datIndex));
+                length -= line.length;
+                countOfKeys++;
+            }
+            fileIndexDat.close();
         }
         return countOfKeys;
     }
