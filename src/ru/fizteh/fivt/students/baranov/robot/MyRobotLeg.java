@@ -15,26 +15,20 @@ public class MyRobotLeg extends RobotLeg {
     }
 
     public boolean step() {
-        if (master.numberOfMadeSteps == master.getMaxNumberOfSteps()) {
+        if (master.numberOfMadeSteps == master.maxNumberOfSteps) {
             return false;
         }
-        synchronized (master.numberOfMadeSteps) {
+        synchronized (master.maxNumberOfSteps) {
             if (master.numberOfMadeSteps % 2 == mode) {
                 try {
-                    master.numberOfMadeSteps.wait();
+                    master.maxNumberOfSteps.wait();
                 } catch (InterruptedException e) {
-                    //
-                } catch (IllegalMonitorStateException e) {
                     //
                 }
                 master.numberOfMadeSteps++;
                 makeStep();
             }
-            try {
-                master.numberOfMadeSteps.notify();
-            } catch (IllegalMonitorStateException e) {
-                //
-            }
+            master.maxNumberOfSteps.notify();
         }
         return true;
     }
