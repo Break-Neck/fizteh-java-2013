@@ -30,6 +30,7 @@ public class Servlet {
         context.addServlet(new ServletHolder(new Rollback()), "/rollback");
         context.addServlet(new ServletHolder(new Get()), "/get");
         context.addServlet(new ServletHolder(new Put()), "/put");
+        context.addServlet(new ServletHolder(new Size()), "/size");
 
         server.setHandler(context);
 
