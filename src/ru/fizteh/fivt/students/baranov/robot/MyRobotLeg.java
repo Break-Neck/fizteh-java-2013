@@ -18,16 +18,24 @@ public class MyRobotLeg extends RobotLeg {
         if (master.numberOfMadeSteps == master.getMaxNumberOfSteps()) {
             return false;
         }
-        while (master.numberOfMadeSteps % 2 == mode) {
+        synchronized (master.numberOfMadeSteps) {
+            if (master.numberOfMadeSteps % 2 == mode) {
+                try {
+                    master.numberOfMadeSteps.wait();
+                } catch (InterruptedException e) {
+                    //
+                } catch (IllegalMonitorStateException e) {
+                    //
+                }
+                master.numberOfMadeSteps++;
+                makeStep();
+            }
             try {
-                master.lock.wait();
-            } catch (InterruptedException e) {
+                master.numberOfMadeSteps.notify();
+            } catch (IllegalMonitorStateException e) {
                 //
             }
         }
-        master.numberOfMadeSteps++;
-        makeStep();
-        master.lock.notify();
         return true;
     }
 
