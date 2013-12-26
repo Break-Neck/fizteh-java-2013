@@ -14,10 +14,15 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.IdentityHashMap;
 
 public class MyBinder<T> implements Binder<T> {
     Class<T> tClass;
+    public final Integer grey;
+    public final Integer black;
     public MyBinder(Class<T> clazz) {
+        grey = -1;
+        black = 1;
         tClass = clazz;
     }
 
@@ -118,11 +123,12 @@ public class MyBinder<T> implements Binder<T> {
         }
         try (OutputStreamWriter oStreamWriter = new OutputStreamWriter(output, "UTF-8")) {
             JSONWriter jsonWriter = new JSONWriter(oStreamWriter);
-            recDraw(value, jsonWriter);
+            IdentityHashMap<Object, Integer> idHashMap = new IdentityHashMap<Object, Integer>();
+            recDraw(value, idHashMap, jsonWriter);
         }
     }
 
-    private void recDraw(Object obj, JSONWriter jsonWriter) {
+    private void recDraw(Object obj, IdentityHashMap<Object, Integer> idHashMap, JSONWriter jsonWriter) {
         jsonWriter.object();
         String name;
         for (Field one : obj.getClass().getDeclaredFields()) {
@@ -163,7 +169,13 @@ public class MyBinder<T> implements Binder<T> {
                     continue;
                 }
 
-                recDraw(objBuf, jsonWriter);
+                if (grey.equals(idHashMap.get(objBuf))) {
+                    throw new IllegalStateException("Cycle reference");
+                }
+                idHashMap.put(objBuf, grey);
+
+                recDraw(objBuf, idHashMap, jsonWriter);
+                idHashMap.put(objBuf, black);
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
             } catch (JSONException e) {
