@@ -206,6 +206,11 @@ public class MyTable implements Table, AutoCloseable {
         transactionsRemovings.put(tid, new HashSet<String>());
     }
 
+    public void removeTransaction(Integer tid) {
+        transactionsRewritings.remove(tid);
+        transactionsRemovings.remove(tid);
+    }
+
     /**
      * Возвращает название таблицы.
      *

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.HashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -25,6 +26,9 @@ public class Servlet {
     //public static Transactions transactions;
     static HashMap<Integer, MyTable> transactions;
     static MyTableProvider provider;
+    static Integer counter;
+
+    private static final ReentrantLock locker = new ReentrantLock(true);
 
     public Servlet(int port) throws IOException {
         server = new Server(port);
@@ -51,6 +55,7 @@ public class Servlet {
         provider = factory.create(addrPath.toString());
 
         transactions = new HashMap<>();
+        counter = 1;
     }
 
     public static class Begin extends HttpServlet {
@@ -68,7 +73,16 @@ public class Servlet {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "table not exists");
                 return;
             }
-            Integer key = transactions.size() + 1;
+            Integer key;
+
+            locker.lock();
+            try {
+                key = counter;
+                counter++;
+            } finally {
+                locker.unlock();
+            }
+
             transactions.put(key, t);
             String s = key.toString();
             t.addTransaction(key);
@@ -103,6 +117,9 @@ public class Servlet {
             }
             Integer diff = t.commit(intTid);
 
+            t.removeTransaction(intTid);
+            transactions.remove(intTid);
+
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("text/plain");
             resp.setCharacterEncoding("UTF8");
@@ -128,6 +145,9 @@ public class Servlet {
                 return;
             }
             Integer diff = t.rollback(intTid);
+
+            t.removeTransaction(intTid);
+            transactions.remove(intTid);
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("text/plain");
