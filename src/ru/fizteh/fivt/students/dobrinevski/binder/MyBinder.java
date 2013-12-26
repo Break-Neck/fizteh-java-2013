@@ -156,7 +156,7 @@ public class MyBinder<T> implements Binder<T> {
                 }
 
                 if (one.getType().isPrimitive()) {
-                    jsonWriter.value(objBuf.toString());
+                    jsonWriter.value(objBuf);
                     continue;
                 }
 
