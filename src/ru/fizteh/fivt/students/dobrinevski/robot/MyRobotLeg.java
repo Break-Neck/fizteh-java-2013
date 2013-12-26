@@ -10,36 +10,37 @@ import java.util.concurrent.locks.ReentrantLock;
 public class MyRobotLeg extends RobotLeg {
     private static boolean turn;
     private Integer step;
-    private static final Lock LOCK = new ReentrantLock();
+    private final Lock lock;
 
-    public MyRobotLeg(RobotLegType type, OutputStream output, boolean myTurn, int stepCount) {
+    public MyRobotLeg(RobotLegType type, OutputStream output, boolean myTurn, int stepCount, Lock locker) {
         super(type, output);
         turn = myTurn;
         step = stepCount;
+        lock = locker;
     }
 
     public boolean step() {
         if (step == 0) {
             return false;
         }
-        if (getType() == RobotLegType.RIGHT && !turn && LOCK.tryLock()) {
+        if (getType() == RobotLegType.RIGHT && !turn && lock.tryLock()) {
             try {
                 makeStep();
                 step--;
                 turn = !turn;
                 return true;
             } finally {
-                LOCK.unlock();
+                lock.unlock();
             }
         }
-        if (getType() == RobotLegType.LEFT && turn && LOCK.tryLock()) {
+        if (getType() == RobotLegType.LEFT && turn && lock.tryLock()) {
             try {
                 makeStep();
                 step--;
                 turn = !turn;
                 return true;
             } finally {
-                LOCK.unlock();
+                lock.unlock();
             }
         }
         return true;
