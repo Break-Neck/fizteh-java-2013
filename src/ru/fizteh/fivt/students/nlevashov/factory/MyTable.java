@@ -36,6 +36,9 @@ public class MyTable implements Table, AutoCloseable {
     ThreadLocal<HashMap<String, Storeable>> rewritings;
     ThreadLocal<HashSet<String>> removings;
 
+    HashMap<Integer, HashMap<String, Storeable>> transactionsRewritings;
+    HashMap<Integer, HashSet<String>> transactionsRemovings;
+
     private final ReentrantReadWriteLock readWriteLocker = new ReentrantReadWriteLock(true);
     private final Lock readLocker = readWriteLocker.readLock();
     private final Lock writeLocker = readWriteLocker.writeLock();
@@ -193,6 +196,14 @@ public class MyTable implements Table, AutoCloseable {
                 return new HashSet<>();
             }
         };
+
+        transactionsRewritings = new HashMap<>();
+        transactionsRemovings = new HashMap<>();
+    }
+
+    public void addTransaction(Integer tid) {
+        transactionsRewritings.put(tid, new HashMap<String, Storeable>());
+        transactionsRemovings.put(tid, new HashSet<String>());
     }
 
     /**
@@ -234,6 +245,29 @@ public class MyTable implements Table, AutoCloseable {
                 }
             } else {
                     return s;
+            }
+        }
+    }
+
+    public Storeable get(String key, Integer tid) {
+        checkClose();
+        if ((key == null) || key.trim().isEmpty() || key.matches(".*[\\s\\t\\n].*")) {
+            throw new IllegalArgumentException("Table.get: key is null or consists illegal symbol/symbols");
+        }
+
+        if (transactionsRemovings.get(tid).contains(key)) {
+            return null;
+        } else {
+            Storeable s = transactionsRewritings.get(tid).get(key);
+            if (s == null) {
+                readLocker.lock();
+                try {
+                    return map.get(key);
+                } finally {
+                    readLocker.unlock();
+                }
+            } else {
+                return s;
             }
         }
     }
@@ -319,6 +353,74 @@ public class MyTable implements Table, AutoCloseable {
         }
     }
 
+    public Storeable put(String key, Storeable value, Integer tid) throws ColumnFormatException {
+        checkClose();
+        if ((key == null) || key.trim().isEmpty() || key.matches(".*[\\s\\t\\n].*")) {
+            throw new IllegalArgumentException("Table.put: key is null or consists illegal symbol/symbols");
+        }
+        if (value == null) {
+            throw new IllegalArgumentException("Table.put: value is null");
+        }
+        try {
+            value.getColumnAt(types.size());
+            throw new ColumnFormatException("Table.put: value has other number of columns");
+        } catch (IndexOutOfBoundsException e) {
+            try {
+                for (int i = 0; i < getColumnsCount(); ++i) {
+                    Class<?> c = getColumnType(i);
+                    Object o = value.getColumnAt(i);
+                    if (o == null) {
+                        if (c == Integer.class) {
+                            value.setColumnAt(i, Integer.valueOf(1));
+                        } else if (c == Long.class)  {
+                            value.setColumnAt(i, Long.valueOf((long) 1));
+                        } else if (c == Byte.class) {
+                            value.setColumnAt(i, Byte.valueOf((byte) 1));
+                        } else if (c == Float.class) {
+                            value.setColumnAt(i, Float.valueOf((float) 1.5));
+                        } else if (c == Double.class) {
+                            value.setColumnAt(i, Double.valueOf(1.5));
+                        } else if (c == Boolean.class) {
+                            value.setColumnAt(i, Boolean.valueOf(true));
+                        } else {
+                            value.setColumnAt(i, "abc");
+                        }
+                        value.setColumnAt(i, null);
+                    } else if (c != o.getClass()) {
+                        throw new ColumnFormatException("Table.put: wrong type");
+                    }
+                }
+                Storeable s;
+                readLocker.lock();
+                try {
+                    s = map.get(key);
+                } finally {
+                    readLocker.unlock();
+                }
+                if (transactionsRemovings.get(tid).contains(key)) {
+                    transactionsRemovings.get(tid).remove(key);
+                    if (!(s == value)) {
+                        transactionsRewritings.get(tid).put(key, value);
+                    }
+                    return null;
+                } else {
+                    if (s == null) {
+                        return transactionsRewritings.get(tid).put(key, value);
+                    } else {
+                        Storeable ss = transactionsRewritings.get(tid).put(key, value);
+                        if (ss == null) {
+                            return s;
+                        } else {
+                            return ss;
+                        }
+                    }
+                }
+            } catch (IndexOutOfBoundsException e1) {
+                throw new ColumnFormatException("Table.put: value has other number of columns");
+            }
+        }
+    }
+
     /**
      * Удаляет значение по указанному ключу.
      *
@@ -357,6 +459,35 @@ public class MyTable implements Table, AutoCloseable {
         }
     }
 
+    public Storeable remove(String key, Integer tid) {
+        checkClose();
+        if ((key == null) || key.trim().isEmpty() || key.matches(".*[\\s\\t\\n].*")) {
+            throw new IllegalArgumentException("Table.remove: key is null or consists illegal symbol/symbols");
+        }
+        if (transactionsRemovings.get(tid).contains(key)) {
+            return null;
+        } else {
+            Storeable s;
+            readLocker.lock();
+            try {
+                s = map.get(key);
+            } finally {
+                readLocker.unlock();
+            }
+            if (s == null) {
+                return rewritings.get().remove(key);
+            } else {
+                transactionsRemovings.get(tid).add(key);
+                Storeable ss = transactionsRewritings.get(tid).remove(key);
+                if (ss == null) {
+                    return s;
+                } else {
+                    return ss;
+                }
+            }
+        }
+    }
+
     /**
      * Возвращает количество ключей в таблице. Возвращает размер текущей версии, с учётом незафиксированных изменений.
      *
@@ -379,6 +510,24 @@ public class MyTable implements Table, AutoCloseable {
             readLocker.unlock();
         }
         return (mapSize + inserts - removings.get().size());
+    }
+
+    public int size(Integer tid) {
+        checkClose();
+        int mapSize;
+        int inserts = 0;
+        readLocker.lock();
+        try {
+            mapSize = map.size();
+            for (Map.Entry<String, Storeable> entry : transactionsRewritings.get(tid).entrySet()) {
+                if (!map.containsKey(entry.getKey())) {
+                    inserts++;
+                }
+            }
+        } finally {
+            readLocker.unlock();
+        }
+        return (mapSize + inserts - transactionsRemovings.get(tid).size());
     }
 
     /**
@@ -408,6 +557,25 @@ public class MyTable implements Table, AutoCloseable {
         return difference;
     }
 
+    public int commit(Integer tid) throws IOException {
+        checkClose();
+        int difference;
+        writeLocker.lock();
+        try {
+            difference = diff(tid);
+            for (String s : transactionsRemovings.get(tid)) {
+                map.remove(s);
+            }
+            map.putAll(transactionsRewritings.get(tid));
+            refreshDiskData();
+        } finally {
+            writeLocker.unlock();
+        }
+        transactionsRewritings.get(tid).clear();
+        transactionsRemovings.get(tid).clear();
+        return difference;
+    }
+
     /**
      * Выполняет откат изменений с момента последней фиксации.
      *
@@ -425,6 +593,20 @@ public class MyTable implements Table, AutoCloseable {
         }
         rewritings.get().clear();
         removings.get().clear();
+        return difference;
+    }
+
+    public int rollback(Integer tid) {
+        checkClose();
+        int difference;
+        readLocker.lock();
+        try {
+            difference = diff(tid);
+        } finally {
+            readLocker.unlock();
+        }
+        transactionsRewritings.get(tid).clear();
+        transactionsRemovings.get(tid).clear();
         return difference;
     }
 
@@ -512,6 +694,26 @@ public class MyTable implements Table, AutoCloseable {
             }
         }
         return rewritings.get().size() - similars + removings.get().size();
+    }
+
+    private int diff(Integer tid) {
+        int similars = 0;
+        for (Map.Entry<String, Storeable> entry : transactionsRewritings.get(tid).entrySet()) {
+            Storeable s = map.get(entry.getKey());
+            if (s != null) {
+                boolean flag = true;
+                for (int i = 0; i < types.size(); ++i) {
+                    if (!(entry.getValue().getColumnAt(i).equals(s.getColumnAt(i)))) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    similars++;
+                }
+            }
+        }
+        return transactionsRewritings.get(tid).size() - similars + transactionsRemovings.get(tid).size();
     }
 
     /**

@@ -37,7 +37,7 @@ public class MyTableProviderFactory implements TableProviderFactory, AutoCloseab
      * @throws java.io.IOException В случае ошибок ввода/вывода.
      */
     @Override
-    public TableProvider create(String path) throws IOException {
+    public MyTableProvider create(String path) throws IOException {
         if (isClosed) {
             throw new IllegalStateException("TableProviderFactory.create: factory closed");
         }

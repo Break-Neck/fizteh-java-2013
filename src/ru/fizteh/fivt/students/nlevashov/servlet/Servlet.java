@@ -1,7 +1,9 @@
 package ru.fizteh.fivt.students.nlevashov.servlet;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.text.ParseException;
+import java.util.HashMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -13,11 +15,17 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.students.nlevashov.factory.MyTable;
+import ru.fizteh.fivt.students.nlevashov.factory.MyTableProvider;
+import ru.fizteh.fivt.students.nlevashov.factory.MyTableProviderFactory;
+import ru.fizteh.fivt.students.nlevashov.shell.Shell;
 
 
 public class Servlet {
-    Server server;
-    public static Transactions transactions;
+    static Server server;
+    //public static Transactions transactions;
+    static HashMap<Integer, MyTable> transactions;
+    static MyTableProvider provider;
 
     public Servlet(int port) throws IOException {
         server = new Server(port);
@@ -34,7 +42,16 @@ public class Servlet {
 
         server.setHandler(context);
 
-        transactions = new Transactions();
+        String addr = System.getProperty("fizteh.db.dir");
+        if (addr == null) {
+            System.err.println("Property \"fizteh.db.dir\" wasn't set");
+            System.exit(1);
+        }
+        Path addrPath = Shell.makePath(addr).toPath();
+        MyTableProviderFactory factory = new MyTableProviderFactory();
+        provider = factory.create(addrPath.toString());
+
+        transactions = new HashMap<>();
     }
 
     public static class Begin extends HttpServlet {
@@ -47,12 +64,15 @@ public class Servlet {
                 return;
             }
 
-            Integer tid = transactions.getTid(tableName);
-            if (tid == null) {
+            MyTable t = provider.getTable(tableName);
+            if (t == null) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "table not exists");
                 return;
             }
-            String s = tid.toString();
+            Integer key = transactions.size() + 1;
+            transactions.put(key, t);
+            String s = key.toString();
+            t.addTransaction(key);
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("text/plain");
@@ -76,12 +96,13 @@ public class Servlet {
                 return;
             }
 
-            Table t = transactions.getTable(Integer.parseInt(tid));
+            Integer intTid = Integer.parseInt(tid);
+            MyTable t = transactions.get(intTid);
             if (t == null) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
-            Integer diff = t.commit();
+            Integer diff = t.commit(intTid);
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("text/plain");
@@ -101,12 +122,13 @@ public class Servlet {
                 return;
             }
 
-            Table t = transactions.getTable(Integer.parseInt(tid));
+            Integer intTid = Integer.parseInt(tid);
+            MyTable t = transactions.get(intTid);
             if (t == null) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
-            Integer diff = t.rollback();
+            Integer diff = t.rollback(intTid);
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("text/plain");
@@ -131,12 +153,13 @@ public class Servlet {
                 return;
             }
 
-            Table t = transactions.getTable(Integer.parseInt(tid));
+            Integer intTid = Integer.parseInt(tid);
+            MyTable t = transactions.get(intTid);
             if (t == null) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
-            Storeable value = t.get(key);
+            Storeable value = t.get(key, intTid);
             if (value == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "key not exists");
                 return;
@@ -146,7 +169,7 @@ public class Servlet {
             resp.setContentType("text/plain");
             resp.setCharacterEncoding("UTF8");
 
-            resp.getWriter().println(transactions.getProvider().serialize(t, value));
+            resp.getWriter().println(provider.serialize(t, value));
         }
     }
 
@@ -171,14 +194,15 @@ public class Servlet {
                 return;
             }
 
-            Table t = transactions.getTable(Integer.parseInt(tid));
+            Integer intTid = Integer.parseInt(tid);
+            MyTable t = transactions.get(intTid);
             if (t == null) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
             Storeable ret;
             try {
-                ret = t.put(key, transactions.getProvider().deserialize(t, value));
+                ret = t.put(key, provider.deserialize(t, value), intTid);
             } catch (ParseException e) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
@@ -192,7 +216,7 @@ public class Servlet {
             resp.setContentType("text/plain");
             resp.setCharacterEncoding("UTF8");
 
-            resp.getWriter().println(transactions.getProvider().serialize(t, ret));
+            resp.getWriter().println(provider.serialize(t, ret));
         }
     }
 
@@ -206,12 +230,13 @@ public class Servlet {
                 return;
             }
 
-            Table t = transactions.getTable(Integer.parseInt(tid));
+            Integer intTid = Integer.parseInt(tid);
+            MyTable t = transactions.get(intTid);
             if (t == null) {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
-            Integer size = t.size();
+            Integer size = t.size(intTid);
 
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("text/plain");
@@ -228,5 +253,4 @@ public class Servlet {
     public void stopServer() throws Exception {
         server.stop();
     }
-
 }
