@@ -45,7 +45,7 @@ public class RobotFactoryTester {
         Random rand = new Random();
         int tests = 5;
         while (tests != 0) {
-            int moves = Math.abs(rand.nextInt()) % 100 + 1;
+            int moves = Math.abs(rand.nextInt()) % 10000 + 1;
             boolean firstTurn = rand.nextBoolean();
             robot = robotFac.createRobot(ostream, moves, firstTurn ? RobotLegType.LEFT : RobotLegType.RIGHT);
             RobotWalker.walk(robot);
