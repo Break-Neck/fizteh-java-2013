@@ -107,7 +107,7 @@ public class BinderTester {
                 "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}");
         buf = "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}"
                 .getBytes();
-        inStream. = new ByteArrayInputStream(buf);
+        inStream = new ByteArrayInputStream(buf);
         D test = (D) bind.deserialize(inStream);
         assertEquals(begin, test);
     }
