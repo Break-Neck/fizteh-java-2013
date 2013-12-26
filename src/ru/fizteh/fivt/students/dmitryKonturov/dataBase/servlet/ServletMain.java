@@ -1,6 +1,5 @@
-package ru.fizteh.fivt.students.dmitryKonturov.dataBase;
+package ru.fizteh.fivt.students.dmitryKonturov.dataBase.servlet;
 
-import ru.fizteh.fivt.students.dmitryKonturov.dataBase.servlet.ServletShell;
 import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellEmulator;
 import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellException;
 
@@ -9,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class FileMap {
+public class ServletMain {
     public static void main(String[] args) {
         String dbDir = System.getProperty("fizteh.db.dir");
         //String dbDir = "/home/kontr/testDir/myTest";

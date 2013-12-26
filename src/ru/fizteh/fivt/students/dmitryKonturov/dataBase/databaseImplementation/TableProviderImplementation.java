@@ -27,6 +27,9 @@ public class TableProviderImplementation implements TableProvider {
     private ReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
     private Lock writeLock = readWriteLock.writeLock();
     private Lock readLock =  readWriteLock.readLock();
+    private TransactionPool transactionPool = new TransactionPool();
+
+    private int isLocal;
 
     private HashMap<String, Table> existingTables = new HashMap<>();
     static final Class[] ALLOWED_TYPES = new Class[]{
@@ -51,14 +54,25 @@ public class TableProviderImplementation implements TableProvider {
         return !containDisallowedCharacter;
     }
 
-    TableProviderImplementation(Path path) throws IOException, DatabaseException {
+    TableProviderImplementation(Path path, int isLocal) throws IOException, DatabaseException {
+        this.isLocal = isLocal;
         workspace = path;
         CheckDatabasesWorkspace.checkWorkspace(workspace);
         isLoading = true;
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
             for (Path entry : stream) {
                 String tableName = entry.toFile().getName();
-                TableImplementation currentTable = new TableImplementation(tableName, this);
+                int transactionId;
+                if (isLocal < 0) {
+                    transactionId = -1;
+                } else {
+                    transactionId = transactionPool.createTransaction(tableName);
+                }
+                TableImplementation currentTable = new TableImplementation(
+                        tableName,
+                        this,
+                        transactionId
+                        );
                 existingTables.put(tableName, currentTable);
             }
         } catch (IOException e) {
@@ -75,6 +89,10 @@ public class TableProviderImplementation implements TableProvider {
 
     boolean isProviderLoading() {
         return isLoading;
+    }
+
+    public TransactionPool getTransactionPool() {
+        return transactionPool;
     }
 
     @Override
@@ -127,7 +145,13 @@ public class TableProviderImplementation implements TableProvider {
 
             Table newTable;
             try {
-                newTable = new TableImplementation(name, this, columnTypes);
+                int transactionId;
+                if (isLocal < 0) {
+                    transactionId = -1;
+                } else {
+                    transactionId = transactionPool.createTransaction(name);
+                }
+                newTable = new TableImplementation(name, this, columnTypes, transactionId);
             } catch (Exception e) {
                 throw new IOException("Fail to create database", e);
             }

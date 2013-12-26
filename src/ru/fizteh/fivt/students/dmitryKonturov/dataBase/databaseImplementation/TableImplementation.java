@@ -22,27 +22,30 @@ public class TableImplementation implements Table {
     private final List<Class<?>> columnTypes;
     private final int columnsCount;
 
-    private ThreadLocal<Map<String, Storeable>> currentChangesMap = new ThreadLocal<Map<String, Storeable>>() {
-        @Override
-        protected Map<String, Storeable> initialValue() {
-            return new HashMap<>();
-        }
-    };
     private HashMap<String, Storeable> savedMap;
     private final Path tablePath;
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
     private final Lock readLock  = readWriteLock.readLock();
     private final Lock writeLock = readWriteLock.writeLock();
+    private final int localTransactionId; // for library version
+
+    private ThreadLocal<Map<String, Storeable>> currentChangesMapDiff = new ThreadLocal<Map<String, Storeable>>() {
+        @Override
+        protected Map<String, Storeable> initialValue() {
+            return new HashMap<>();
+        }
+    };
 
     /**
      * loads database from its folder
      */
-    TableImplementation(String tableName, TableProviderImplementation tableProvider) throws IOException,
-            DatabaseException {
+    TableImplementation(String tableName, TableProviderImplementation tableProvider, int transactionId)
+            throws IOException, DatabaseException {
 
         this.tableName = tableName;
         this.tableProvider = tableProvider;
+        this.localTransactionId = transactionId;
         this.tablePath = tableProvider.getWorkspace().resolve(tableName);
         Path signatureFile = tablePath.resolve(StoreableUtils.getSignatureFileName());
         this.columnTypes = StoreableUtils.loadSignatureFile(signatureFile);
@@ -65,11 +68,13 @@ public class TableImplementation implements Table {
     /**
      * not even try to load database
      */
-    TableImplementation(String tableName, TableProviderImplementation tableProvider, List<Class<?>> columnTypes) throws
+    TableImplementation(String tableName, TableProviderImplementation tableProvider, List<Class<?>> columnTypes,
+                        int transactionId) throws
             IOException, RuntimeException, DatabaseException {
 
         this.tableName = tableName;
         this.tableProvider = tableProvider;
+        this.localTransactionId = transactionId;
         this.columnTypes = new ArrayList<>();
         for (Class<?> type : columnTypes) {
             if (type == null) {
@@ -106,9 +111,18 @@ public class TableImplementation implements Table {
         return result;
     }
 
-    public int getUnsavedChangesCount() { //need external sync
+    private Map<String, Storeable> getCurrentChanges(int transactionId) {
+        if (transactionId < 0) {
+            return currentChangesMapDiff.get();
+        } else {
+            return tableProvider.getTransactionPool().getDiffTable(transactionId);
+        }
+    }
+
+    public int getUnsavedChangesCount(int transactionId) { //need external sync
         int changesNum = 0;
-        for (Map.Entry<String, Storeable> entry : currentChangesMap.get().entrySet()) {
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
+        for (Map.Entry<String, Storeable> entry : currentChangesMap.entrySet()) {
             String key = entry.getKey();
             Storeable value = entry.getValue();
             Storeable savedValue = savedMap.get(key);
@@ -147,6 +161,10 @@ public class TableImplementation implements Table {
         }
     }
 
+    public int getLocalTransactionId() {
+        return localTransactionId;
+    }
+
     @Override
     public String getName() {
         checkTableState();
@@ -154,13 +172,18 @@ public class TableImplementation implements Table {
     }
 
     @Override
-    public Storeable get(String key) throws IllegalArgumentException {
+    public Storeable get(String key) {
+        return get(key, localTransactionId);
+    }
+
+    public Storeable get(String key, int transactionId) throws IllegalArgumentException {
         if (key == null) {
             throw new IllegalArgumentException("Empty key");
         }
         checkTableState();
-        if (currentChangesMap.get().containsKey(key)) {
-            return currentChangesMap.get().get(key);
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
+        if (currentChangesMap.containsKey(key)) {
+            return currentChangesMap.get(key);
         } else {
             readLock.lock();
             try {
@@ -173,7 +196,11 @@ public class TableImplementation implements Table {
     }
 
     @Override
-    public Storeable put(String key, Storeable value) throws IllegalArgumentException {
+    public Storeable put(String key, Storeable value) {
+        return put(key, value, localTransactionId);
+    }
+
+    public Storeable put(String key, Storeable value, int transactionId) throws IllegalArgumentException {
         checkKey(key);
         if (value == null) {
             throw new IllegalArgumentException("Empty value");
@@ -181,34 +208,47 @@ public class TableImplementation implements Table {
         checkTableState();
         StoreableUtils.checkStoreableBelongsToTable(this, value);
 
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
-
-        Storeable toReturn = get(key);
-        currentChangesMap.get().put(key, value);
+        Storeable toReturn = get(key, transactionId);
+        currentChangesMap.put(key, value);
         return toReturn;
 
     }
 
     @Override
-    public Storeable remove(String key) throws IllegalArgumentException {
+    public Storeable remove(String key) {
+        return remove(key, localTransactionId);
+    }
+
+    public Storeable remove(String key, int transactionId) throws IllegalArgumentException {
         if (key == null) {
             throw new IllegalArgumentException("Empty key");
         }
         checkTableState();
 
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
-        Storeable toReturn = get(key);
-        currentChangesMap.get().put(key, null);
+
+        Storeable toReturn = get(key, transactionId);
+        currentChangesMap.put(key, null);
         return toReturn;
     }
 
     @Override
     public int size() {
+        return size(localTransactionId);
+    }
+
+    public int size(int transactionId) {
         checkTableState();
         readLock.lock();
         try {
             int tableSize = savedMap.size();
-            for (Map.Entry<String, Storeable> entry : currentChangesMap.get().entrySet()) {
+
+            Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
+
+            for (Map.Entry<String, Storeable> entry : currentChangesMap.entrySet()) {
                 String key = entry.getKey();
                 Storeable value = entry.getValue();
                 Storeable savedValue = savedMap.get(key);
@@ -230,12 +270,18 @@ public class TableImplementation implements Table {
 
     @Override
     public int commit() throws IOException {
+        return commit(localTransactionId, false);
+    }
+
+    public int commit(int transactionId, boolean needToFinishTransaction) throws IOException {
         checkTableState();
         writeLock.lock();
         try {
             int changesNumber = 0;
             boolean[] changedTableHash = new boolean[16];
-            for (Map.Entry<String, Storeable> entry : currentChangesMap.get().entrySet()) {
+            Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
+
+            for (Map.Entry<String, Storeable> entry : currentChangesMap.entrySet()) {
                 String key = entry.getKey();
                 int keyHash = Math.abs(key.hashCode());
                 Storeable value = entry.getValue();
@@ -259,7 +305,10 @@ public class TableImplementation implements Table {
                 }
             }
 
-            currentChangesMap.get().clear();
+            currentChangesMap.clear();
+            if (needToFinishTransaction && transactionId >= 0) {
+                tableProvider.getTransactionPool().deleteTransaction(transactionId);
+            }
 
             Map<String, String>[] savedStringMap = new HashMap[16];
             for (int i = 0; i < 16; ++i) {
@@ -293,15 +342,24 @@ public class TableImplementation implements Table {
 
     @Override
     public int rollback() {
+        return rollback(localTransactionId, false);
+    }
+
+    public int rollback(int transactionId, boolean needToFinishTransaction) {
         checkTableState();
         int toReturn;
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
+
         readLock.lock();
         try {
-            toReturn = getUnsavedChangesCount();
+            toReturn = getUnsavedChangesCount(transactionId);
         } finally {
             readLock.unlock();
         }
-        currentChangesMap.get().clear();
+        currentChangesMap.clear();
+        if (needToFinishTransaction && transactionId >= 0) {
+            tableProvider.getTransactionPool().deleteTransaction(transactionId);
+        }
         return toReturn;
     }
 

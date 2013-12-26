@@ -188,7 +188,7 @@ public class WorkWithTableProviderCommands {
 
             TableImplementation currentTable = (TableImplementation) info.getProperty("CurrentTable");
             if (currentTable != null) {
-                int toCommitSize = currentTable.getUnsavedChangesCount();
+                int toCommitSize = currentTable.getUnsavedChangesCount(currentTable.getLocalTransactionId());
                 if (toCommitSize > 0) {
                     printOut(String.format("%d unsaved changes", toCommitSize));
                     return;
