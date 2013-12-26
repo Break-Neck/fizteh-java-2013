@@ -56,6 +56,10 @@ public class Shell {
 	
 	public void setDB(){
 		String dir = System.getProperty("fizteh.db.dir");
+		if(dir == null){
+			printMessage("Incorrect db path");
+			System.exit(1);
+		}
 		File file =  new File(dir);
 		if(!file.isDirectory()){
 			printMessage("Incorrect db path");
