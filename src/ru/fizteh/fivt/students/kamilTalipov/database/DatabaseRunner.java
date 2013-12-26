@@ -4,6 +4,7 @@ import ru.fizteh.fivt.students.kamilTalipov.database.commands.*;
 import ru.fizteh.fivt.students.kamilTalipov.database.core.DatabaseException;
 import ru.fizteh.fivt.students.kamilTalipov.database.core.HashDatabase;
 import ru.fizteh.fivt.students.kamilTalipov.database.core.MultiFileHashTableFactory;
+import ru.fizteh.fivt.students.kamilTalipov.database.core.MultiFileHashTableProvider;
 import ru.fizteh.fivt.students.kamilTalipov.database.servlet.server.ServletServer;
 import ru.fizteh.fivt.students.kamilTalipov.shell.Command;
 import ru.fizteh.fivt.students.kamilTalipov.shell.Shell;
@@ -17,12 +18,11 @@ public class DatabaseRunner {
         HashDatabase database = null;
         ServletServer server = null;
         try {
-            database = new HashDatabase(System.getProperty("fizteh.db.dir"));
-            server = new ServletServer(new MultiFileHashTableFactory().create(System.getProperty("fizteh.db.dir")));
+            MultiFileHashTableProvider provider = new MultiFileHashTableFactory().create(
+                                                                System.getProperty("fizteh.db.dir"));
+            database = new HashDatabase(provider);
+            server = new ServletServer(provider);
         } catch (FileNotFoundException e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
-        } catch (DatabaseException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         } catch (IOException e) {
