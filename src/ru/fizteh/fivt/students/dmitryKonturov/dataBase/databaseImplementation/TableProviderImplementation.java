@@ -145,7 +145,13 @@ public class TableProviderImplementation implements TableProvider {
 
             Table newTable;
             try {
-                newTable = new TableImplementation(name, this, columnTypes, transactionPool.createTransaction(name));
+                int transactionId;
+                if (isLocal < 0) {
+                    transactionId = -1;
+                } else {
+                    transactionId = transactionPool.createTransaction(name);
+                }
+                newTable = new TableImplementation(name, this, columnTypes, transactionId);
             } catch (Exception e) {
                 throw new IOException("Fail to create database", e);
             }
