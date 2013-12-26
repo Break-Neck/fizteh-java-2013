@@ -72,15 +72,17 @@ public class FileSystem {
     }
     
     public static boolean recursiveCopy(File source, File dest, String command) {
-        if (source.isDirectory()) {
+        
+		String errorPrefix = command + ": \'" + dest.getAbsolutePath() + "\':";
+		if (source.isDirectory()) {
             try {
                 if (!dest.mkdir()) {
-					String error = command + ": \'" + dest.getAbsolutePath() + "\': couldn't create directory";
+					String error = errorPrefix + " couldn't create directory";
                     System.out.println(error);
                     return false;
                 }
             } catch (SecurityException e) {
-				String error = command + ": \'" + dest.getAbsolutePath() + "\': haven't rights to create directory";
+				String error = errorPrefix + " haven't rights to create directory";
                 System.out.println(error);
                 return false;
             }
@@ -96,22 +98,22 @@ public class FileSystem {
         } else {
             try {
                 if (!dest.createNewFile()) {
-                    String error = command + ": \'" + dest.getAbsolutePath() + "\': couldn't create file";
+                    String error = errorPrefix + " couldn't create file";
 					System.out.println(error);
                     return false;
                 }
                 if (!dest.canWrite() || !source.canRead()) {
-                    String error = command + ": \'" + dest.getAbsolutePath() + "\': haven't rights to create file";
+                    String error = errorPrefix + " haven't rights to create file";
 					Shell.printMessage(error);
                     return false;
                 }
                 return copy(source, dest, command);
             } catch (SecurityException e) {
-                String error = command + ": \'" + dest.getAbsolutePath() + "\': haven't rights to create file";
+                String error = errorPrefix + " haven't rights to create file";
 				System.out.println(error);
                 return false;
             } catch (IOException e) {
-                String error = command + ": \'" + dest.getAbsolutePath() + "\': couldn't create file";
+                String error = errorPrefix + " couldn't create file";
 				System.out.println(error);
                 return false;
             }
