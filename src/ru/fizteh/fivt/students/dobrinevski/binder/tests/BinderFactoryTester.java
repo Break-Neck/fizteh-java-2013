@@ -10,6 +10,46 @@ import ru.fizteh.fivt.students.dobrinevski.binder.MyBinderFactory;
 public class BinderFactoryTester {
     public static BinderFactory bf;
 
+    public static class B {
+        @DoNotBind
+        int f;
+        char g;
+        double h;
+        public B() {
+            f = 1;
+            g = 'A';
+            h = 0.69;
+        }
+    }
+
+    public static class A {
+        int f;
+        char g;
+        @Name("ololo")
+        String h;
+        B add;
+        public A() {
+            f = 96;
+            g = 'Z';
+            h = "How to buy pig?";
+            add = new B();
+        }
+    }
+
+    public static class WithoutConstructor {
+        int f;
+        char g;
+    }
+
+    public static class WithPrivateConstructor {
+        int a;
+        double b;
+        private WithPrivateConstructor() {
+            a = 0;
+            b = 0;
+        }
+    }
+
     @Before
     public void init()  {
         bf = new MyBinderFactory();
@@ -31,8 +71,18 @@ public class BinderFactoryTester {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void keyEnumGiven() {
+        bf.create(Enum.class);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void classWithoutConstructorGiven() {
         bf.create(WithoutConstructor.class);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void classWithPrivateConstructorGiven() {
+        bf.create(WithPrivateConstructor.class);
     }
 
     @Test
@@ -41,31 +91,3 @@ public class BinderFactoryTester {
     }
 }
 
-class B {
-    @DoNotBind
-    int f;
-    char g;
-    double h;
-    public B() {
-        f = 1;
-        g = 'A';
-        h = 0.69;
-    }
-}
-class A {
-    int f;
-    char g;
-    @Name("ololo")
-    String h;
-    B add;
-    public A() {
-        f = 96;
-        g = 'Z';
-        h = "How to buy pig?";
-        add = new B();
-    }
-}
-class WithoutConstructor {
-    int f;
-    char g;
-}

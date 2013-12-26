@@ -29,9 +29,9 @@ public class MyBinder<T> implements Binder<T> {
             T answer = tClass.getConstructor().newInstance();
             recDec(answer, jsonObject);
             return answer;
-        } catch (NoSuchMethodException e) {
+        }   catch (NoSuchMethodException e) {
             throw new IllegalArgumentException("There is no declared constructor in " + tClass.getName());
-        } catch (SecurityException e) {
+        }   catch (SecurityException e) {
             throw new IllegalArgumentException("SecurityException in " + tClass.getName() + " : " + e.toString());
         } catch (InvocationTargetException e) {
             throw new IllegalArgumentException("Something bad in your constructor : " + e.getMessage());
@@ -57,14 +57,17 @@ public class MyBinder<T> implements Binder<T> {
                 Field field = null;
                 Field[] fields = obj.getClass().getDeclaredFields();
                 for (Field f : fields) {
-                    if (f.getName().equals(i.toString()) && !f.isAnnotationPresent(DoNotBind.class)) {
-                        field = f;
-                        break;
-                    }
-                    if (f.getAnnotation(Name.class).value().equals(i.toString())
-                            && !f.isAnnotationPresent(DoNotBind.class)) {
-                        field = f;
-                        break;
+                    if (!f.isAnnotationPresent(DoNotBind.class)) {
+                        if (f.getName().equals(i.toString())) {
+                            field = f;
+                            break;
+                        }
+                        if (f.isAnnotationPresent(Name.class)) {
+                            if (f.getAnnotation(Name.class).value().equals(i.toString())) {
+                                field = f;
+                                break;
+                            }
+                        }
                     }
                 }
 

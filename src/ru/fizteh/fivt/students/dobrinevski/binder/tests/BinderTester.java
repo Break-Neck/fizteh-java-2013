@@ -21,6 +21,63 @@ public class BinderTester {
     public static ByteArrayOutputStream outStream;
     public static ByteArrayInputStream inStream;
 
+    public static class IntAndDouble {
+        int a;
+        double b;
+        public IntAndDouble() {
+            a = 5;
+            b = 25;
+        }
+    }
+    public static class C {
+        @DoNotBind
+        public int f;
+        public char g;
+        public double h;
+        public C() {
+            f = 1;
+            g = 'A';
+            h = 0.69;
+        }
+        @Override
+        public boolean equals(Object a) {
+            if (f == ((C) a).f && g == ((C) a).g && h == ((C) a).h) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return f + (int) g + (int) h;
+        }
+    }
+    public static class D {
+        int f;
+        char g;
+        @Name("ololo")
+        String h;
+        C add;
+        public D() {
+            f = 96;
+            g = 'Z';
+            h = "How to buy pig?";
+            add = new C();
+        }
+        @Override
+        public boolean equals(Object a) {
+            if (f == ((D) a).f && g == ((D) a).g && h.equals(((D) a).h) && add.equals(((D) a).add)) {
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return f + (int) g + hashCode() + add.hashCode();
+        }
+    }
+
     @Before
     public void init()  {
         bf = new MyBinderFactory();
@@ -44,42 +101,15 @@ public class BinderTester {
     @Test
     public void mainTestSerDeser() throws IOException {
         bind = bf.create(D.class);
-        bind.serialize(new D(), outStream);
+        D begin = new D();
+        bind.serialize(begin, outStream);
         assertEquals(outStream.toString(),
                 "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}");
         buf = "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}"
                 .getBytes();
+        inStream. = new ByteArrayInputStream(buf);
+        D test = (D) bind.deserialize(inStream);
+        assertEquals(begin, test);
     }
 }
-class IntAndDouble {
-    int a;
-    double b;
-    public IntAndDouble() {
-        a = 5;
-        b = 25;
-    }
-}
-class C {
-    @DoNotBind
-    int f;
-    char g;
-    double h;
-    public C() {
-        f = 1;
-        g = 'A';
-        h = 0.69;
-    }
-}
-class D {
-    int f;
-    char g;
-    @Name("ololo")
-    String h;
-    C add;
-    public D() {
-        f = 96;
-        g = 'Z';
-        h = "How to buy pig?";
-        add = new C();
-    }
-}
+
