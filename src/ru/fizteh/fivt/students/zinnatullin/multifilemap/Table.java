@@ -14,7 +14,6 @@ public class Table {
     private String name;
     private File path;
     public HashMap data;
-    //public HashMap<String, String> data;
     
     public Table(File path, String name) {
         this.name = name;

@@ -17,7 +17,7 @@ public class GetCommand implements ShellCommand {
         }
         String value = "";
         value = Shell.getInstance().getDB().get(args[1]);
-        if (value != "") {
+        if (!value.equals("")) {
             System.out.println("found");
             System.out.println(value);
         } else {

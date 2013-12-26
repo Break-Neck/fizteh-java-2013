@@ -18,7 +18,7 @@ public class PutCommand implements ShellCommand {
         
         String value = "";
         value = Shell.getInstance().getDB().put(args[1], args[2]);
-        if (value != "") {
+        if (!value.equals("")) {
             System.out.println("overwrite");
             System.out.println(value);
         } else {

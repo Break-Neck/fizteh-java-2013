@@ -50,7 +50,7 @@ public class TableProvider {
     }
     
     public static String getNFile(String key) {
-        int hash = Math.abs(key.hashCode()/16 % 16);
+        int hash = Math.abs(key.hashCode() / 16 % 16);
         return hash + ".data";
     }
 }

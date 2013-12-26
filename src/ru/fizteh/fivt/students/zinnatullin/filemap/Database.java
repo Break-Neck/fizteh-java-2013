@@ -17,11 +17,9 @@ public class Database {
     private HashMap<String, String> data;
     
     public Database(String path, String file) {
-         this.path = path;
+        this.path = path;
         this.file = file;
         data = new HashMap();
-        //data.put("name", "van");
-        //data.put("surname", "Ivanov");
     }
     
     public Database setFilename(String path, String file) {

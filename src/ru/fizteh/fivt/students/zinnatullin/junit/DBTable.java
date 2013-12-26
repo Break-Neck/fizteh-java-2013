@@ -204,7 +204,7 @@ public class DBTable implements Table{
                                 this.data.put(nDir, dirMap);
                                 fis.close();
                             }
-                        } catch(Exception ex) {
+                        } catch (Exception ex) {
                             System.err.println("Error read database data");
                         }
                     }
@@ -270,7 +270,7 @@ public class DBTable implements Table{
             }
             fos.flush();
             fos.close();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             return null;
         }
         return this;
@@ -286,7 +286,7 @@ public class DBTable implements Table{
     }
     
     public static String getNFile(String key) {
-        int hash = Math.abs(key.hashCode()/16 % 16);
+        int hash = Math.abs(key.hashCode() / 16 % 16);
         return hash + ".data";
     }
 }

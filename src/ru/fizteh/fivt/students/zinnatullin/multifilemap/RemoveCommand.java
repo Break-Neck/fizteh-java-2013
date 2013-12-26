@@ -23,7 +23,7 @@ public class RemoveCommand implements ShellCommand {
             Shell.printMessage(ex.getMessage());
             return false;
         }
-        if (value != "") {
+        if (!value.equals("")) {
             System.out.println("removed");
             System.out.println(value);
         } else {

@@ -36,7 +36,7 @@ public class Shell {
         if (args.length > 0) {
             Shell.getInstance().exec(args);
         } else {
-            do{
+            do {
                 printSuggestMessage();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 String commandName = reader.readLine();

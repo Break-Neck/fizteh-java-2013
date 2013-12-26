@@ -55,7 +55,7 @@ public class Shell {
             Shell.getInstance().exec(args);
         } else {
             boolean status = false;
-            do{
+            do {
                 printSuggestMessage();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 String commandName = reader.readLine();
