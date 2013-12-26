@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.kamilTalipov.database;
 
 import ru.fizteh.fivt.students.kamilTalipov.database.commands.*;
-import ru.fizteh.fivt.students.kamilTalipov.database.core.DatabaseException;
 import ru.fizteh.fivt.students.kamilTalipov.database.core.HashDatabase;
 import ru.fizteh.fivt.students.kamilTalipov.database.core.MultiFileHashTableFactory;
 import ru.fizteh.fivt.students.kamilTalipov.database.core.MultiFileHashTableProvider;
