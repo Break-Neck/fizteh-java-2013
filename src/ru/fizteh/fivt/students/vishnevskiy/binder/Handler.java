@@ -100,6 +100,7 @@ public class Handler extends DefaultHandler {
                 }
             }
         } else {                 // if field
+
             fields.pop();
         }
     }

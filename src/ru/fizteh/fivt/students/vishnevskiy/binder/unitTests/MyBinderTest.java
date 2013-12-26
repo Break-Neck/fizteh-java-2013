@@ -40,7 +40,7 @@ public class MyBinderTest {
         Circular c1 = new Circular();
         c1.sub = new SubCircular();
         c1.sub.circ = c1;
-        binder.serialize(new Valid(), output);
+        binder.serialize(c1, output);
     }
 
     @Test
