@@ -88,12 +88,13 @@ public class Handler extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) throws SAXException {
         depth--;
         if (depth % 2 == 0) {     // if class
+            Object currObject = objects.pop();
             if (depth == 0) {     // if top class
-                this.object = objects.pop();
+                this.object = currObject;
             } else {
                 fields.peek().setAccessible(true);
                 try {
-                    fields.peek().set(objects.peek(), object);
+                    fields.peek().set(objects.peek(), currObject);
                 } catch (IllegalAccessException e) {
                     throw new IllegalArgumentException("Invalid object");
                 }
@@ -112,21 +113,21 @@ public class Handler extends DefaultHandler {
             currField.setAccessible(true);
             String value = new String(chars, start, length);
 
-            if (currentType.equals(char.class)) {
+            if (currentType.equals(char.class) || currentType.equals(Character.class)) {
                 currField.set(currObject, chars[start]);
             } else if (currentType.equals(String.class)) {
                 currField.set(currObject, value);
-            } else if (currentType.equals(int.class)) {
+            } else if (currentType.equals(int.class) || currentType.equals(Integer.class)) {
                 currField.set(currObject, Integer.parseInt(value));
-            } else if (currentType.equals(long.class)) {
+            } else if (currentType.equals(long.class) || currentType.equals(Long.class)) {
                 currField.set(currObject, Long.parseLong(value));
-            } else if (currentType.equals(byte.class)) {
+            } else if (currentType.equals(byte.class) || currentType.equals(Byte.class)) {
                 currField.set(currObject, Short.parseShort(value));
-            } else if (currentType.equals(float.class)) {
+            } else if (currentType.equals(float.class) || currentType.equals(Float.class)) {
                 currField.set(currObject, Float.parseFloat(value));
-            } else if (currentType.equals(double.class)) {
+            } else if (currentType.equals(double.class) || currentType.equals(Double.class)) {
                 currField.set(currObject, Double.parseDouble(value));
-            } else if (currentType.equals(boolean.class)) {
+            } else if (currentType.equals(boolean.class) || currentType.equals(Boolean.class)) {
                 currField.set(currObject, Boolean.parseBoolean(value));
             } else if (currentType.isEnum()) {
                 Object enumConstant = null;
