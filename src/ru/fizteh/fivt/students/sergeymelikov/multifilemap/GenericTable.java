@@ -26,9 +26,9 @@ public abstract class GenericTable<ValueType> {
 
     public GenericTable(String name, File rootDir) {
         tableDirectory = new File(rootDir, name);
-        if (!tableDirectory.isDirectory()) {
-            throw new IllegalArgumentException(name + "not exist");
-        }
+//        if (!tableDirectory.isDirectory()) {
+//            throw new IllegalArgumentException(name + "not exist");
+//        }
         try {
             oldDatabase = new MultiFileHashMap<>(tableDirectory, this);
         } catch (IOException e) {
