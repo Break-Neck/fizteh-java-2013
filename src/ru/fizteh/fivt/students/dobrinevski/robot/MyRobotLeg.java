@@ -4,15 +4,15 @@ import ru.fizteh.fivt.robot.RobotLeg;
 import ru.fizteh.fivt.robot.RobotLegType;
 
 import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class MyRobotLeg extends RobotLeg {
-    private static boolean turn;
+    private AtomicBoolean turn;
     private Integer step;
     private final Lock lock;
 
-    public MyRobotLeg(RobotLegType type, OutputStream output, boolean myTurn, int stepCount, Lock locker) {
+    public MyRobotLeg(RobotLegType type, OutputStream output, AtomicBoolean myTurn, int stepCount, Lock locker) {
         super(type, output);
         turn = myTurn;
         step = stepCount;
