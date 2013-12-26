@@ -6,23 +6,29 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public abstract class AbstractTable<KeyType, ValueType> {
+public abstract class AbstractTable<KeyType, ValueType> implements AutoCloseable {
     protected Map<KeyType, ValueType> dataBase = new HashMap<KeyType, ValueType>();
-    protected ThreadLocal<Map<KeyType, ValueType>> addedKeys;// = new HashMap<KeyType, ValueType>();
-    protected ThreadLocal<Set<KeyType>> deletedKeys;// = new HashSet<KeyType>();
+    protected ThreadLocal<Map<KeyType, ValueType>> addedKeys;
+    protected ThreadLocal<Set<KeyType>> deletedKeys;
 
     protected final Lock tableTransactionsLock = new ReentrantLock(true);
 
     protected File dataDirectory = null;
 
+    protected AtomicBoolean isClosed = new AtomicBoolean(false);
+
     public String getName() {
+        checkIfClosed();
         return dataDirectory.getName();
     }
 
     public ValueType get(KeyType key) {
+        checkIfClosed();
+
         if (key == null) {
             throw new IllegalArgumentException("null key");
         }
@@ -46,6 +52,8 @@ public abstract class AbstractTable<KeyType, ValueType> {
     }
 
     public ValueType put(KeyType key, ValueType value) {
+        checkIfClosed();
+
         if (key == null) {
             throw new IllegalArgumentException("null key");
         }
@@ -73,6 +81,8 @@ public abstract class AbstractTable<KeyType, ValueType> {
     }
 
     public ValueType remove(KeyType key) {
+        checkIfClosed();
+
         if (key == null) {
             throw new IllegalArgumentException("null key");
         }
@@ -92,6 +102,8 @@ public abstract class AbstractTable<KeyType, ValueType> {
     }
 
     public int size() {
+        checkIfClosed();
+
         tableTransactionsLock.lock();
         try {
             for (KeyType key : deletedKeys.get()) {
@@ -123,6 +135,8 @@ public abstract class AbstractTable<KeyType, ValueType> {
     }
 
     protected int countChanges() {
+        checkIfClosed();
+
         int changesCounter = addedKeys.get().size() + deletedKeys.get().size();
 
         for (KeyType key : addedKeys.get().keySet()) {
@@ -140,6 +154,8 @@ public abstract class AbstractTable<KeyType, ValueType> {
     public abstract int commit() throws IOException;
 
     public int rollback() {
+        checkIfClosed();
+
         tableTransactionsLock.lock();
         int counter;
         try {
@@ -153,11 +169,33 @@ public abstract class AbstractTable<KeyType, ValueType> {
     }
 
     public int getChangesCount() {
+        checkIfClosed();
+
         tableTransactionsLock.lock();
         try {
             return countChanges();
         } finally {
             tableTransactionsLock.unlock();
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        tableTransactionsLock.lock();
+        try {
+            if (!isClosed.get()) {
+                rollback();
+                isClosed.set(true);
+            }
+        } finally {
+            tableTransactionsLock.unlock();
+        }
+
+    }
+
+    public void checkIfClosed() {
+        if (isClosed.get()) {
+            throw new IllegalStateException("Table is closed");
         }
     }
 }

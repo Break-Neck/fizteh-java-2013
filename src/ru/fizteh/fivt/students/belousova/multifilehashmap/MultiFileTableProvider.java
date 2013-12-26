@@ -2,7 +2,8 @@ package ru.fizteh.fivt.students.belousova.multifilehashmap;
 
 import java.io.File;
 
-public class MultiFileTableProvider extends AbstractTableProvider<ChangesCountingTable> implements ChangesCountingTableProvider {
+public class MultiFileTableProvider extends AbstractTableProvider<MultiFileTable>
+        implements ChangesCountingTableProvider {
     public MultiFileTableProvider(File directory) {
         if (directory == null) {
             throw new IllegalArgumentException("null directory");
@@ -14,7 +15,7 @@ public class MultiFileTableProvider extends AbstractTableProvider<ChangesCountin
         }
 
 
-        dataDitectory = directory;
+        dataDirectory = directory;
         for (File tableFile : directory.listFiles()) {
             tableMap.put(tableFile.getName(), new MultiFileTable(tableFile));
         }
@@ -31,7 +32,7 @@ public class MultiFileTableProvider extends AbstractTableProvider<ChangesCountin
         if (!name.matches(TABLE_NAME_FORMAT)) {
             throw new IllegalArgumentException("incorrect name");
         }
-        File tableDirectory = new File(dataDitectory, name);
+        File tableDirectory = new File(dataDirectory, name);
         if (!tableDirectory.mkdir()) {
             return null;
         }

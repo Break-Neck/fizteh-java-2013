@@ -30,8 +30,8 @@ public class StorableTableProviderTest {
         goodList.add(Double.class);
         goodList.add(String.class);
         goodList.add(Boolean.class);
-        testString = "<row><col>5</col><col>0</col><col>65777</col><col>" +
-                "5.5</col><col>767.576</col><col>frgedr</col><col>true</col></row>";
+        testString = "<row><col>5</col><col>0</col><col>65777</col><col>"
+                + "5.5</col><col>767.576</col><col>frgedr</col><col>true</col></row>";
         badList.add(null);
         badList.add(IllegalArgumentException.class);
     }

@@ -3,7 +3,7 @@ package ru.fizteh.fivt.students.belousova.storable.tests;
 import org.junit.*;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.students.belousova.storable.ChangesCountingTable;
+import ru.fizteh.fivt.students.belousova.storable.ExtendedTable;
 import ru.fizteh.fivt.students.belousova.storable.StorableTableProvider;
 import ru.fizteh.fivt.students.belousova.storable.StorableTableProviderFactory;
 import ru.fizteh.fivt.students.belousova.utils.FileUtils;
@@ -18,15 +18,15 @@ public class StorableTableTest {
     private static String testString;
     private static Storeable testStorable;
     private static String testString1;
-    private ChangesCountingTable table;
+    private ExtendedTable table;
 
     @BeforeClass
     public static void setUpClass() throws Exception {
         tableProvider = tableProviderFactory.create("javatest");
-        testString = "<row><col>5</col><col>0</col><col>65777</col><col>" +
-                "5.5</col><col>767.576</col><col>frgedr</col><col>true</col></row>";
-        testString1 = "<row><col>5</col><col>0</col><col>65777</col><col>" +
-                "5.5</col><col>767.576</col><col>frgedr</col><col>true</col></row>";
+        testString = "<row><col>5</col><col>0</col><col>65777</col><col>"
+                + "5.5</col><col>767.576</col><col>frgedr</col><col>true</col></row>";
+        testString1 = "<row><col>5</col><col>0</col><col>65777</col><col>"
+                + "5.5</col><col>767.576</col><col>frgedr</col><col>true</col></row>";
     }
 
     @Before
