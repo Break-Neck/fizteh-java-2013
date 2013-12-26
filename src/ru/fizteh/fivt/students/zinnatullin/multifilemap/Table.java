@@ -26,11 +26,11 @@ public class Table {
 	public Table getData(String nDir, String nFile) throws FileNotFoundException, IOException{
 		
 		File nPath = new File(path, nDir);
-		if(!nPath.exists()) {
+		if (!nPath.exists()) {
 			nPath.mkdir();
 		}
 		File inputFile = new File(nPath, nFile);
-		if(!inputFile.exists()) {
+		if (!inputFile.exists()) {
 			inputFile.createNewFile();
 		}
 		FileInputStream fis = new FileInputStream(inputFile);
@@ -39,28 +39,28 @@ public class Table {
 		while(fis.available() > 0) {
 			byte[] keyLenBytes = new byte[4];
 			fis.read(keyLenBytes);
-			if(keyLenBytes.length == 0) {
+			if (keyLenBytes.length == 0) {
 				continue;
 			}
 			int keyLen = Integer.parseInt(new String(keyLenBytes, "UTF-8"), 16);
 			
 			byte[] valueLenBytes = new byte[4];
 			fis.read(valueLenBytes);
-			if(valueLenBytes.length == 0) {
+			if (valueLenBytes.length == 0) {
 				continue;
 			}
 			int valueLen = Integer.parseInt(new String(valueLenBytes, "UTF-8"), 16);
 						
 			byte[] keyBytes = new byte[keyLen];
 			fis.read(keyBytes);
-			if(keyBytes.length == 0) {
+			if (keyBytes.length == 0) {
 				continue;
 			}
 			String key = new String(keyBytes, "UTF-8");
 			
 			byte[] valueBytes = new byte[valueLen];
 			fis.read(valueBytes);
-			if(valueBytes.length == 0) {
+			if (valueBytes.length == 0) {
 				continue;
 			}
 			String value = new String(valueBytes, "UTF-8");
@@ -68,7 +68,7 @@ public class Table {
 			data.put(key, value);
 		}
 		
-		if(!this.data.containsKey(nDir)) {
+		if (!this.data.containsKey(nDir)) {
 			HashMap filemap = new HashMap();
 			filemap.put(nFile, data);
 			this.data.put(nDir, filemap);
@@ -83,18 +83,18 @@ public class Table {
 	
 	public Table saveData(String nDir, String nFile) throws FileNotFoundException, IOException{
 		File nPath = new File(path, nDir);
-		if(!nPath.exists()) {
+		if (!nPath.exists()) {
 			nPath.mkdir();
 		}
 		File outputFile = new File(nPath, nFile);
-		if(!outputFile.exists()) {
+		if (!outputFile.exists()) {
 			outputFile.createNewFile();
 		}
 		FileOutputStream fos = new FileOutputStream(outputFile);
 
 		HashMap dirMap = (HashMap)data.get(nDir);
 		HashMap fileMap = (HashMap)dirMap.get(nFile);
-		if(!fileMap.isEmpty()) {
+		if (!fileMap.isEmpty()) {
 			for (Iterator it = fileMap.entrySet().iterator(); it.hasNext();) {
 				Map.Entry<String, String> entry = (Map.Entry<String, String>)it.next();
 				String key = entry.getKey();
@@ -102,7 +102,7 @@ public class Table {
 				byte[] keyLenBytes;
 				String keyLenHex = "";
 				int keyLenHexSize = Long.toHexString(key.getBytes().length).getBytes().length;
-				if(keyLenHexSize < 4) {
+				if (keyLenHexSize < 4) {
 					for (int i = 0; i < (4 - keyLenHexSize); i++) {
 						keyLenHex += Long.toHexString(0);
 					}
@@ -113,7 +113,7 @@ public class Table {
 				byte[] valueLenBytes;
 				String valueLenHex = "";
 				int valueLenHexSize = Long.toHexString(value.getBytes().length).getBytes().length;
-				if(valueLenHexSize < 4) {
+				if (valueLenHexSize < 4) {
 					for (int i = 0; i < (4 - valueLenHexSize); i++) {
 						valueLenHex += Long.toHexString(0);
 					}

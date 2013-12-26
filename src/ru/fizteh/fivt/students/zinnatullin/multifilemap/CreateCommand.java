@@ -17,7 +17,7 @@ public class CreateCommand implements ShellCommand {
         }
 
 		boolean result = Shell.getInstance().getDB().createTable(args[1]);
-        if(result) {
+        if (result) {
 			Shell.printMessage("created");
 			return true;
 		} else {

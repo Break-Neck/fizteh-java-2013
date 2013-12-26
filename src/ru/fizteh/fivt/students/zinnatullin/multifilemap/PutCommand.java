@@ -23,7 +23,7 @@ public class PutCommand implements ShellCommand {
 			Shell.printMessage(ex.getMessage());
 			return false;
 		}
-		if(value != "") {
+		if (value != "") {
 			System.out.println("overwrite");
 			System.out.println(value);
 		} else {

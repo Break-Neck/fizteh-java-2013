@@ -21,7 +21,7 @@ public class Shell {
     public static void main(String[] args) throws IOException {
         Shell shell = new Shell();
 		
-		if(args.length > 0){
+		if (args.length > 0){
 			shell.exec(args);
 		} else {
 			do{
@@ -38,7 +38,7 @@ public class Shell {
     }
 
     private void exec(String[] args) {  
-		if(!commands.containsKey(args[0])){
+		if (!commands.containsKey(args[0])){
 			printMessage(args[0] + ": command not found");
 		} else {
 			commands.get(args[0]).execute(args);

@@ -16,14 +16,14 @@ public class GetCommand implements ShellCommand {
             return false;
         }
 		
-		if(Shell.getInstance().table == null){
+		if (Shell.getInstance().table == null){
 			Shell.printMessage("empty table");
 			return false;
 		}
 		
 		String value = null;
 		value = Shell.getInstance().table.get(args[1]);
-		if(value != null){
+		if (value != null){
 			Shell.printMessage("found");
 			Shell.printMessage(value);
 		} else {

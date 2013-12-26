@@ -23,7 +23,7 @@ public class Database {
 	
 	public boolean useTable(String name) {
 		table = TableProvider.get(path, name);
-		if(table instanceof Table) {
+		if (table instanceof Table) {
 			return true;
 		} else {
 			return false;
@@ -35,7 +35,7 @@ public class Database {
 	}
 		
 	public String get(String key) throws Exception{
-		if(table == null) {
+		if (table == null) {
 			throw new Exception("Table not select");
 		}
 		String value = null;
@@ -46,14 +46,14 @@ public class Database {
 		}
 		HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
 		HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
-		if(fileMap.containsKey(key)) {
+		if (fileMap.containsKey(key)) {
 			value = (String)fileMap.get(key);
 		}
 		return value;
 	}
 	
 	public String put(String key, String value) throws Exception{
-		if(table == null) {
+		if (table == null) {
 			throw new Exception("Table not select");
 		}
 		String oldValue = "";
@@ -61,7 +61,7 @@ public class Database {
 			table.getData(TableProvider.getNDir(key), TableProvider.getNFile(key));
 			HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
 			HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
-			if(fileMap.containsKey(key)) {
+			if (fileMap.containsKey(key)) {
 				oldValue = (String)fileMap.get(key);
 			}
 			fileMap.put(key, value);
@@ -75,7 +75,7 @@ public class Database {
 	}
 	
 	public String remove(String key) throws Exception{
-		if(table == null) {
+		if (table == null) {
 			throw new Exception("Table not select");
 		}
 		String oldValue = "";
@@ -83,7 +83,7 @@ public class Database {
 			table.getData(TableProvider.getNDir(key), TableProvider.getNFile(key));
 			HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
 			HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
-			if(fileMap.containsKey(key)) {
+			if (fileMap.containsKey(key)) {
 				oldValue = (String)fileMap.get(key);
 				fileMap.remove(key);
 				dirMap.put(TableProvider.getNFile(key), fileMap);
@@ -97,15 +97,15 @@ public class Database {
 	}
 	
 	public void commit() throws Exception{
-		if(table == null) {
+		if (table == null) {
 			throw new Exception("Table not select");
 		}
-		if(!table.data.isEmpty()) {
+		if (!table.data.isEmpty()) {
 			for (Iterator it = table.data.entrySet().iterator(); it.hasNext();) {
 				Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>)it.next();
 				String nDir = entry.getKey();
 				HashMap dirMap = entry.getValue();
-				if(!dirMap.isEmpty()) {
+				if (!dirMap.isEmpty()) {
 					for(it = dirMap.entrySet().iterator(); it.hasNext();) {
 						String nFile = entry.getKey();
 						try {

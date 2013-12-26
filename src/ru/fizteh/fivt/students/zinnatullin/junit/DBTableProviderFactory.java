@@ -10,7 +10,7 @@ public class DBTableProviderFactory implements TableProviderFactory{
 	public TableProvider create(String dir) {
 		
 		File path = new File(dir);
-		if(!path.exists() || !path.isDirectory()) {
+		if (!path.exists() || !path.isDirectory()) {
 			return null;
 		}
 		

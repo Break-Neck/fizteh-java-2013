@@ -23,7 +23,7 @@ public class Shell {
     }
 
 	public static Shell getInstance() {
-		if(shell == null) {
+		if (shell == null) {
 			shell = new Shell();
 		}
 		return shell;
@@ -33,7 +33,7 @@ public class Shell {
 		String dbPath = System.getProperty("fizteh.db.dir");
 		Shell.getInstance().setDB(dbPath);
 		
-		if(args.length > 0) {
+		if (args.length > 0) {
 			Shell.getInstance().exec(args);
 		} else {
 			do{
@@ -50,7 +50,7 @@ public class Shell {
 	}
 	
 	private void exec(String[] args) {  
-		if(!commands.containsKey(args[0])) {
+		if (!commands.containsKey(args[0])) {
 			printMessage(args[0] + ": command not found");
 		} else {
 			commands.get(args[0]).execute(args);
@@ -68,7 +68,7 @@ public class Shell {
 	
 	public void setDB(String dir) {
 		File path =  new File(dir);
-		if(!path.isDirectory()) {
+		if (!path.isDirectory()) {
 			printMessage("Incorrect db path");
 			System.exit(1);
 		}

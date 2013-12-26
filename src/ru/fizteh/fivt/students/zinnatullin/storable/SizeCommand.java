@@ -16,7 +16,7 @@ public class SizeCommand implements ShellCommand {
             return false;
         }
 
-		if(Shell.getInstance().table == null){
+		if (Shell.getInstance().table == null){
 			Shell.printMessage("empty table");
 			return false;
 		}

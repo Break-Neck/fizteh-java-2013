@@ -28,7 +28,7 @@ public class Shell {
     }
 
 	public static Shell getInstance(){
-		if(shell == null){
+		if (shell == null){
 			shell = new Shell();
 		}
 		return shell;
@@ -37,7 +37,7 @@ public class Shell {
 	public static void main(String[] args) throws IOException{
 		
 		String dbPath = System.getProperty("fizteh.db.dir");
-		if(dbPath.isEmpty()){
+		if (dbPath.isEmpty()){
 			printMessage("Empty db path");
 			System.exit(1);
 		}
@@ -45,13 +45,13 @@ public class Shell {
 		DBTableProviderFactory providerFactory = new DBTableProviderFactory();
 		DBTableProvider provider = (DBTableProvider)providerFactory.create(dbPath);
 		
-		if(provider == null){
+		if (provider == null){
 			printMessage("Incorrect db path");
 			System.exit(1);
 		}
 		Shell.getInstance().provider = provider;
 		
-		if(args.length > 0){
+		if (args.length > 0){
 			Shell.getInstance().exec(args);
 		} else {
 			boolean status = false;
@@ -70,7 +70,7 @@ public class Shell {
 	
 	private boolean exec(String[] args) {  
 		boolean status = false;
-		if(!commands.containsKey(args[0])){
+		if (!commands.containsKey(args[0])){
 			printMessage(args[0] + ": command not found");
 		} else {
 			status = commands.get(args[0]).execute(args);

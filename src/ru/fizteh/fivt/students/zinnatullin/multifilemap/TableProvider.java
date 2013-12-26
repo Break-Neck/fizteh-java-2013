@@ -8,7 +8,7 @@ public class TableProvider {
 		Table table = null;
 		
 		File tablePath = new File(path, name);
-		if(tablePath.exists() && tablePath.isDirectory()) {
+		if (tablePath.exists() && tablePath.isDirectory()) {
 			return new Table(path, name);
 		}
 		
