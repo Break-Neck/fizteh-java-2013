@@ -222,7 +222,7 @@ public class DataBase implements Table, AutoCloseable {
         int nFileInMap = getnFileInMap(keyString);
         
         	
-            if ((files.containsKey(nFileInMap)) && (files != null) && (files.get(nFileInMap) != null) && (files.get(nFileInMap).mapFromFile != null)) {
+            if ((files.containsKey(nFileInMap))) {
                	
             	result = files.get(nFileInMap).mapFromFile.get(keyString);
             } else {
