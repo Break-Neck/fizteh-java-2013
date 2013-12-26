@@ -42,6 +42,7 @@ class Valid {
         f = 8.56;
         h = 'h';
         i = "qwerty";
+        sub = new SubValid();
     }
 }
 

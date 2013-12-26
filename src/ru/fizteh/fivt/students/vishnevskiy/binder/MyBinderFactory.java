@@ -2,6 +2,8 @@ package ru.fizteh.fivt.students.vishnevskiy.binder;
 
 import ru.fizteh.fivt.binder.*;
 
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.lang.reflect.Field;
@@ -24,18 +26,27 @@ public class MyBinderFactory implements BinderFactory {
     }
 
     private void checkSerializable(Class<?> clazz) {
+        Set<Class<?>> checked = new HashSet<Class<?>>();
+        checkSub(checked, clazz);
+    }
+
+    private void checkSub(Set<Class<?>> checked, Class<?> clazz) {
         if (clazz.isPrimitive() || clazz.equals(String.class) || clazz.isEnum()) {
             return;
         }
         if (clazz.isArray() || MyBinder.isWrapperType(clazz)) {
             throw new IllegalArgumentException("The class can't be serialized");
         }
+        if (checked.contains(clazz)) {
+            return;
+        }
         checkDefaultConstructor(clazz);
+        checked.add(clazz);
         for (Field field : clazz.getDeclaredFields()) {
             if (field.getAnnotation(DoNotBind.class) != null) {
                 continue;
             }
-            checkSerializable(field.getType());
+            checkSub(checked, field.getType());
         }
     }
 
