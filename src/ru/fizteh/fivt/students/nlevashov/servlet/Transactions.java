@@ -25,6 +25,7 @@ public class Transactions {
         TableProviderFactory factory = new MyTableProviderFactory();
         provider = factory.create(addrPath.toString());
 
+        tids = new HashMap<>();
         counter = 0;
     }
 

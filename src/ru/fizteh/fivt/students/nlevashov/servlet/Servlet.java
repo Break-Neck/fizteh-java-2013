@@ -24,13 +24,13 @@ public class Servlet {
             String tableName = req.getParameter("table");
 
             if ((tableName == null) || (tableName.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "table expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "table expected");
                 return;
             }
 
             Integer tid = transactions.getTid(tableName);
             if (tid == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "table not exists");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "table not exists");
                 return;
             }
             String s = tid.toString();
@@ -40,7 +40,9 @@ public class Servlet {
             resp.setCharacterEncoding("UTF8");
 
             String result = "tid=";
-            for (int i = 0; i < 6 - s.length(); i++) result = result + "0";
+            for (int i = 0; i < 5 - s.length(); i++) {
+                result = result + "0";
+            }
             resp.getWriter().print(result + s);
         }
     }
@@ -51,13 +53,13 @@ public class Servlet {
             String tid = req.getParameter("tid");
 
             if ((tid == null) || (tid.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid expected");
                 return;
             }
 
-            Table t = transactions.getTable(Integer.getInteger(tid));
+            Table t = transactions.getTable(Integer.parseInt(tid));
             if (t == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid not defined");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
             Integer diff = t.commit();
@@ -76,13 +78,13 @@ public class Servlet {
             String tid = req.getParameter("tid");
 
             if ((tid == null) || (tid.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid expected");
                 return;
             }
 
-            Table t = transactions.getTable(Integer.getInteger(tid));
+            Table t = transactions.getTable(Integer.parseInt(tid));
             if (t == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid not defined");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
             Integer diff = t.rollback();
@@ -102,17 +104,17 @@ public class Servlet {
             String key = req.getParameter("key");
 
             if ((tid == null) || (tid.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid expected");
                 return;
             }
             if ((key == null) || (key.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "key expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "key expected");
                 return;
             }
 
-            Table t = transactions.getTable(Integer.getInteger(tid));
+            Table t = transactions.getTable(Integer.parseInt(tid));
             if (t == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid not defined");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
             Storeable value = t.get(key);
@@ -138,28 +140,28 @@ public class Servlet {
 
 
             if ((tid == null) || (tid.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid expected");
                 return;
             }
             if ((key == null) || (key.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "key expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "key expected");
                 return;
             }
             if ((value == null) || (value.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "value expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "value expected");
                 return;
             }
 
-            Table t = transactions.getTable(Integer.getInteger(tid));
+            Table t = transactions.getTable(Integer.parseInt(tid));
             if (t == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid not defined");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
             Storeable ret;
             try {
                 ret = t.put(key, transactions.getProvider().deserialize(t, value));
             } catch (ParseException e) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
             }
             if (ret == null) {
@@ -181,13 +183,13 @@ public class Servlet {
             String tid = req.getParameter("tid");
 
             if ((tid == null) || (tid.isEmpty())) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid expected");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid expected");
                 return;
             }
 
-            Table t = transactions.getTable(Integer.getInteger(tid));
+            Table t = transactions.getTable(Integer.parseInt(tid));
             if (t == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid not defined");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
                 return;
             }
             Integer size = t.size();
@@ -201,7 +203,7 @@ public class Servlet {
     }
 
     public static void main(String[] args) throws Exception {
-        Server server = new Server(8008);
+        Server server = new Server(8080);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         context.setContextPath("/");
@@ -211,6 +213,8 @@ public class Servlet {
         context.addServlet(new ServletHolder(new Rollback()), "/rollback");
         context.addServlet(new ServletHolder(new Get()), "/get");
         context.addServlet(new ServletHolder(new Put()), "/put");
+
+        transactions = new Transactions();
 
         server.setHandler(context);
         server.start();
