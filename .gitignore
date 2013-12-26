@@ -2,5 +2,3 @@
 *.iml
 out
 jars
-/nbproject/private/
-/build/
