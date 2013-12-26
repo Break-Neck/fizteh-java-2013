@@ -17,7 +17,7 @@ public class MyBinderFactory implements BinderFactory {
         if (clazz.isPrimitive() || clazz.equals(String.class) || clazz.isEnum()) {
             return;
         }
-        if (clazz.isArray()) {
+        if (clazz.isArray() || MyBinder.isWrapperType(clazz)) {
             throw new IllegalArgumentException("The class can't be serialized");
         }
         try {
@@ -38,6 +38,9 @@ public class MyBinderFactory implements BinderFactory {
 
     public <T> MyBinder<T> create(Class<T> clazz) {
         if (clazz == null) {
+            throw new IllegalArgumentException("Invalid class");
+        }
+        if (clazz.isPrimitive() || MyBinder.isWrapperType(clazz)) {
             throw new IllegalArgumentException("Invalid class");
         }
         checkSerializable(clazz);

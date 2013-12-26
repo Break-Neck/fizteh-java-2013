@@ -5,6 +5,8 @@ import ru.fizteh.fivt.binder.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.lang.reflect.Field;
 import javax.xml.stream.*;
@@ -13,6 +15,24 @@ import org.xml.sax.SAXException;
 
 public class MyBinder<T> implements Binder<T> {
     private Class<T> clazz;
+    private static final Set<Class<?>> WRAPPER_TYPES = getWrapperTypes();
+
+    private static Set<Class<?>> getWrapperTypes() {
+        Set<Class<?>> wrapperTypes = new HashSet<Class<?>>();
+        wrapperTypes.add(Boolean.class);
+        wrapperTypes.add(Character.class);
+        wrapperTypes.add(Byte.class);
+        wrapperTypes.add(Short.class);
+        wrapperTypes.add(Integer.class);
+        wrapperTypes.add(Long.class);
+        wrapperTypes.add(Float.class);
+        wrapperTypes.add(Double.class);
+        return wrapperTypes;
+    }
+
+    public static boolean isWrapperType(Class<?> clazz) {
+        return WRAPPER_TYPES.contains(clazz);
+    }
 
     public MyBinder(Class<T> clazz) {
         this.clazz = clazz;
@@ -40,8 +60,11 @@ public class MyBinder<T> implements Binder<T> {
         if (object == null) {
             return objects;
         }
-
-        Class<?> clazz = object.getClass();
+        if (object.getClass().isPrimitive() || isWrapperType(object.getClass())
+                || object.getClass().equals(String.class) || object.getClass().isEnum()) {
+            return objects;
+        }
+            Class<?> clazz = object.getClass();
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
             if (field.getAnnotation(DoNotBind.class) == null) {
@@ -56,7 +79,7 @@ public class MyBinder<T> implements Binder<T> {
 
     private void writeXML(Object object, XMLStreamWriter writer) throws XMLStreamException, IllegalAccessException {
         Class<?> clazz = object.getClass();
-        if (clazz.isPrimitive() || clazz.equals(String.class) || clazz.isEnum()) {
+        if (clazz.isPrimitive() || isWrapperType(clazz) || clazz.equals(String.class) || clazz.isEnum()) {
             writer.writeCharacters(object.toString());
         } else {
             writer.writeStartElement(clazz.getName());
