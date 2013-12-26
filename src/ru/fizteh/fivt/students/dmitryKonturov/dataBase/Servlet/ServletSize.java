@@ -22,7 +22,7 @@ public class ServletSize extends HttpServlet {
 
         String tidString = request.getParameter("tid");
         if (tidString == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "no tid as parameter");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "no tid as parameter");
             return;
         }
 
@@ -30,7 +30,7 @@ public class ServletSize extends HttpServlet {
         try {
             transactionId = ServletShell.parseTransactionId(tidString);
         } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid parameter is wrong");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid parameter is wrong");
             return;
         }
 
@@ -45,7 +45,7 @@ public class ServletSize extends HttpServlet {
             TableImplementation table = (TableImplementation) provider.getTable(tableName);
             size = table.size(transactionId);
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ShellEmulator.getNiceMessage(e));
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ShellEmulator.getNiceMessage(e));
             return;
         }
 

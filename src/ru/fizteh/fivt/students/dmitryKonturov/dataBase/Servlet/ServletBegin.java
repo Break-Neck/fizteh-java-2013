@@ -22,7 +22,7 @@ public class ServletBegin extends HttpServlet {
 
         String tableName = request.getParameter("table");
         if (tableName == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "no table as parameter");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "no table as parameter");
             return;
         }
 
@@ -30,7 +30,7 @@ public class ServletBegin extends HttpServlet {
         try {
             transactionId = provider.getTransactionPool().createTransaction(tableName);
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ShellEmulator.getNiceMessage(e));
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ShellEmulator.getNiceMessage(e));
             return;
         }
 
@@ -42,7 +42,7 @@ public class ServletBegin extends HttpServlet {
                 return;
             }
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ShellEmulator.getNiceMessage(e));
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ShellEmulator.getNiceMessage(e));
             return;
         }
 

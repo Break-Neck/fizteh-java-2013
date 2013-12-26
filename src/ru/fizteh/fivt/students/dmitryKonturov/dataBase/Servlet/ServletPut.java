@@ -23,7 +23,7 @@ public class ServletPut extends HttpServlet {
 
         String tidString = request.getParameter("tid");
         if (tidString == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "no tid as parameter");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "no tid as parameter");
             return;
         }
 
@@ -31,7 +31,7 @@ public class ServletPut extends HttpServlet {
         try {
             transactionId = ServletShell.parseTransactionId(tidString);
         } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid parameter is wrong");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid parameter is wrong");
             return;
         }
 
@@ -42,13 +42,13 @@ public class ServletPut extends HttpServlet {
 
         String key = request.getParameter("key");
         if (key == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "no key as parameter");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "no key as parameter");
             return;
         }
 
         String value = request.getParameter("value");
         if (value == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "no value as parametter");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "no value as parametter");
             return;
         }
 
