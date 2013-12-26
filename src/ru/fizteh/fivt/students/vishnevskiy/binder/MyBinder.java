@@ -84,6 +84,7 @@ public class MyBinder<T> implements Binder<T> {
                 }
             }
         }
+        objects.remove(object);
     }
 
     private void writeXML(Object object, XMLStreamWriter writer) throws XMLStreamException, IllegalAccessException {

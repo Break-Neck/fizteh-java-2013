@@ -13,11 +13,20 @@ public class BinderMain {
         MyBinder binder = factory.create(Valid.class);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
-            binder.serialize(new Valid(), output);
+            binder.serialize(new Circular(), output);
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }
+}
+class Circular {
+    private int a;
+    SubCircular sub;
+}
+
+class SubCircular {
+    public float a;
+    Circular circ;
 }
 
 class Valid {
