@@ -153,11 +153,15 @@ public class Servlet {
             }
 
             Integer intTid = Integer.parseInt(tid);
-            MyTable t = transactions.get(intTid);
-            if (t == null) {
-                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
+            if (!transactions.containsKey(intTid)) {
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not exists");
                 return;
             }
+            MyTable t = transactions.get(intTid);
+            //if (t == null) {
+            //    resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not defined");
+            //    return;
+            //}
             Storeable value = t.get(key, intTid);
             if (value == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "key not exists");
