@@ -14,7 +14,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.IdentityHashMap;
 
 public class MyBinder<T> implements Binder<T> {
     Class<T> tClass;
@@ -46,45 +45,41 @@ public class MyBinder<T> implements Binder<T> {
     }
 
     private void recDec(Object obj, JSONObject jsonObject, Class<?> clazz) {
-        try {
-            String name;
-            for (Field one : obj.getClass().getDeclaredFields()) {
-                one.setAccessible(true);
-                try {
-                    if (one.isAnnotationPresent(DoNotBind.class)) {
-                        continue;
-                    }
-
-                    if (one.isAnnotationPresent(Name.class)) {
-                        name = one.getAnnotation(Name.class).value();
-                    } else {
-                        name = one.getName();
-                    }
-                    if (name == null || name.equals("") || name.contains("\n")) {
-                        throw new IllegalArgumentException("Field name is incorrect");
-                    }
-                    Object geted = jsonObject.get(name);
-                    if (geted == null || geted.getClass().isPrimitive()
-                            || geted.getClass().getSimpleName().equals("String")
-                            || geted.getClass().isEnum()) {
-                        one.set(obj, geted);
-                    }
-                    if (one.get(obj) == null) {
-                        try {
-                            one.set(obj, one.getType().newInstance());
-                        } catch (InstantiationException e) {
-                            throw new IllegalArgumentException("Cannot create");
-                        }
-                    }
-                    recDec(one.get(obj), (JSONObject) geted, one.getType());
-                } catch (IllegalAccessException e) {
-                    throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
-                } catch (JSONException e) {
-                    throw new IllegalArgumentException("json fail: " + e.getMessage());
+        String name;
+        for (Field one : obj.getClass().getDeclaredFields()) {
+            one.setAccessible(true);
+            try {
+                if (one.isAnnotationPresent(DoNotBind.class)) {
+                    continue;
                 }
+
+                if (one.isAnnotationPresent(Name.class)) {
+                    name = one.getAnnotation(Name.class).value();
+                } else {
+                    name = one.getName();
+                }
+                if (name == null || name.equals("") || name.contains("\n")) {
+                    throw new IllegalArgumentException("Field name is incorrect");
+                }
+                Object geted = jsonObject.get(name);
+                if (geted == null || geted.getClass().isPrimitive()
+                        || geted.getClass().getSimpleName().equals("String")
+                        || geted.getClass().isEnum()) {
+                    one.set(obj, geted);
+                }
+                if (one.get(obj) == null) {
+                    try {
+                        one.set(obj, one.getType().newInstance());
+                    } catch (InstantiationException e) {
+                        throw new IllegalArgumentException("Cannot create");
+                    }
+                }
+                recDec(one.get(obj), (JSONObject) geted, one.getType());
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
+            } catch (JSONException e) {
+                throw new IllegalArgumentException("json fail: " + e.getMessage());
             }
-        } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("illegal access " + e.getMessage());
         }
     }
 
@@ -94,12 +89,11 @@ public class MyBinder<T> implements Binder<T> {
         }
         try (OutputStreamWriter oStreamWriter = new OutputStreamWriter(output, "UTF-8")) {
             JSONWriter jsonWriter = new JSONWriter(oStreamWriter);
-            IdentityHashMap<Object, Integer> idHashMap = new IdentityHashMap<Object, Integer>();
-            recDraw(value, idHashMap, jsonWriter);
+            recDraw(value, jsonWriter);
         }
     }
 
-    private void recDraw(Object obj, IdentityHashMap<Object, Integer> idHashMap, JSONWriter jsonWriter) {
+    private void recDraw(Object obj, JSONWriter jsonWriter) {
         jsonWriter.object();
         String name;
         for (Field one : obj.getClass().getDeclaredFields()) {
@@ -140,13 +134,7 @@ public class MyBinder<T> implements Binder<T> {
                     continue;
                 }
 
-                if (grey.equals(idHashMap.get(objBuf))) {
-                    throw new IllegalStateException("Cycle reference");
-                }
-                idHashMap.put(objBuf, grey);
-
-                recDraw(objBuf, idHashMap, jsonWriter);
-                idHashMap.put(objBuf, black);
+                recDraw(objBuf, jsonWriter);
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
             } catch (JSONException e) {
