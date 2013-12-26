@@ -73,7 +73,7 @@ public class MyTableProvider implements TableProvider, AutoCloseable {
      * @throws IllegalArgumentException Если название таблицы null или имеет недопустимое значение.
      */
     @Override
-    public Table getTable(String name) {
+    public MyTable getTable(String name) {
         checkClose();
         if ((name == null) || name.trim().isEmpty() || name.matches(".*[/:\\*\\?\"\\\\><\\|\\s\\t\\n].*")) {
             throw new IllegalArgumentException("TableProvider.getTable: bad table name \"" + name + "\"");
@@ -108,7 +108,7 @@ public class MyTableProvider implements TableProvider, AutoCloseable {
      * @throws java.io.IOException При ошибках ввода/вывода.
      */
     @Override
-    public Table createTable(String name, List<Class<?>> columnTypes) throws IOException {
+    public MyTable createTable(String name, List<Class<?>> columnTypes) throws IOException {
         checkClose();
         if ((name == null) || name.trim().isEmpty() || name.matches(".*[/:\\*\\?\"\\\\><\\|\\s\\t\\n].*")) {
             throw new IllegalArgumentException("TableProvider.createTable: bad table name \"" + name + "\"");

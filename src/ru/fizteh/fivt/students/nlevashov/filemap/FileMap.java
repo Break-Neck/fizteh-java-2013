@@ -1,6 +1,7 @@
 package ru.fizteh.fivt.students.nlevashov.filemap;
 
 import ru.fizteh.fivt.students.nlevashov.mode.Mode;
+import ru.fizteh.fivt.students.nlevashov.servlet.Servlet;
 import ru.fizteh.fivt.students.nlevashov.shell.Shell;
 import ru.fizteh.fivt.storage.structured.*;
 import ru.fizteh.fivt.students.nlevashov.factory.*;
@@ -15,7 +16,11 @@ import java.util.regex.Pattern;
 public class FileMap {
 
     static Table currentTable = null;
-    static TableProvider provider;
+    static MyTableProvider provider;
+    static Servlet server;
+    static boolean doesServerRun = false;
+    static Integer port;
+
 
     public static void create(String tableName, String[] types) throws IOException {
         List<Class<?>> classes = new ArrayList<>();
@@ -160,8 +165,9 @@ public class FileMap {
                 System.exit(1);
             }
             Path addrPath = Shell.makePath(addr).toPath();
-            TableProviderFactory factory = new MyTableProviderFactory();
+            MyTableProviderFactory factory = new MyTableProviderFactory();
             provider = factory.create(addrPath.toString());
+
             Mode.start(args, new Mode.Executor() {
                 public boolean execute(String cmd) throws IOException {
                     if (!cmd.isEmpty()) {
@@ -249,7 +255,52 @@ public class FileMap {
                                 rollback();
                                 break;
                             }
+                            case "starthttp": {
+                                if (arguments.isEmpty()) {
+                                    port = 10001;
+                                } else if (arguments.matches("[0-9]+")) {
+                                    port = Integer.parseInt(arguments);
+                                } else {
+                                    throw new IOException("wrong type (starthttp: wrong arguments)");
+                                }
+                                if (doesServerRun) {
+                                    throw new IOException("not started: server is running");
+                                }
+                                try {
+                                    server = new Servlet(port, provider);
+                                    server.startServer();
+                                    doesServerRun = true;
+                                    System.out.println("started at " + port.toString());
+                                } catch (Exception e) {
+                                    throw new IOException("not started: " + e.getMessage(), e);
+                                }
+                                break;
+                            }
+                            case "stophttp": {
+                                if (!arguments.isEmpty()) {
+                                    throw new IOException("wrong type (stophttp: wrong arguments number)");
+                                }
+                                if (!doesServerRun) {
+                                    throw new IOException("not started");
+                                }
+                                try {
+                                    server.stopServer();
+                                    doesServerRun = false;
+                                    System.out.println("stopped at " + port.toString());
+                                } catch (Exception e) {
+                                    throw new IOException(e.getMessage(), e);
+                                }
+                                break;
+                            }
                             case "exit":
+                                if (doesServerRun) {
+                                    try {
+                                        server.stopServer();
+                                        doesServerRun = false;
+                                    } catch (Exception e) {
+                                        throw new IOException(e.getMessage(), e);
+                                    }
+                                }
                                 return false;
                             default:
                                 throw new IOException("wrong type (wrong command: " + cmd + ")");
