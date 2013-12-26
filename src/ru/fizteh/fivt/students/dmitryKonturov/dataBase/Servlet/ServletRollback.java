@@ -1,6 +1,5 @@
 package ru.fizteh.fivt.students.dmitryKonturov.dataBase.Servlet;
 
-
 import ru.fizteh.fivt.students.dmitryKonturov.dataBase.databaseImplementation.TableImplementation;
 import ru.fizteh.fivt.students.dmitryKonturov.dataBase.databaseImplementation.TableProviderImplementation;
 import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellEmulator;
@@ -10,37 +9,41 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class ServletBegin extends HttpServlet {
-    private TableProviderImplementation provider;
+public class ServletRollback extends HttpServlet {
+    TableProviderImplementation provider;
 
-    public ServletBegin(TableProviderImplementation provider) {
+    public ServletRollback(TableProviderImplementation provider) {
         this.provider = provider;
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String tableName = request.getParameter("table");
-        if (tableName == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "no table as parameter");
+
+        String tidString = request.getParameter("tid");
+        if (tidString == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "no tid as parameter");
             return;
         }
 
         int transactionId;
         try {
-            transactionId = provider.getTransactionPool().createTransaction(tableName);
-        } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ShellEmulator.getNiceMessage(e));
+            transactionId = ServletShell.parseTransactionId(tidString);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid parameter is wrong");
             return;
         }
 
-        TableImplementation table;
+        if (!provider.getTransactionPool().transactionExists(transactionId)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid not exists");
+            return;
+        }
+
+        int changesCount;
         try {
-            table = (TableImplementation) provider.getTable(tableName);
-            if (table == null) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "table not exists");
-                return;
-            }
+            String tableName = provider.getTransactionPool().getTableName(transactionId);
+            TableImplementation table = (TableImplementation) provider.getTable(tableName);
+            changesCount = table.rollback(transactionId, true);
         } catch (Exception e) {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ShellEmulator.getNiceMessage(e));
             return;
@@ -49,6 +52,6 @@ public class ServletBegin extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("text/plain");
         response.setCharacterEncoding("UTF8");
-        response.getWriter().println("tid=" +  String.format("%05d", transactionId));
+        response.getWriter().println("diff=" + changesCount);
     }
 }

@@ -79,7 +79,7 @@ public class TableProviderImplementation implements TableProvider {
         return isLoading;
     }
 
-    TransactionPool getTransactionPool() {
+    public TransactionPool getTransactionPool() {
         return transactionPool;
     }
 
