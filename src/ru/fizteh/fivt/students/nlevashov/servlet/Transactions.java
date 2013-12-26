@@ -15,7 +15,7 @@ public class Transactions {
     TableProvider provider;
     Integer counter;
 
-    Transactions() throws IOException {
+    public Transactions() throws IOException {
         String addr = System.getProperty("fizteh.db.dir");
         if (addr == null) {
             System.err.println("Property \"fizteh.db.dir\" wasn't set");

@@ -16,7 +16,25 @@ import ru.fizteh.fivt.storage.structured.Table;
 
 
 public class Servlet {
+    Server server;
     public static Transactions transactions;
+
+    public Servlet() throws IOException {
+        server = new Server(8008);
+
+        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        context.setContextPath("/");
+
+        context.addServlet(new ServletHolder(new Begin()), "/begin");
+        context.addServlet(new ServletHolder(new Commit()), "/commit");
+        context.addServlet(new ServletHolder(new Rollback()), "/rollback");
+        context.addServlet(new ServletHolder(new Get()), "/get");
+        context.addServlet(new ServletHolder(new Put()), "/put");
+
+        server.setHandler(context);
+
+        transactions = new Transactions();
+    }
 
     public static class Begin extends HttpServlet {
         @Override
@@ -202,21 +220,12 @@ public class Servlet {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Server server = new Server(8080);
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        context.setContextPath("/");
-
-        context.addServlet(new ServletHolder(new Begin()), "/begin");
-        context.addServlet(new ServletHolder(new Commit()), "/commit");
-        context.addServlet(new ServletHolder(new Rollback()), "/rollback");
-        context.addServlet(new ServletHolder(new Get()), "/get");
-        context.addServlet(new ServletHolder(new Put()), "/put");
-
-        transactions = new Transactions();
-
-        server.setHandler(context);
+    public void startServer() throws Exception {
         server.start();
     }
+
+    public void stopServer() throws Exception {
+        server.stop();
+    }
+
 }

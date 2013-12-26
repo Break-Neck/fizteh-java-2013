@@ -1,6 +1,7 @@
 package ru.fizteh.fivt.students.nlevashov.filemap;
 
 import ru.fizteh.fivt.students.nlevashov.mode.Mode;
+import ru.fizteh.fivt.students.nlevashov.servlet.Servlet;
 import ru.fizteh.fivt.students.nlevashov.shell.Shell;
 import ru.fizteh.fivt.storage.structured.*;
 import ru.fizteh.fivt.students.nlevashov.factory.*;
@@ -16,6 +17,7 @@ public class FileMap {
 
     static Table currentTable = null;
     static TableProvider provider;
+    static Servlet server;
 
     public static void create(String tableName, String[] types) throws IOException {
         List<Class<?>> classes = new ArrayList<>();
@@ -162,6 +164,9 @@ public class FileMap {
             Path addrPath = Shell.makePath(addr).toPath();
             TableProviderFactory factory = new MyTableProviderFactory();
             provider = factory.create(addrPath.toString());
+
+            server = new Servlet();
+
             Mode.start(args, new Mode.Executor() {
                 public boolean execute(String cmd) throws IOException {
                     if (!cmd.isEmpty()) {
@@ -247,6 +252,28 @@ public class FileMap {
                                     throw new IOException("wrong type (rollback: wrong arguments number)");
                                 }
                                 rollback();
+                                break;
+                            }
+                            case "starthttp": {
+                                if (!arguments.isEmpty()) {
+                                    throw new IOException("wrong type (rollback: wrong arguments number)");
+                                }
+                                try {
+                                    server.startServer();
+                                } catch (Exception e) {
+                                    throw new IOException(e.getMessage(), e);
+                                }
+                                break;
+                            }
+                            case "stophttp": {
+                                if (!arguments.isEmpty()) {
+                                    throw new IOException("wrong type (rollback: wrong arguments number)");
+                                }
+                                try {
+                                    server.stopServer();
+                                } catch (Exception e) {
+                                    throw new IOException(e.getMessage(), e);
+                                }
                                 break;
                             }
                             case "exit":
