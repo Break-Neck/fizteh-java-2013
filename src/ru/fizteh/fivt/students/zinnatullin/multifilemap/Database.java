@@ -102,7 +102,7 @@ public class Database {
         }
         if (!table.data.isEmpty()) {
             for (Iterator it = table.data.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>)it.next();
+                Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>) it.next();
                 String nDir = entry.getKey();
                 HashMap dirMap = entry.getValue();
                 if (!dirMap.isEmpty()) {

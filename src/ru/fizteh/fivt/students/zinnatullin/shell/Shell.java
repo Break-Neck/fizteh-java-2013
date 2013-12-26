@@ -33,7 +33,7 @@ public class Shell {
                 }
                 args = commandName.split("[\\s]");
                 shell.exec(args);
-            } while(!args[0].equals("exit"));
+            } while (!args[0].equals("exit"));
         }
     }
 

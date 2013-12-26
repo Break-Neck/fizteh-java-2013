@@ -64,7 +64,7 @@ public class Shell {
                 }
                 args = commandName.split("[\\s]");
                 status = Shell.getInstance().exec(args);
-            } while(!(args[0].equals("exit") && status));
+            } while (!(args[0].equals("exit") && status));
         }
     }
     

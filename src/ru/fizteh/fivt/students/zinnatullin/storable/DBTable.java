@@ -104,12 +104,12 @@ public class DBTable implements Table{
         int count = 0;
         if (!data.isEmpty()) {
             for (Iterator it = data.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>)it.next();
+                Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>) it.next();
                 String nDir = entry.getKey();
                 HashMap dirMap = entry.getValue();
                 if (!dirMap.isEmpty()) {
                     for (Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
-                        Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>)it1.next();
+                        Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>) it1.next();
                         String nFile = entry1.getKey();
                         HashMap value = entry1.getValue();
                         count += value.size();
@@ -124,12 +124,12 @@ public class DBTable implements Table{
     public int commit() {
         if (!data.isEmpty()) {
             for (Iterator it = data.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>)it.next();
+                Map.Entry<String, HashMap> entry = (Map.Entry<String, HashMap>) it.next();
                 String nDir = entry.getKey();
                 HashMap dirMap = entry.getValue();
                 if (!dirMap.isEmpty()) {
                     for (Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
-                        Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>)it1.next();
+                        Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>) it1.next();
                         String nFile = entry1.getKey();
                         saveData(nDir, nFile);
                     }
@@ -162,7 +162,7 @@ public class DBTable implements Table{
                             FileInputStream fis = new FileInputStream(inputFile);
 
                             HashMap<String, String> data = new HashMap();
-                            while(fis.available() > 0) {
+                            while (fis.available() > 0) {
                                 byte[] keyLenBytes = new byte[4];
                                 fis.read(keyLenBytes);
                                 if (keyLenBytes.length == 0) {
@@ -235,7 +235,7 @@ public class DBTable implements Table{
             HashMap fileMap = (HashMap) dirMap.get(nFile);
             if (!fileMap.isEmpty()) {
                 for (Iterator it = fileMap.entrySet().iterator(); it.hasNext();) {
-                    Map.Entry<String, String> entry = (Map.Entry<String, String>)it.next();
+                    Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
                     String key = entry.getKey();
                     String value = entry.getValue();
                     byte[] keyLenBytes;

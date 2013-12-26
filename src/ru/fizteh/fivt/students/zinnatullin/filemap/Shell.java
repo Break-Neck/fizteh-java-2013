@@ -42,7 +42,7 @@ public class Shell {
                 }
                 args = commandName.split("[\\s]");
                 Shell.getInstance().exec(args);
-            } while(!args[0].equals("exit"));
+            } while (!args[0].equals("exit"));
         }
     }
     

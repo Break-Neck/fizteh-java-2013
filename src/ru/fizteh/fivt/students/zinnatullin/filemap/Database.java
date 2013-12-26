@@ -35,7 +35,7 @@ public class Database {
         File inputFile = new File(path, file);
         FileInputStream fis = new FileInputStream(inputFile);
 
-        while(fis.available() > 0) {
+        while (fis.available() > 0) {
             byte[] keyLenBytes = new byte[4];
             fis.read(keyLenBytes);
             if (keyLenBytes.length == 0) {

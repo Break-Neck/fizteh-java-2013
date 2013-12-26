@@ -36,7 +36,7 @@ public class Table {
         FileInputStream fis = new FileInputStream(inputFile);
         
         HashMap<String, String> data = new HashMap();
-        while(fis.available() > 0) {
+        while (fis.available() > 0) {
             byte[] keyLenBytes = new byte[4];
             fis.read(keyLenBytes);
             if (keyLenBytes.length == 0) {
@@ -96,7 +96,7 @@ public class Table {
         HashMap fileMap = (HashMap) dirMap.get(nFile);
         if (!fileMap.isEmpty()) {
             for (Iterator it = fileMap.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, String> entry = (Map.Entry<String, String>)it.next();
+                Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
                 String key = entry.getKey();
                 String value = entry.getValue();
                 byte[] keyLenBytes;
