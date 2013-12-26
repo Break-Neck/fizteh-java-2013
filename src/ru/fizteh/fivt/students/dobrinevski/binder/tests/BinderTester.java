@@ -11,6 +11,7 @@ import ru.fizteh.fivt.students.dobrinevski.binder.MyBinderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,18 +40,6 @@ public class BinderTester {
             g = 'A';
             h = 0.69;
         }
-        @Override
-        public boolean equals(Object a) {
-            if (f == ((C) a).f && g == ((C) a).g && h == ((C) a).h) {
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return f + (int) g + (int) h;
-        }
     }
     public static class D {
         int f;
@@ -63,18 +52,6 @@ public class BinderTester {
             g = 'Z';
             h = "How to buy pig?";
            // add = new C();
-        }
-        @Override
-        public boolean equals(Object a) {
-            if (f == ((D) a).f && g == ((D) a).g && h.equals(((D) a).h) && add.equals(((D) a).add)) {
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return f + (int) g + hashCode() + add.hashCode();
         }
     }
     public static class Inner {
@@ -126,15 +103,11 @@ public class BinderTester {
     @Test
     public void mainTestSerDeser() throws IOException {
         bind = bf.create(D.class);
-        D begin = new D();
-       /* bind.serialize(begin, outStream);
-        assertEquals(outStream.toString(),
-                "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}"); */
-        buf = "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}"
-                .getBytes();
-        inStream = new ByteArrayInputStream(buf);
+        String buff = "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}";
+        inStream = new ByteArrayInputStream(buff.getBytes(StandardCharsets.UTF_8));
         D test = (D) bind.deserialize(inStream);
-        assertEquals(begin, test);
+        bind.serialize(test, outStream);
+        assertEquals(outStream.toString(), buff);
     }
 
     @Test

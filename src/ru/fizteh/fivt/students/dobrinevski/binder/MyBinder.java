@@ -61,12 +61,41 @@ public class MyBinder<T> implements Binder<T> {
                 if (name == null || name.equals("") || name.contains("\n")) {
                     throw new IllegalArgumentException("Field name is incorrect");
                 }
-                Object geted = jsonObject.get(name);
-                if (geted == null || geted.getClass().isPrimitive()
-                        || geted.getClass().getSimpleName().equals("String")
-                        || geted.getClass().isEnum()) {
-                    one.set(obj, geted);
+
+                Object got = jsonObject.get(name);
+                if (got == null) {
+                    one.set(obj, null);
                 }
+                if (one.getType().isPrimitive()) {
+                    if (one.getType().getSimpleName().equals("int")) {
+                        one.set(obj, Integer.parseInt(got.toString()));
+                    } else if (one.getType().getSimpleName().equals("double")) {
+                        one.set(obj, Double.parseDouble(got.toString()));
+                    } else if (one.getType().getSimpleName().equals("float")) {
+                        one.set(obj, Float.parseFloat(got.toString()));
+                    } else if (one.getType().getSimpleName().equals("long")) {
+                        one.set(obj, Long.parseLong(got.toString()));
+                    } else if (one.getType().getSimpleName().equals("boolean")) {
+                        one.set(obj, Boolean.parseBoolean(got.toString()));
+                    } else if (one.getType().getSimpleName().equals("short")) {
+                        one.set(obj, Short.parseShort(got.toString()));
+                    } else if (one.getType().getSimpleName().equals("byte")) {
+                        one.set(obj, Byte.parseByte(got.toString()));
+                    } else if (one.getType().getSimpleName().equals("char")) {
+                        one.set(obj, got.toString().charAt(0));
+                    }
+                    continue;
+                }
+                if (one.getType().getSimpleName().equals("String")) {
+                    one.set(obj, got);
+                    continue;
+                }
+
+                if (one.getType().isEnum()) {
+                    one.set(obj, Enum.valueOf((Class<Enum>) one.getType(), got.toString()));
+                    continue;
+                }
+
                 if (one.get(obj) == null) {
                     try {
                         one.set(obj, one.getType().newInstance());
@@ -74,7 +103,7 @@ public class MyBinder<T> implements Binder<T> {
                         throw new IllegalArgumentException("Cannot create");
                     }
                 }
-                recDec(one.get(obj), (JSONObject) geted, one.getType());
+                recDec(one.get(obj), (JSONObject) got, one.getType());
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
             } catch (JSONException e) {
