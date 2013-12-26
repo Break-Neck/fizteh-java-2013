@@ -92,7 +92,7 @@ public class MyBinder<T> implements Binder<T> {
         if (clazz.isPrimitive() || isWrapperType(clazz) || clazz.equals(String.class) || clazz.isEnum()) {
             writer.writeCharacters(object.toString());
         } else {
-            writer.writeStartElement(clazz.getName());
+            writer.writeStartElement(clazz.getSimpleName());
 
             for (Field field : clazz.getDeclaredFields()) {
                 field.setAccessible(true);
@@ -107,15 +107,13 @@ public class MyBinder<T> implements Binder<T> {
                 } else {
                     fieldName = field.getName();
                 }
-                writer.writeStartElement(fieldName);
 
                 Object fieldObj = field.get(object);
-                if (fieldObj == null) {
-                    writer.writeAttribute("value", "null");
-                } else {
+                if (fieldObj != null) {
+                    writer.writeStartElement(fieldName);
                     writeXML(fieldObj, writer);
+                    writer.writeEndElement();
                 }
-                writer.writeEndElement();
             }
 
             writer.writeEndElement();
