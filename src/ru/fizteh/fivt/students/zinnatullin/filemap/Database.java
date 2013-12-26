@@ -43,14 +43,14 @@ public class Database {
             if (keyLenBytes.length == 0) {
                 continue;
             }
-            int keyLen = Integer.parseInt(new String(keyLenBytes, "UTF-8"), 16);
+            int keyLen = Integer.parseInt(new String(keyLenBytes, "UTF-8"), 10);
             
             byte[] valueLenBytes = new byte[4];
             fis.read(valueLenBytes);
             if (valueLenBytes.length == 0) {
                 continue;
             }
-            int valueLen = Integer.parseInt(new String(valueLenBytes, "UTF-8"), 16);
+            int valueLen = Integer.parseInt(new String(valueLenBytes, "UTF-8"), 10);
             
             byte[] keyBytes = new byte[keyLen];
             fis.read(keyBytes);
@@ -83,25 +83,25 @@ public class Database {
             
             byte[] keyLenBytes;
             String keyLenHex = "";
-            int keyLenHexSize = Long.toHexString(key.getBytes().length).getBytes().length;
+            int keyLenHexSize = Long.toString(key.getBytes().length).getBytes().length;
 			if (keyLenHexSize < 4) {
                 for (int i = 0; i < (4 - keyLenHexSize); i++) {
-                    keyLenHex += Long.toHexString(0);
+                    keyLenHex += Long.toString(0);
                 }
             }
-            keyLenHex += Long.toHexString(key.getBytes().length);
+            keyLenHex += Long.toString(key.getBytes().length);
             keyLenBytes = keyLenHex.getBytes();
             fos.write(keyLenBytes);
             
             byte[] valueLenBytes;
             String valueLenHex = "";
-            int valueLenHexSize = Long.toHexString(value.getBytes().length).getBytes().length;
+            int valueLenHexSize = Long.toString(value.getBytes().length).getBytes().length;
             if (valueLenHexSize < 4) {
                 for (int i = 0; i < (4 - valueLenHexSize); i++) {
-                    valueLenHex += Long.toHexString(0);
+                    valueLenHex += Long.toString(0);
                 }
             }
-            valueLenHex += Long.toHexString(value.getBytes().length);
+            valueLenHex += Long.toString(value.getBytes().length);
             valueLenBytes = valueLenHex.getBytes();
             fos.write(valueLenBytes);
                         
