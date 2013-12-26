@@ -7,6 +7,8 @@ import ru.fizteh.fivt.binder.DoNotBind;
 import ru.fizteh.fivt.binder.Name;
 import ru.fizteh.fivt.students.dobrinevski.binder.MyBinderFactory;
 
+import java.util.List;
+
 public class BinderFactoryTester {
     public static BinderFactory bf;
 
@@ -39,6 +41,10 @@ public class BinderFactoryTester {
     public static class WithoutConstructor {
         int f;
         char g;
+        A h;
+        public WithoutConstructor(String a) {
+
+        }
     }
 
     public static class WithPrivateConstructor {
@@ -50,9 +56,22 @@ public class BinderFactoryTester {
         }
     }
 
+    public interface Inter {
+    }
+
     @Before
     public void init()  {
         bf = new MyBinderFactory();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void keyInterfaceGiven() {
+        bf.create(Inter.class);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void keyListGiven() {
+        bf.create(List.class);
     }
 
     @Test(expected = IllegalArgumentException.class)

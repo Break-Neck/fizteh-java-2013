@@ -59,13 +59,19 @@ public class MyBinder<T> implements Binder<T> {
                 for (Field f : fields) {
                     if (!f.isAnnotationPresent(DoNotBind.class)) {
                         if (f.getName().equals(i.toString())) {
-                            field = f;
-                            break;
+                            if (field == null) {
+                                field = f;
+                            } else {
+                                throw new IllegalArgumentException("2 field with equal name");
+                            }
                         }
                         if (f.isAnnotationPresent(Name.class)) {
                             if (f.getAnnotation(Name.class).value().equals(i.toString())) {
-                                field = f;
-                                break;
+                                if (field == null) {
+                                    field = f;
+                                } else {
+                                    throw new IllegalArgumentException("2 field with equal name");
+                                }
                             }
                         }
                     }
