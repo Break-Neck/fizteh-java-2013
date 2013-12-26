@@ -18,6 +18,7 @@ public class FileMap {
     static Table currentTable = null;
     static TableProvider provider;
     static Servlet server;
+    static boolean doesServerRun = false;
 
     public static void create(String tableName, String[] types) throws IOException {
         List<Class<?>> classes = new ArrayList<>();
@@ -261,9 +262,13 @@ public class FileMap {
                                 } else {
                                     throw new IOException("wrong type (starthttp: wrong arguments)");
                                 }
+                                if (doesServerRun) {
+                                    throw new IOException("server is running");
+                                }
                                 try {
                                     server = new Servlet(port);
                                     server.startServer();
+                                    doesServerRun = true;
                                 } catch (Exception e) {
                                     throw new IOException(e.getMessage(), e);
                                 }
@@ -273,8 +278,12 @@ public class FileMap {
                                 if (!arguments.isEmpty()) {
                                     throw new IOException("wrong type (stophttp: wrong arguments number)");
                                 }
+                                if (!doesServerRun) {
+                                    throw new IOException("there is nothing to close");
+                                }
                                 try {
                                     server.stopServer();
+                                    doesServerRun = false;
                                 } catch (Exception e) {
                                     throw new IOException(e.getMessage(), e);
                                 }
