@@ -165,8 +165,6 @@ public class FileMap {
             TableProviderFactory factory = new MyTableProviderFactory();
             provider = factory.create(addrPath.toString());
 
-            server = new Servlet();
-
             Mode.start(args, new Mode.Executor() {
                 public boolean execute(String cmd) throws IOException {
                     if (!cmd.isEmpty()) {
@@ -255,10 +253,16 @@ public class FileMap {
                                 break;
                             }
                             case "starthttp": {
-                                if (!arguments.isEmpty()) {
-                                    throw new IOException("wrong type (rollback: wrong arguments number)");
+                                int port;
+                                if (arguments.isEmpty()) {
+                                    port = 8008;
+                                } else if (arguments.matches("[0-9]+")) {
+                                    port = Integer.parseInt(arguments);
+                                } else {
+                                    throw new IOException("wrong type (starthttp: wrong arguments)");
                                 }
                                 try {
+                                    server = new Servlet(port);
                                     server.startServer();
                                 } catch (Exception e) {
                                     throw new IOException(e.getMessage(), e);
@@ -267,7 +271,7 @@ public class FileMap {
                             }
                             case "stophttp": {
                                 if (!arguments.isEmpty()) {
-                                    throw new IOException("wrong type (rollback: wrong arguments number)");
+                                    throw new IOException("wrong type (stophttp: wrong arguments number)");
                                 }
                                 try {
                                     server.stopServer();

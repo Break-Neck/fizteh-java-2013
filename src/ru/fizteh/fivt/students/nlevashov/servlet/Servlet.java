@@ -19,8 +19,8 @@ public class Servlet {
     Server server;
     public static Transactions transactions;
 
-    public Servlet() throws IOException {
-        server = new Server(8008);
+    public Servlet(int port) throws IOException {
+        server = new Server(port);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         context.setContextPath("/");
