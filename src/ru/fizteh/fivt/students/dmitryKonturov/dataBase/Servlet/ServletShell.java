@@ -13,7 +13,7 @@ public class ServletShell extends ShellEmulator {
     private static ServletShellInfo getServletShellInfo(Path workspace) throws IOException {
         TableProviderFactoryImplementation providerFactory = new TableProviderFactoryImplementation();
         TableProviderImplementation tableProvider = (TableProviderImplementation) providerFactory
-                .create(workspace.toString());
+                .create(workspace.toString(), 1);
         return new ServletShellInfo(tableProvider);
     }
 

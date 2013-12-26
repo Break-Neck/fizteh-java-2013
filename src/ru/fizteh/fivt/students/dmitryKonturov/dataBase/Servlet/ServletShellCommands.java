@@ -14,8 +14,22 @@ public class ServletShellCommands {
     public static ShellCommand[] getPackageCommands() {
         return new ShellCommand[] {
                 new StartCommand(),
-                new StopCommand()
+                new StopCommand(),
+                new ExitCommand()
         };
+    }
+
+    static class ExitCommand implements ShellCommand {
+
+        @Override
+        public String getName() {
+            return "exit";
+        }
+
+        @Override
+        public void execute(String[] args, ShellInfo info) throws ShellException {
+            System.exit(0);
+        }
     }
 
     static class StartCommand implements ShellCommand {
