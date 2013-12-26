@@ -75,14 +75,18 @@ public class FileSystem {
         if (source.isDirectory()) {
             try {
                 if (!destination.mkdir()) {
-                    System.out.println(command + ": \'" + destination.getAbsolutePath() + "\': couldn't create directory");
+                    System.out.println(
+							command + ": \'" + destination.getAbsolutePath() + "\': couldn't create directory"
+					);
                     return false;
                 }
             } catch (SecurityException e) {
-                System.out.println(command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create directory");
+                System.out.println(
+						command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create directory"
+				);
                 return false;
             }
-            File files[] = source.listFiles();
+            File[] files = source.listFiles();
             if (files != null) {
                 for (File file : files) {
                     File newFile = new File(destination.getAbsolutePath() + File.separator + file.getName());
@@ -94,19 +98,27 @@ public class FileSystem {
         } else {
             try {
                 if (!destination.createNewFile()) {
-                    System.out.println(command + ": \'" + destination.getAbsolutePath() + "\': couldn't create file");
+                    System.out.println(
+							command + ": \'" + destination.getAbsolutePath() + "\': couldn't create file"
+					);
                     return false;
                 }
                 if (!destination.canWrite() || !source.canRead()) {
-                    Shell.printMessage(command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create file");
+                    Shell.printMessage(
+							command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create file"
+					);
                     return false;
                 }
                 return copy(source, destination, command);
             } catch (SecurityException e) {
-                System.out.println(command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create file");
+                System.out.println(
+						command + ": \'" + destination.getAbsolutePath() + "\': haven't rights to create file"
+				);
                 return false;
             } catch (IOException e) {
-                System.out.println(command + ": \'" + destination.getAbsolutePath() + "\': couldn't create file");
+                System.out.println(
+						command + ": \'" + destination.getAbsolutePath() + "\': couldn't create file"
+				);
                 return false;
             }
         }
@@ -122,7 +134,8 @@ public class FileSystem {
             System.out.println(command + ": invalid destination path");
         } else if (!destination.getParentFile().exists()) {
             System.out.println(command + ": destination path doesn't exists");
-        } else if (destination.getParent().equals(source.getParent()) && destination.getName().equals(source.getName())) {
+        } else if (destination.getParent().equals(source.getParent()) && 
+				destination.getName().equals(source.getName())) {
             System.out.println(command + ": source path is part of destination path");
         } else {
             return recursiveCopy(source, destination, command);
