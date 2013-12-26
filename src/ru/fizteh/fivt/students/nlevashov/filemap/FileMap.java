@@ -293,6 +293,14 @@ public class FileMap {
                                 break;
                             }
                             case "exit":
+                                if (doesServerRun) {
+                                    try {
+                                        server.stopServer();
+                                        doesServerRun = false;
+                                    } catch (Exception e) {
+                                        throw new IOException(e.getMessage(), e);
+                                    }
+                                }
                                 return false;
                             default:
                                 throw new IOException("wrong type (wrong command: " + cmd + ")");
