@@ -43,7 +43,7 @@ public class Shell {
 		}
 		
 		DBTableProviderFactory providerFactory = new DBTableProviderFactory();
-		DBTableProvider provider = (DBTableProvider)providerFactory.create(dbPath);
+		DBTableProvider provider = (DBTableProvider) providerFactory.create(dbPath);
 		
 		if (provider == null) {
 			printMessage("Incorrect db path");

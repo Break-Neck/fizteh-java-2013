@@ -44,8 +44,8 @@ public class Database {
 		} catch (IOException ex) {
 			Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);
 		}
-		HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
-		HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
+		HashMap dirMap = (HashMap) table.data.get(TableProvider.getNDir(key));
+		HashMap fileMap = (HashMap) dirMap.get(TableProvider.getNFile(key));
 		if (fileMap.containsKey(key)) {
 			value = (String) fileMap.get(key);
 		}
@@ -59,8 +59,8 @@ public class Database {
 		String oldValue = "";
 		try {
 			table.getData(TableProvider.getNDir(key), TableProvider.getNFile(key));
-			HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
-			HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
+			HashMap dirMap = (HashMap) table.data.get(TableProvider.getNDir(key));
+			HashMap fileMap = (HashMap) dirMap.get(TableProvider.getNFile(key));
 			if (fileMap.containsKey(key)) {
 				oldValue = (String) fileMap.get(key);
 			}
@@ -81,8 +81,8 @@ public class Database {
 		String oldValue = "";
 		try {
 			table.getData(TableProvider.getNDir(key), TableProvider.getNFile(key));
-			HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
-			HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
+			HashMap dirMap = (HashMap) table.data.get(TableProvider.getNDir(key));
+			HashMap fileMap = (HashMap) dirMap.get(TableProvider.getNFile(key));
 			if (fileMap.containsKey(key)) {
 				oldValue = (String) fileMap.get(key);
 				fileMap.remove(key);

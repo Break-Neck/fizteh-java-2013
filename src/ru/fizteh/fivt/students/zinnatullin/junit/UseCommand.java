@@ -26,7 +26,7 @@ public class UseCommand implements ShellCommand {
 			return false;
 		}
 		
-		DBTable table = (DBTable)Shell.getInstance().provider.getTable(args[1]);
+		DBTable table = (DBTable) Shell.getInstance().provider.getTable(args[1]);
         if (table != null) {
 			Shell.printMessage("use " + args[1]);
 			Shell.getInstance().table = table;

@@ -73,7 +73,7 @@ public class Table {
 			filemap.put(nFile, data);
 			this.data.put(nDir, filemap);
 		} else {
-			HashMap dirMap = (HashMap)this.data.get(nDir);
+			HashMap dirMap = (HashMap) this.data.get(nDir);
 			dirMap.put(nFile, data);
 			this.data.put(nDir, dirMap);
 		}
@@ -92,8 +92,8 @@ public class Table {
 		}
 		FileOutputStream fos = new FileOutputStream(outputFile);
 
-		HashMap dirMap = (HashMap)data.get(nDir);
-		HashMap fileMap = (HashMap)dirMap.get(nFile);
+		HashMap dirMap = (HashMap) data.get(nDir);
+		HashMap fileMap = (HashMap) dirMap.get(nFile);
 		if (!fileMap.isEmpty()) {
 			for (Iterator it = fileMap.entrySet().iterator(); it.hasNext();) {
 				Map.Entry<String, String> entry = (Map.Entry<String, String>)it.next();

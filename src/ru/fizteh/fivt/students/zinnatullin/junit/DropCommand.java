@@ -21,7 +21,7 @@ public class DropCommand implements ShellCommand {
 			return false;
 		}
 		
-		DBTable table = (DBTable)Shell.getInstance().provider.getTable(args[1]);
+		DBTable table = (DBTable) Shell.getInstance().provider.getTable(args[1]);
         if (table != null) {
 			Shell.getInstance().provider.removeTable(args[1]);
 			Shell.printMessage("dropped");

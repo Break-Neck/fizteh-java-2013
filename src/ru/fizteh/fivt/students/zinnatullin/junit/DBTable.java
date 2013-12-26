@@ -35,9 +35,9 @@ public class DBTable implements Table{
 		}
 		String value = null;
 		if (data != null) {
-			HashMap dirMap = (HashMap)data.get(nDir);
+			HashMap dirMap = (HashMap) data.get(nDir);
 			if (dirMap != null) {
-				HashMap fileMap = (HashMap)dirMap.get(nFile);
+				HashMap fileMap = (HashMap) dirMap.get(nFile);
 				if (fileMap != null && fileMap.containsKey(key)) {
 					value = (String) fileMap.get(key);
 				}
@@ -55,11 +55,11 @@ public class DBTable implements Table{
 			readData();
 		}
 		if (data != null) {
-			HashMap dirMap = (HashMap)data.get(nDir);
+			HashMap dirMap = (HashMap) data.get(nDir);
 			if (dirMap == null) {
 				dirMap = new HashMap();
 			}	
-			HashMap fileMap = (HashMap)dirMap.get(nFile);
+			HashMap fileMap = (HashMap) dirMap.get(nFile);
 			if (fileMap == null) {
 				fileMap = new HashMap();
 			}
@@ -84,8 +84,8 @@ public class DBTable implements Table{
 		if (data == null) {
 			readData();
 		}
-		HashMap dirMap = (HashMap)data.get(nDir);
-		HashMap fileMap = (HashMap)dirMap.get(nFile);
+		HashMap dirMap = (HashMap) data.get(nDir);
+		HashMap fileMap = (HashMap) dirMap.get(nFile);
 		if (fileMap.containsKey(key)) {
 			oldValue = (String) fileMap.get(key);
 			fileMap.remove(key);
@@ -199,7 +199,7 @@ public class DBTable implements Table{
 								filemap.put(nFile, data);
 								this.data.put(nDir, filemap);
 							} else {
-								HashMap dirMap = (HashMap)this.data.get(nDir);
+								HashMap dirMap = (HashMap) this.data.get(nDir);
 								dirMap.put(nFile, data);
 								this.data.put(nDir, dirMap);
 								fis.close();
@@ -231,8 +231,8 @@ public class DBTable implements Table{
 		try {
 			FileOutputStream fos = new FileOutputStream(outputFile);
 
-			HashMap dirMap = (HashMap)data.get(nDir);
-			HashMap fileMap = (HashMap)dirMap.get(nFile);
+			HashMap dirMap = (HashMap) data.get(nDir);
+			HashMap fileMap = (HashMap) dirMap.get(nFile);
 			if (!fileMap.isEmpty()) {
 				for (Iterator it = fileMap.entrySet().iterator(); it.hasNext();) {
 					Map.Entry<String, String> entry = (Map.Entry<String, String>)it.next();

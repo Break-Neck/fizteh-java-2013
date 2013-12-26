@@ -16,7 +16,7 @@ public class CreateCommand implements ShellCommand {
             return false;
         }
 
-		DBTable table = (DBTable)Shell.getInstance().provider.createTable(args[1]);
+		DBTable table = (DBTable) Shell.getInstance().provider.createTable(args[1]);
         if (table != null) {
 			Shell.printMessage("created");
 			return true;
