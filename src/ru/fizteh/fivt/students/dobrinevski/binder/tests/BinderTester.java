@@ -77,6 +77,20 @@ public class BinderTester {
             return f + (int) g + hashCode() + add.hashCode();
         }
     }
+    public static class Inner {
+        public Inner() {
+
+        }
+    }
+    public static class Outer {
+        Inner i = new Inner();
+        Inner i1 = i;
+        Inner i2 = i;
+        public Outer() {
+
+        }
+    }
+
 
     @Before
     public void init()  {
@@ -110,6 +124,13 @@ public class BinderTester {
         inStream = new ByteArrayInputStream(buf);
         D test = (D) bind.deserialize(inStream);
         assertEquals(begin, test);
+    }
+
+    @Test
+    public void testKomanov() throws IOException {
+        bind = bf.create(Outer.class);
+        bind.serialize(new Outer(), outStream);
+        assertEquals("{\"i\":{},\"i1\":{},\"i2\":{}}", outStream.toString());
     }
 }
 
