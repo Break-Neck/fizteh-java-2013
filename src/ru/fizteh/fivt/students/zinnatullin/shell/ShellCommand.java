@@ -1,5 +1,6 @@
 package ru.fizteh.fivt.students.zinnatullin.shell;
 
 interface ShellCommand {
-    abstract boolean execute(String[] args);
+
+    boolean execute(String[] args);
 }
