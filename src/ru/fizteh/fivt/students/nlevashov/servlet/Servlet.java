@@ -14,7 +14,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import ru.fizteh.fivt.storage.structured.Storeable;
-import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.nlevashov.factory.MyTable;
 import ru.fizteh.fivt.students.nlevashov.factory.MyTableProvider;
 import ru.fizteh.fivt.students.nlevashov.factory.MyTableProviderFactory;
