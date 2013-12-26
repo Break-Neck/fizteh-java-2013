@@ -21,28 +21,14 @@ public class BinderMain {
 }
 
 class Valid {
-    private byte a;
     private int b;
-    private long c;
-    private float d;
-    public double f;
-    public boolean g;
-    public char h;
-
-    @Name("str")
-    public String i;
-
-    @DoNotBind
-    private int[] j;
 
     public SubValid sub;
-
+    public SubValid sub2;
     public Valid() {
         b = 7;
-        f = 8.56;
-        h = 'h';
-        i = "qwerty";
         sub = new SubValid();
+        sub2 = new SubValid();
     }
 }
 

@@ -30,8 +30,6 @@ public class Handler extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         depth++;
 
-        Object currObject = objects.peek();
-        Class<?> currClass = currObject.getClass();
         if (depth % 2 != 0) {  // if class
 
             try {
@@ -49,7 +47,7 @@ public class Handler extends DefaultHandler {
         } else {            // if field
 
             Field currField = null;
-            for (Field field : currClass.getDeclaredFields()) {
+            for (Field field : objects.peek().getClass().getDeclaredFields()) {
                 if (field.getAnnotation(DoNotBind.class) != null) {
                     continue;
                 }
@@ -74,9 +72,9 @@ public class Handler extends DefaultHandler {
                 for (int i = 0; i < attributes.getLength(); ++i) {
                     if (attributes.getQName(i).equals("value")) {
                         if (attributes.getValue(i).equals("empty")) {
-                            currField.set(currObject, "");
+                            currField.set(objects.peek(), "");
                         } else if (attributes.getValue(i).equals("null")) {
-                            currField.set(currObject, null);
+                            currField.set(objects.peek(), null);
                         }
                     }
                 }
@@ -93,10 +91,9 @@ public class Handler extends DefaultHandler {
             if (depth == 0) {     // if top class
                 this.object = objects.pop();
             } else {
-                Field currField = fields.peek();
-                currField.setAccessible(true);
+                fields.peek().setAccessible(true);
                 try {
-                    currField.set(objects.peek(), object);
+                    fields.peek().set(objects.peek(), object);
                 } catch (IllegalAccessException e) {
                     throw new IllegalArgumentException("Invalid object");
                 }
