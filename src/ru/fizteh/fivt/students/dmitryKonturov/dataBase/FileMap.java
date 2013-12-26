@@ -12,8 +12,8 @@ import java.nio.file.Paths;
 public class FileMap {
 
     public static void main(String[] args) {
-        //String dbDir = System.getProperty("fizteh.db.dir");
-        String dbDir = "/home/kontr/testDir/myTest";
+        String dbDir = System.getProperty("fizteh.db.dir");
+        //String dbDir = "/home/kontr/testDir/myTest";
         if (dbDir == null) {
             System.err.println("Empty property");
             System.exit(1);
