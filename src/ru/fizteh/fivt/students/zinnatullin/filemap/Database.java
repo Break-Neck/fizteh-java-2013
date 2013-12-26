@@ -16,7 +16,11 @@ public class Database {
     private String file;
     private HashMap<String, String> data;
     
-    public Database(String path, String file) {
+    public Database(String path, String file) throws IOException {
+		File dbFile = new File(path, file);
+		if(!dbFile.exists()){
+			dbFile.createNewFile();
+		}
         this.path = path;
         this.file = file;
         data = new HashMap();
