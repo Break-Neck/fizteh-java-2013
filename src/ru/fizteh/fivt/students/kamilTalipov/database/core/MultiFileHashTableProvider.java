@@ -4,6 +4,7 @@ import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProvider;
+import ru.fizteh.fivt.students.kamilTalipov.database.servlet.TransactionManager;
 import ru.fizteh.fivt.students.kamilTalipov.database.utils.FileUtils;
 import ru.fizteh.fivt.students.kamilTalipov.database.utils.JsonUtils;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class MultiFileHashTableProvider implements TableProvider, AutoCloseable {
     private final File databaseDirectory;
     private final ArrayList<MultiFileHashTable> tables;
+    private final TransactionManager transactionManager;
 
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock readLock = readWriteLock.readLock();
@@ -39,6 +41,7 @@ public class MultiFileHashTableProvider implements TableProvider, AutoCloseable 
         }
 
         tables = new ArrayList<>();
+        transactionManager = new TransactionManager(5);
 
         loadTables();
     }
@@ -206,6 +209,11 @@ public class MultiFileHashTableProvider implements TableProvider, AutoCloseable 
         } finally {
             writeLock.unlock();
         }
+    }
+
+    public TransactionManager getTransactionManager() {
+        checkState();
+        return transactionManager;
     }
 
     void closedTable(MultiFileHashTable table) throws IllegalArgumentException {

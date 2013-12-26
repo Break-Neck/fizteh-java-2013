@@ -1,16 +1,13 @@
 package ru.fizteh.fivt.students.kamilTalipov.database.core;
 
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
-import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.Storeable;
-
+import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.students.kamilTalipov.database.servlet.TransactionHandler;
+import ru.fizteh.fivt.students.kamilTalipov.database.servlet.TransactionManager;
 import ru.fizteh.fivt.students.kamilTalipov.database.utils.FileUtils;
 import ru.fizteh.fivt.students.kamilTalipov.database.utils.JsonUtils;
 import ru.fizteh.fivt.students.kamilTalipov.database.utils.StoreableUtils;
-
-import static ru.fizteh.fivt.students.kamilTalipov.database.utils.InputStreamUtils.readInt;
-import static ru.fizteh.fivt.students.kamilTalipov.database.utils.InputStreamUtils.readString;
-import static ru.fizteh.fivt.students.kamilTalipov.database.utils.StoreableUtils.isEqualStoreable;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -20,9 +17,14 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static ru.fizteh.fivt.students.kamilTalipov.database.utils.InputStreamUtils.readInt;
+import static ru.fizteh.fivt.students.kamilTalipov.database.utils.InputStreamUtils.readString;
+import static ru.fizteh.fivt.students.kamilTalipov.database.utils.StoreableUtils.isEqualStoreable;
+
 public class MultiFileHashTable implements Table, AutoCloseable {
     private final HashMap<String, Storeable>[][] table;
-    private final ThreadLocal<HashMap<String, Storeable>> newValues;
+    private final ThreadLocal<TransactionHandler> transaction;
+    private final TransactionManager manager;
 
     private final ArrayList<Class<?>> types;
 
@@ -47,8 +49,8 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private static final String SIGNATURE_FILE_NAME = "signature.tsv";
 
     public MultiFileHashTable(String workingDirectory, String tableName,
-                              MultiFileHashTableProvider myTableProvider,
-                              List<Class<?>> types) throws DatabaseException, IOException {
+                               MultiFileHashTableProvider myTableProvider,
+                               List<Class<?>> types) throws DatabaseException, IOException {
         if (workingDirectory == null) {
             throw new IllegalArgumentException("Working directory path must be not null");
         }
@@ -68,6 +70,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         this.tableName = tableName;
 
         this.myTableProvider = myTableProvider;
+        this.manager = myTableProvider.getTransactionManager();
 
         this.types = new ArrayList<>();
         for (Class<?> type : types) {
@@ -90,10 +93,10 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         writeSignatureFile();
 
         table = new HashMap[ALL_DIRECTORIES][FILES_IN_DIRECTORY];
-        newValues = new ThreadLocal<HashMap<String, Storeable>>() {
+        transaction = new ThreadLocal<TransactionHandler>() {
             @Override
-            protected HashMap<String, Storeable> initialValue() {
-                return new HashMap<>();
+            protected TransactionHandler initialValue() {
+                return manager.createHandlerFor(MultiFileHashTable.this);
             }
         };
         readTable();
@@ -101,7 +104,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
 
     public MultiFileHashTable(String workingDirectory, String tableName,
                               MultiFileHashTableProvider myTableProvider) throws DatabaseException,
-                                                                                    IOException {
+            IOException {
         this(workingDirectory, tableName, myTableProvider, getTypes(workingDirectory, tableName));
     }
 
@@ -116,8 +119,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         return tableName;
     }
 
-    @Override
-    public Storeable get(String key) throws IllegalArgumentException {
+    public Storeable get(String key, HashMap<String, Storeable> diff) {
         checkState();
         if (key == null) {
             throw new IllegalArgumentException("Key must be not null");
@@ -126,8 +128,8 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             throw new IllegalArgumentException("Key must be not empty");
         }
 
-        if (newValues.get().containsKey(key)) {
-            return newValues.get().get(key);
+        if (diff.containsKey(key)) {
+            return diff.get(key);
         }
 
         readLock.lock();
@@ -139,7 +141,12 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     @Override
-    public Storeable put(String key, Storeable value) throws IllegalArgumentException {
+    public Storeable get(String key) throws IllegalArgumentException {
+        return get(key, transaction.get().getDiff());
+    }
+
+    public Storeable put(String key, Storeable value,
+                         HashMap<String, Storeable> diff) throws IllegalArgumentException {
         checkState();
 
         if (key == null) {
@@ -158,14 +165,18 @@ public class MultiFileHashTable implements Table, AutoCloseable {
             throw new ColumnFormatException("Storeable incorrect value");
         }
 
-        Storeable oldValue = get(key);
-        newValues.get().put(key, value);
+        Storeable oldValue = get(key, diff);
+        diff.put(key, value);
 
         return oldValue;
     }
 
     @Override
-    public Storeable remove(String key) throws IllegalArgumentException {
+    public Storeable put(String key, Storeable value) {
+        return put(key, value, transaction.get().getDiff());
+    }
+
+    public Storeable remove(String key, HashMap<String, Storeable> diff) throws IllegalArgumentException {
         checkState();
 
         if (key == null) {
@@ -178,13 +189,18 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         Storeable oldValue;
         readLock.lock();
         try {
-            oldValue = get(key);
+            oldValue = get(key, diff);
         } finally {
             readLock.unlock();
         }
-        newValues.get().put(key, null);
+        diff.put(key, null);
 
         return oldValue;
+    }
+
+    @Override
+    public Storeable remove(String key) {
+        return remove(key, transaction.get().getDiff());
     }
 
     public void removeTable() throws DatabaseException {
@@ -200,13 +216,12 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         }
     }
 
-    @Override
-    public int size() {
+    public int size(HashMap<String, Storeable> diff) {
         checkState();
         readLock.lock();
         try {
             int tableSize = getTableSize();
-            for (Map.Entry<String, Storeable> entry : newValues.get().entrySet()) {
+            for (Map.Entry<String, Storeable> entry : diff.entrySet()) {
                 String key = entry.getKey();
                 Storeable value = entry.getValue();
                 Storeable savedValue = getFromTable(key);
@@ -228,24 +243,33 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     @Override
-    public int commit() throws IOException {
+    public int size() {
+        return size(transaction.get().getDiff());
+    }
+
+    public int commit(HashMap<String, Storeable> diff) throws IOException {
         checkState();
 
         writeLock.lock();
         try {
             int changes = 0;
+            int tableSize = getTableSize();
             HashSet<ChangedFile> changesFile = new HashSet<>();
 
-            for (Map.Entry<String, Storeable> entry : newValues.get().entrySet()) {
+            for (Map.Entry<String, Storeable> entry : diff.entrySet()) {
                 String key = entry.getKey();
                 Storeable value = entry.getValue();
                 if (value == null) {
                     if (removeFromTable(key) != null) {
                         ++changes;
+                        --tableSize;
                         changesFile.add(new ChangedFile(key));
                     }
                 } else {
                     Storeable oldValue = putToTable(key, value);
+                    if (oldValue == null) {
+                        ++tableSize;
+                    }
                     if (!isEqualStoreable(value, oldValue)) {
                         ++changes;
                         changesFile.add(new ChangedFile(key));
@@ -259,7 +283,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
                 throw new IOException("Database io error", e);
             }
 
-            newValues.get().clear();
+            transaction.get().getDiff().clear();
 
             return changes;
         } finally {
@@ -268,12 +292,21 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     @Override
-    public int rollback() {
+    public int commit() throws IOException {
+        return commit(transaction.get().getDiff());
+    }
+
+    public int rollback(HashMap<String, Storeable> diff) {
         checkState();
 
-        int changes = uncommittedChanges();
-        newValues.get().clear();
+        int changes = uncommittedChanges(diff);
+        diff.clear();
         return changes;
+    }
+
+    @Override
+    public int rollback() {
+        return rollback(transaction.get().getDiff());
     }
 
     @Override
@@ -295,11 +328,15 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     }
 
     public int uncommittedChanges() {
+        return uncommittedChanges(transaction.get().getDiff());
+    }
+
+    public int uncommittedChanges(HashMap<String, Storeable> diff) {
         checkState();
         readLock.lock();
         try {
             int changes = 0;
-            for (Map.Entry<String, Storeable> entry : newValues.get().entrySet()) {
+            for (Map.Entry<String, Storeable> entry : diff.entrySet()) {
                 String key = entry.getKey();
                 Storeable value = entry.getValue();
                 if (!isEqualStoreable(value, getFromTable(key))) {
@@ -338,8 +375,10 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private void readTable() throws DatabaseException, FileNotFoundException {
         File[] innerFiles = tableDirectory.listFiles();
         for (File file : innerFiles) {
-            if (!file.isDirectory() && file.getName().equals(SIGNATURE_FILE_NAME)) {
-                continue;
+            if (!file.isDirectory()) {
+                if (file.getName().equals(SIGNATURE_FILE_NAME)) {
+                    continue;
+                }
             }
             if (!file.isDirectory()
                     || (file.isDirectory() && !isCorrectDirectoryName(file.getName()))) {
@@ -597,7 +636,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private void removeChangesFile(HashSet<ChangedFile> changes) throws DatabaseException {
         for (ChangedFile file : changes) {
             File fileToDelete = new File(tableDirectory.getAbsoluteFile() + File.separator
-                                            + file.getPath());
+                    + file.getPath());
             if (fileToDelete.exists()) {
                 FileUtils.remove(fileToDelete);
             }
@@ -607,8 +646,11 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     private void removeDataFiles() throws DatabaseException {
         File[] innerFiles = tableDirectory.listFiles();
         for (File file : innerFiles) {
-            if ((!file.isDirectory() && !file.getName().equals(SIGNATURE_FILE_NAME))
-                    || (file.isDirectory() && !isCorrectDirectoryName(file.getName()))) {
+            if (file.isDirectory() && !isCorrectDirectoryName(file.getName())) {
+                throw new DatabaseException("At table '" + tableName
+                        + "': directory contain redundant files");
+            }
+            if (!file.isDirectory() && !file.getName().equals(SIGNATURE_FILE_NAME)) {
                 throw new DatabaseException("At table '" + tableName
                         + "': directory contain redundant files");
             }

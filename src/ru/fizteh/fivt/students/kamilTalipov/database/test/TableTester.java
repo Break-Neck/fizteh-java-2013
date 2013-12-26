@@ -49,6 +49,7 @@ public class TableTester {
         Assert.assertEquals(table.get("123").toString(), storeable.toString());
         Assert.assertEquals(table.size(), 1);
         Assert.assertEquals(table.commit(), 1);
+        Assert.assertEquals(table.size(), 1);
     }
 
     @Test(expected = ColumnFormatException.class)

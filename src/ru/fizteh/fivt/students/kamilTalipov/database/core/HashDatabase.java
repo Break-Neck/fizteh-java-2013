@@ -13,6 +13,15 @@ public class HashDatabase implements MultiTableDatabase, TransactionDatabase {
     private final MultiFileHashTableProvider tableProvider;
     private MultiFileHashTable activeTable;
 
+    public HashDatabase(MultiFileHashTableProvider provider) {
+        if (provider == null) {
+            throw new IllegalArgumentException("Provider should be not null");
+        }
+
+        this.tableProvider = provider;
+        activeTable = null;
+    }
+
     public HashDatabase(String databaseDirectory) throws IOException, DatabaseException {
         if (databaseDirectory == null) {
             throw new IllegalArgumentException("Database directory path must be not null");
