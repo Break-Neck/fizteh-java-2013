@@ -3,6 +3,8 @@ package ru.fizteh.fivt.students.kamilTalipov.database;
 import ru.fizteh.fivt.students.kamilTalipov.database.commands.*;
 import ru.fizteh.fivt.students.kamilTalipov.database.core.DatabaseException;
 import ru.fizteh.fivt.students.kamilTalipov.database.core.HashDatabase;
+import ru.fizteh.fivt.students.kamilTalipov.database.core.MultiFileHashTableFactory;
+import ru.fizteh.fivt.students.kamilTalipov.database.servlet.server.ServletServer;
 import ru.fizteh.fivt.students.kamilTalipov.shell.Command;
 import ru.fizteh.fivt.students.kamilTalipov.shell.Shell;
 import ru.fizteh.fivt.students.kamilTalipov.shell.Exit;
@@ -13,8 +15,10 @@ import java.io.IOException;
 public class DatabaseRunner {
     public static void main(String[] args) {
         HashDatabase database = null;
+        ServletServer server = null;
         try {
             database = new HashDatabase(System.getProperty("fizteh.db.dir"));
+            server = new ServletServer(new MultiFileHashTableFactory().create(System.getProperty("fizteh.db.dir")));
         } catch (FileNotFoundException e) {
             System.err.println(e.getMessage());
             System.exit(1);
@@ -38,6 +42,8 @@ public class DatabaseRunner {
                 new SizeCommand(database),
                 new CommitCommand(database),
                 new RollbackCommand(database),
+                new ServerStartCommand(server),
+                new ServerStopCommand(server),
                 new Exit()};
         try {
             Shell.run(commands, args);
