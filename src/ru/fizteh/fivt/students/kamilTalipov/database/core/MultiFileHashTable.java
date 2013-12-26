@@ -299,7 +299,7 @@ public class MultiFileHashTable implements Table, AutoCloseable {
     public int rollback(HashMap<String, Storeable> diff) {
         checkState();
 
-        int changes = uncommittedChanges();
+        int changes = uncommittedChanges(diff);
         diff.clear();
         return changes;
     }
@@ -327,12 +327,12 @@ public class MultiFileHashTable implements Table, AutoCloseable {
         close(true);
     }
 
-    public int uncommittedChanges() {
+    public int uncommittedChanges(HashMap<String, Storeable> diff) {
         checkState();
         readLock.lock();
         try {
             int changes = 0;
-            for (Map.Entry<String, Storeable> entry : transaction.get().getDiff().entrySet()) {
+            for (Map.Entry<String, Storeable> entry : diff.entrySet()) {
                 String key = entry.getKey();
                 Storeable value = entry.getValue();
                 if (!isEqualStoreable(value, getFromTable(key))) {

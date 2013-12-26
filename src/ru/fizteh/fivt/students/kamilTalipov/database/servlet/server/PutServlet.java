@@ -20,8 +20,7 @@ public class PutServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String id = req.getParameter("tid");
         if (id == null) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Transaction id expected");
@@ -37,6 +36,7 @@ public class PutServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "value expected");
             return;
         }
+
         TransactionData transaction;
         try {
             transaction = provider.getTransactionManager().getTransaction(id);
@@ -44,6 +44,7 @@ public class PutServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return;
         }
+
         Storeable value;
         try {
             value = provider.deserialize(transaction.getTable(), valueString);
@@ -51,6 +52,7 @@ public class PutServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             return;
         }
+
         Storeable oldValue = transaction.getTable().put(key, value, transaction.getDiff());
         String answer;
         try {
