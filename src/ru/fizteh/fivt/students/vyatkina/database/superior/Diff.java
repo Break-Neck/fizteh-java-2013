@@ -32,8 +32,7 @@ public class Diff<ValueType> {
             try {
                 commitedValueKeeper.readLock().lock();
                 return committedValue.get();
-            }
-            finally {
+            } finally {
                 commitedValueKeeper.readLock().unlock();
             }
         } else {
@@ -50,8 +49,7 @@ public class Diff<ValueType> {
                 isChanged.set(true);
                 this.value.set(value);
             }
-        }
-        finally {
+        } finally {
             commitedValueKeeper.readLock().unlock();
         }
     }
@@ -63,8 +61,7 @@ public class Diff<ValueType> {
                     && (areTheSame(committedValue.get(), value.get()))) {
                 isChanged.set(null);
             }
-        }
-        finally {
+        } finally {
             commitedValueKeeper.readLock().unlock();
         }
     }
@@ -83,8 +80,7 @@ public class Diff<ValueType> {
             } else {
                 return false;
             }
-        }
-        finally {
+        } finally {
             commitedValueKeeper.writeLock().unlock();
         }
     }

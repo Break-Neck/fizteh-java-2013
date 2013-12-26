@@ -23,12 +23,10 @@ public class CommitCommand extends DatabaseCommand {
         int commitedChanges = 0;
         try {
             commitedChanges = state.databaseAdapter.commit();
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             state.printErrorMessage(e.getMessage());
             return;
-        }
-        catch (WrappedIOException e) {
+        } catch (WrappedIOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
         state.printUserMessage(String.valueOf(commitedChanges));

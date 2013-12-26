@@ -79,7 +79,7 @@ public class FileMap {
                 System.out.println("using " + tableName);
             } else {
                 MyTable currentTableCopy = (MyTable) currentTable;
-                int difference = currentTableCopy.mapsDifference();
+                int difference = currentTableCopy.threadSafeDifference();
                 if (difference > 0) {
                     System.out.println(difference + " unsaved changes");
                 } else {

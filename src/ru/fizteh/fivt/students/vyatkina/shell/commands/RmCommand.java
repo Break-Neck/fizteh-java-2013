@@ -21,8 +21,7 @@ public class RmCommand extends AbstractCommand<ShellState> {
         try {
             Path file = Paths.get(args[0]);
             state.getFileManager().deleteFile(file);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
     }

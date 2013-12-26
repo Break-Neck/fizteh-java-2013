@@ -18,8 +18,8 @@ public class CreateStructedCommand extends DatabaseCommand {
 
     @Override
     public String[] parseArgs(String signature) {
-        Pattern ARGS_PATTERN = Pattern.compile("^(.*)\\s+\\((.*)\\)$");
-        Matcher matcher = ARGS_PATTERN.matcher(signature);
+        Pattern argsPattern = Pattern.compile("^(.*)\\s+\\((.*)\\)$");
+        Matcher matcher = argsPattern.matcher(signature);
         if (matcher.matches()) {
             String[] args = new String[2];
             args[0] = matcher.group(1);
@@ -37,12 +37,10 @@ public class CreateStructedCommand extends DatabaseCommand {
         boolean newTableIsCreated;
         try {
             newTableIsCreated = state.databaseAdapter.createTable(tableName, structuredSignature);
-        }
-        catch (UnsupportedOperationException | IllegalArgumentException e) {
+        } catch (UnsupportedOperationException | IllegalArgumentException e) {
             state.printErrorMessage(e.getMessage());
             return;
-        }
-        catch (WrappedIOException e) {
+        } catch (WrappedIOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
         if (newTableIsCreated) {

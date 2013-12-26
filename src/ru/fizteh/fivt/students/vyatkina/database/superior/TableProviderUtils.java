@@ -55,7 +55,8 @@ public class TableProviderUtils implements TableProviderConstants {
         return file;
     }
 
-    public static Set<Path> deleteFilesThatChanged(Path tablePath, Set<String> keysThatValuesHaveChanged) throws IOException {
+    public static Set<Path> deleteFilesThatChanged(Path tablePath, Set<String> keysThatValuesHaveChanged)
+            throws IOException {
         Set<Path> paths = new HashSet<>();
         if (Files.notExists(tablePath)) {
             Files.createDirectory(tablePath);
@@ -115,8 +116,8 @@ public class TableProviderUtils implements TableProviderConstants {
                 haveFiles = true;
                 boolean emptyFile = true;
 
-                try (DataInputStream in = new DataInputStream(new BufferedInputStream
-                        (new FileInputStream(file)))) {
+                try (DataInputStream in = new DataInputStream(new BufferedInputStream(
+                        new FileInputStream(file)))) {
                     while (in.available() != 0) {
                         emptyFile = false;
                         DatabaseUtils.KeyValue pair = DatabaseUtils.readKeyValue(in);
@@ -125,8 +126,7 @@ public class TableProviderUtils implements TableProviderConstants {
                         }
                         result.put(pair.key, pair.value);
                     }
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw new IOException(e.getMessage());
                 }
 
@@ -167,12 +167,11 @@ public class TableProviderUtils implements TableProviderConstants {
             Path file = TableProviderUtils.createFileForKeyIfNotExists(entry.getKey(), tablePath);
             if (filesChanged.contains(file)) {
 
-                try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream
-                        (new FileOutputStream(file.toFile(), true)))) {
+                try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
+                        new FileOutputStream(file.toFile(), true)))) {
 
                     DatabaseUtils.writeKeyValue(new DatabaseUtils.KeyValue(entry.getKey(), entry.getValue()), out);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw new IOException("Unable to write to file: " + e.getMessage());
                 }
             }
@@ -181,14 +180,13 @@ public class TableProviderUtils implements TableProviderConstants {
 
     public static void writeTable(Map<Path, List<DatabaseUtils.KeyValue>> fileMap) throws IOException {
         for (Path file : fileMap.keySet()) {
-            try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream
-                    (new FileOutputStream(file.toFile(), true)))) {
+            try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
+                    new FileOutputStream(file.toFile(), true)))) {
                 List<DatabaseUtils.KeyValue> entries = fileMap.get(file);
                 for (int i = 0; i < entries.size(); ++i) {
                     DatabaseUtils.writeKeyValue(entries.get(i), out);
                 }
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new IOException("Unable to write to file: " + e.getMessage());
             }
         }
@@ -196,8 +194,8 @@ public class TableProviderUtils implements TableProviderConstants {
 
     public static List<Class<?>> readTableSignature(Path path) throws IllegalArgumentException, IOException {
         List<Class<?>> classes = new ArrayList<>();
-        try (Scanner in = new Scanner(new BufferedInputStream
-                (new FileInputStream(path.toFile())))) {
+        try (Scanner in = new Scanner(new BufferedInputStream(
+                new FileInputStream(path.toFile())))) {
             while (in.hasNext()) {
                 Class<?> aClass = Type.BY_SHORT_NAME.get(in.next().trim());
                 if (aClass != null) {
@@ -206,8 +204,7 @@ public class TableProviderUtils implements TableProviderConstants {
                     throw new IllegalArgumentException(UNEXPECTED_CLASS_IN_STORABLE);
                 }
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new IOException(e.fillInStackTrace());
         }
         return classes;
@@ -217,19 +214,18 @@ public class TableProviderUtils implements TableProviderConstants {
         Path signatureFile = path.resolve(SIGNATURE_FILE);
         Files.createFile(signatureFile);
 
-        try (PrintStream out = new PrintStream(new BufferedOutputStream
-                (new FileOutputStream(signatureFile.toFile(), true)))) {
-            boolean first_element = true;
+        try (PrintStream out = new PrintStream(new BufferedOutputStream(
+                new FileOutputStream(signatureFile.toFile(), true)))) {
+            boolean firstElement = true;
             for (Class<?> aClass : classes) {
-                if (!first_element) {
+                if (!firstElement) {
                     out.print(" ");
                 } else {
-                    first_element = false;
+                    firstElement = false;
                 }
                 out.print(Type.BY_CLASS.get(aClass));
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new IOException(e.getMessage());
         }
     }

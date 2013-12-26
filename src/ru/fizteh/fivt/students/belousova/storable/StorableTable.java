@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class StorableTable extends AbstractTable<String, Storeable> implements ChangesCountingTable {
+public class StorableTable extends AbstractTable<String, Storeable> implements ExtendedTable {
     private List<Class<?>> columnTypes = new ArrayList<>();
     StorableTableProvider tableProvider = null;
 
@@ -89,6 +89,8 @@ public class StorableTable extends AbstractTable<String, Storeable> implements C
 
     @Override
     public int commit() throws IOException {
+        checkIfClosed();
+
         tableTransactionsLock.lock();
         try {
             int counter = countChanges();
@@ -107,11 +109,24 @@ public class StorableTable extends AbstractTable<String, Storeable> implements C
 
     @Override
     public int getColumnsCount() {
+        checkIfClosed();
         return columnTypes.size();
     }
 
     @Override
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
+        checkIfClosed();
         return columnTypes.get(columnIndex);
+    }
+
+    @Override
+    public boolean isClosed() {
+        return isClosed.get();
+    }
+
+    @Override
+    public String toString() {
+        checkIfClosed();
+        return getClass().getSimpleName() + "[" + dataDirectory.getAbsolutePath() + "]";
     }
 }

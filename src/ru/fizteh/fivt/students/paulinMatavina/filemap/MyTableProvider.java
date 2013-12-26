@@ -6,22 +6,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.json.JSONArray;
 import java.text.ParseException;
+
 import ru.fizteh.fivt.storage.structured.*;
 import ru.fizteh.fivt.students.paulinMatavina.shell.ShellState;
 import ru.fizteh.fivt.students.paulinMatavina.utils.*;
 
-public class MyTableProvider extends State implements TableProvider {
-    private HashMap<String, MultiDbState> tableMap;
+public class MyTableProvider extends State implements TableProvider, AutoCloseable {
+    private HashMap<String, MyTable> tableMap;
     private String rootDir;
     private ShellState shell;
-    public String currTableName;
+    private ReentrantLock tableAccessLock;
+    private volatile boolean isClosed;
     
+    public String currTableName;
+
     public MyTableProvider(String dir) throws IOException {
         validate(dir);
+        
+        tableAccessLock = new ReentrantLock(true);
         shell = new ShellState();    
         File root = new File(shell.makeNewSource(dir));
+        isClosed = false;
+        
         if (fileExist(dir) && !root.isDirectory()) {
             throw new IllegalArgumentException("provided root is not a directory");
         }  
@@ -30,7 +40,7 @@ public class MyTableProvider extends State implements TableProvider {
             try {
                 shell.mkdir(new String[] {dir});
             } catch (Exception e) {
-                throw new IOException(e.getMessage(), e);
+                throw new IOException(dir + ": " + e.getMessage(), e);
             }
         }     
         
@@ -39,15 +49,15 @@ public class MyTableProvider extends State implements TableProvider {
         this.add(new DbGet());
         this.add(new DbPut());
         this.add(new DbRemove());
-        this.add(new MultiDbDrop());
-        this.add(new MultiDbCreate());
-        this.add(new MultiDbUse());
+        this.add(new DbDrop());
+        this.add(new DbCreate());
+        this.add(new DbUse());
         this.add(new DbCommit());
         this.add(new DbRollback());
         this.add(new DbSize());
         
         currTableName = null;
-        tableMap = new HashMap<String, MultiDbState>();
+        tableMap = new HashMap<String, MyTable>();
         rootDir = dir;
     }
     
@@ -64,63 +74,86 @@ public class MyTableProvider extends State implements TableProvider {
     
     @Override
     public Table getTable(String name) {
+        checkClosed();
         validate(name);
         checkNameIsCorrect(name);
+        
         try {
             return tryToGetTable(name);
-        } catch (Exception e) {
-            return null;
+        } catch (Throwable e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
     
-    public MultiDbState tryToGetTable(String name) throws ParseException, IOException {
-        validate(name);
-        checkNameIsCorrect(name);
-        MultiDbState newTable;
-        if (tableMap.get(name) == null) {
-            if (fileExist(name)) {
-                newTable = new MultiDbState(rootDir, name, this);
-                tableMap.put(name, newTable);   
-            }
-        }   
-        return tableMap.get(name);
+    public MyTable tryToGetTable(String name) throws ParseException, IOException {
+        MyTable newTable = null;
+        
+        tableAccessLock.lock();
+        try {
+            newTable = tableMap.get(name);
+            if (newTable == null || (newTable != null && newTable.wasClosed())) {
+                if (fileExist(name)) {
+                    newTable = new MyTable(rootDir, name, this);
+                    tableMap.put(name, newTable);
+                }
+            }  
+        } finally {
+            tableAccessLock.unlock();
+        }
+        
+        return newTable;
     }
 
     @Override
     public Table createTable(String name, List<Class<?>> columnTypes) throws IOException, DbWrongTypeException {
+        checkClosed();
         validate(name);
-        checkNameIsCorrect(name);      
-        if (fileExist(name)) {
-            return null;
-        }   
-        if (columnTypes == null || columnTypes.size() == 0) {
-            throw new IllegalArgumentException("no column types provided");
-        }
-        MultiDbState table;
-        shell.mkdir(new String[] {shell.makeNewSource(name)});
-       
+        checkNameIsCorrect(name); 
+        
+        tableAccessLock.lock();
         try {
-            table = new MultiDbState(rootDir, name, this, columnTypes);
+            if (fileExist(name) && new File(shell.makeNewSource(name)).isDirectory()) {
+                return null;
+            }     
+            if (fileExist(name) && !new File(shell.makeNewSource(name)).isDirectory()) {
+                throw new IOException(name + " exists and is not a directory");
+            }        
+            if (columnTypes == null || columnTypes.size() == 0) {
+                throw new IllegalArgumentException("no column types provided");
+            }
+            
+            MyTable table;
+            shell.mkdir(new String[] {shell.makeNewSource(name)});      
+            table = new MyTable(rootDir, name, this, columnTypes);
+            tableMap.put(name, table);
+            return table;
         } catch (ParseException e) {
             throw new RuntimeException(e.getMessage(), e);
-        }
-        
-        tableMap.put(name, table);
-        return table;
+        } finally {
+            tableAccessLock.unlock();
+        }      
     }
 
+    @Override
     public void removeTable(String name) {
-        validate(name);
+        checkClosed();
+        validate(name); 
         
-        if (!fileExist(name)) {
-            throw new IllegalStateException("removing not existing table");
+        tableAccessLock.lock();
+        try {
+            if (!fileExist(name)) {
+                throw new IllegalStateException("removing not existing table");
+            } 
+            MyTable table = null;
+            table = tableMap.get(name);  
+            if (table != null) {
+                table.dropped();
+            }
+            tableMap.remove(name);             
+            shell.rm(new String[]{name});
+        } finally {
+            tableAccessLock.unlock();
         }
-        
-        if (tableMap.get(name) != null) {
-            tableMap.get(name).dropped();
-        }
-        tableMap.put(name, null);
-        shell.rm(new String[]{name});
         
         return;
     }
@@ -149,21 +182,33 @@ public class MyTableProvider extends State implements TableProvider {
     }
     
     public Table getCurrTable() {
-        if (currTableName == null) {
-            return null;
-        } else {
-            return tableMap.get(currTableName);
+        checkClosed();
+        
+        Table answer = null;
+        
+        tableAccessLock.lock();
+        try {
+            if (currTableName == null) {
+                return null;
+            } else {
+                answer = tableMap.get(currTableName);
+            }
+        } finally {
+            tableAccessLock.unlock();
         }
+        return answer;
     }
     
     @Override
     public Storeable deserialize(Table table, String value) throws ParseException {
+        checkClosed();
         if (value == null) {
             throw new IllegalArgumentException("no storeable passed");
         }
         if (table == null) {
             throw new IllegalArgumentException("no table passed");
         }
+        
         try {
             ArrayList<Class<?>> columnTypes = new ArrayList<>();
             int columnCount = table.getColumnsCount();
@@ -172,7 +217,8 @@ public class MyTableProvider extends State implements TableProvider {
             }
             JSONArray array = new JSONArray(value);
             if (columnCount != array.length()) {
-                throw new ParseException("wrong array size " + columnCount, 0);
+                throw new ParseException("wrong array size " + columnCount 
+                        + ": expected " + array.length(), 0);
             }
             
             Storeable newList = new MyStoreable(columnTypes);
@@ -188,12 +234,14 @@ public class MyTableProvider extends State implements TableProvider {
 
     @Override
     public String serialize(Table table, Storeable value) throws ColumnFormatException {
+        checkClosed();
         if (value == null) {
             throw new IllegalArgumentException("no storeable passed");
         }
         if (table == null) {
             throw new IllegalArgumentException("no table passed");
         }
+        
         try {
             int columnCount = table.getColumnsCount();
             Object[] objects = new Object[columnCount];
@@ -213,9 +261,11 @@ public class MyTableProvider extends State implements TableProvider {
 
     @Override
     public Storeable createFor(Table table) {
+        checkClosed();
         if (table == null) {
             throw new IllegalArgumentException("no table passed");
         }
+        
         ArrayList<Class<?>> columnTypes = new ArrayList<>();
         int columnCount = table.getColumnsCount();
         for (int i = 0; i < columnCount; i++) {
@@ -227,11 +277,14 @@ public class MyTableProvider extends State implements TableProvider {
     @Override
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
+        checkClosed();
         if (table == null) {
             throw new IllegalArgumentException("no table passed");
         }
+        
         ArrayList<Class<?>> types = new ArrayList<>();
         int columnCount = table.getColumnsCount();
+        
         for (int i = 0; i < columnCount; i++) {
             types.add(table.getColumnType(i));
         }
@@ -249,9 +302,9 @@ public class MyTableProvider extends State implements TableProvider {
     
     public ArrayList<Class<?>> parseSignature(StringTokenizer tokens) {
         ArrayList<Class<?>> columnTypes = new ArrayList<Class<?>>();
+        
         while (tokens.hasMoreTokens()) {
             String nextToken = tokens.nextToken().trim();
-            
             switch (nextToken) {
                 case ("int") :
                     columnTypes.add(Integer.class);
@@ -279,5 +332,25 @@ public class MyTableProvider extends State implements TableProvider {
             }
         }
         return columnTypes;
+    }
+    
+    @Override
+    public String toString() {
+        String result = getClass().getSimpleName() + "[" + rootDir + "]";
+        return result;
+    }
+
+    private void checkClosed() {
+        if (isClosed) {
+            throw new IllegalStateException(toString() + ": was closed");
+        }
+    }
+    
+    @Override
+    public void close() throws Exception {
+        isClosed = true;
+        for (MyTable table : tableMap.values()) {
+            table.close();
+        }
     }
 }

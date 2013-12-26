@@ -69,4 +69,25 @@ public class StoreableImplementation implements Storeable {
 	public String getStringAt(int columnIndex) throws ColumnFormatException {
 		return (String)getObjectOfClassAt(columnIndex, String.class);
 	}
+	
+	 public String toString() {
+	     StringBuilder builder = new StringBuilder();
+	     builder.append(getClass().getSimpleName() + '[');
+	     
+	     boolean firstValue = false;
+	     for (Object currentValue: storableValues) {
+	         if (!(firstValue)) {
+	             firstValue = true;
+	         } else {
+	             builder.append(',');
+	         }
+	         if (currentValue != null) {
+	             builder.append(currentValue.toString());
+	         }
+	     }
+	    
+	     builder.append(']');
+
+	     return new String(builder);
+	 }
 }

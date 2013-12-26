@@ -22,12 +22,10 @@ public class CreateCommand extends DatabaseCommand {
         boolean newTableIsCreated;
         try {
             newTableIsCreated = state.databaseAdapter.createTable(tableName);
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             state.printErrorMessage(e.getMessage());
             return;
-        }
-        catch (WrappedIOException e) {
+        } catch (WrappedIOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
         if (newTableIsCreated) {

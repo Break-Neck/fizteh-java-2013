@@ -21,8 +21,7 @@ public class MkdirCommand extends AbstractCommand<ShellState> {
         Path newDir = Paths.get(args[0]);
         try {
             state.getFileManager().makeDirectory(newDir);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
 

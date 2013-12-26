@@ -8,17 +8,17 @@ import ru.fizteh.fivt.students.elenav.storeable.StoreableTableState;
 
 public interface Provider {
 
-	File getWorkingDirectory();
+    File getWorkingDirectory();
 
-	void removeTable(String name) throws IOException;
+    void removeTable(String name) throws IOException;
 
-	Object getTable(String name);
+    Object getTable(String name);
 
-	FilesystemState createTable(String string);
+    FilesystemState createTable(String string);
 
-	StoreableTableState createTable(String string, List<Class<?>> identifyTypes)  throws IOException;
+    StoreableTableState createTable(String string, List<Class<?>> identifyTypes)  throws IOException;
 
-	void use(FilesystemState table) throws IOException;
+    void use(FilesystemState table) throws IOException;
 
-	
+    
 }

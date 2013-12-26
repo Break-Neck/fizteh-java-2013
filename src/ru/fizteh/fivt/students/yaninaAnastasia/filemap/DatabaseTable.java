@@ -9,31 +9,45 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class DatabaseTable implements Table {
+public class DatabaseTable implements Table, AutoCloseable {
     public HashMap<String, Storeable> oldData;
-    public HashMap<String, Storeable> modifiedData;
-    public HashSet<String> deletedKeys;
-    public int size;
-    public int uncommittedChanges;
+    public ThreadLocal<Long> transactionId;
     private String tableName;
     public List<Class<?>> columnTypes;
     DatabaseTableProvider provider;
+    private ReadWriteLock transactionLock = new ReentrantReadWriteLock(true);
+    volatile boolean isClosed;
 
 
     public DatabaseTable(String name, List<Class<?>> colTypes, DatabaseTableProvider providerRef) {
+        isClosed = false;
         this.tableName = name;
         oldData = new HashMap<String, Storeable>();
-        modifiedData = new HashMap<String, Storeable>();
-        deletedKeys = new HashSet<String>();
+        transactionId = new ThreadLocal<Long>() {
+            @Override
+            public Long initialValue() {
+                return TransactionPool.getInstance().createTransaction();
+            }
+        };
         columnTypes = colTypes;
         provider = providerRef;
-        uncommittedChanges = 0;
         for (final Class<?> columnType : columnTypes) {
             if (columnType == null || ColumnTypes.fromTypeToName(columnType) == null) {
                 throw new IllegalArgumentException("unknown column type");
             }
         }
+    }
+
+    public DatabaseTable(DatabaseTable other) {
+        this.tableName = other.tableName;
+        this.columnTypes = other.columnTypes;
+        this.provider = other.provider;
+        this.oldData = other.oldData;
+        isClosed = false;
+        this.transactionId = other.transactionId;
     }
 
     public static int getDirectoryNum(String key) {
@@ -47,34 +61,41 @@ public class DatabaseTable implements Table {
     }
 
     public String getName() {
+        isCloseChecker();
         if (tableName == null) {
             throw new IllegalArgumentException("Table name cannot be null");
         }
         return tableName;
     }
 
-    public void putName(String name) {
-        this.tableName = name;
+    @Override
+    public Storeable get(String key) {
+        return get(key, transactionId.get());
     }
 
-    public Storeable get(String key) throws IllegalArgumentException {
+    public Storeable get(String key, long transactionId) throws IllegalArgumentException {
+        isCloseChecker();
         if (key == null || (key.isEmpty() || key.trim().isEmpty())) {
             throw new IllegalArgumentException("Table name cannot be null");
         }
-        if (modifiedData.containsKey(key)) {
-            return modifiedData.get(key);
+
+        TransactionWithModifies transaction = TransactionPool.getInstance().getTransaction(transactionId);
+        if (transaction.modifiedData.containsKey(key)) {
+            return transaction.modifiedData.get(key);
         }
-        if (deletedKeys.contains(key)) {
+        if (transaction.deletedKeys.contains(key)) {
             return null;
         }
-        return oldData.get(key);
+        transactionLock.readLock().lock();
+        try {
+            return oldData.get(key);
+        } finally {
+            transactionLock.readLock().unlock();
+        }
     }
 
-    public static boolean checkStringCorrect(String string) {
-        return string.matches("\\s*") || string.split("\\s+").length != 1;
-    }
-
-    public Storeable put(String key, Storeable value) throws IllegalArgumentException {
+    public Storeable put(String key, Storeable value, long transactionId) throws IllegalArgumentException {
+        isCloseChecker();
         if ((key == null) || (key.trim().isEmpty())) {
             throw new IllegalArgumentException("Key can not be null");
         }
@@ -86,115 +107,222 @@ public class DatabaseTable implements Table {
         }
         checkAlienStoreable(value);
         for (int index = 0; index < getColumnsCount(); ++index) {
-                switch (ColumnTypes.fromTypeToName(columnTypes.get(index))) {
-                    case "String":
-                        String stringValue = (String) value.getColumnAt(index);
-                        if (stringValue == null) {
-                            continue;
-                        }
-                        break;
-                    default:
-                }
+            switch (ColumnTypes.fromTypeToName(columnTypes.get(index))) {
+                case "String":
+                    String stringValue = (String) value.getColumnAt(index);
+                    if (stringValue == null) {
+                        continue;
+                    }
+                    break;
+                default:
+            }
         }
         Storeable oldValue = null;
-        oldValue = modifiedData.get(key);
-        if (oldValue == null && !deletedKeys.contains(key)) {
-            oldValue = oldData.get(key);
+        TransactionWithModifies transaction = TransactionPool.getInstance().getTransaction(transactionId);
+        oldValue = transaction.modifiedData.get(key);
+        if (oldValue == null && !transaction.deletedKeys.contains(key)) {
+            transactionLock.readLock().lock();
+            try {
+                oldValue = oldData.get(key);
+            } finally {
+                transactionLock.readLock().unlock();
+            }
         }
-        modifiedData.put(key, value);
-        if (deletedKeys.contains(key)) {
-            deletedKeys.remove(key);
+        transaction.modifiedData.put(key, value);
+        if (transaction.deletedKeys.contains(key)) {
+            transaction.deletedKeys.remove(key);
         }
-        if (oldValue == null) {
-            size += 1;
-        }
-        uncommittedChanges = changesCount();
+        transaction.uncommittedChanges = changesCount(transactionId);
         return oldValue;
     }
 
-    public Storeable remove(String key) throws IllegalArgumentException {
+    public Storeable remove(String key, long transactionId) throws IllegalArgumentException {
+        isCloseChecker();
         if (key == null || (key.isEmpty() || key.trim().isEmpty())) {
             throw new IllegalArgumentException("Key name cannot be null");
         }
         Storeable oldValue = null;
-        oldValue = modifiedData.get(key);
-        if (oldValue == null && !deletedKeys.contains(key)) {
-            oldValue = oldData.get(key);
+        TransactionWithModifies transaction = TransactionPool.getInstance().getTransaction(transactionId);
+        oldValue = transaction.modifiedData.get(key);
+        if (oldValue == null && !transaction.deletedKeys.contains(key)) {
+            transactionLock.readLock().lock();
+            try {
+                oldValue = oldData.get(key);
+            } finally {
+                transactionLock.readLock().unlock();
+            }
         }
-        if (modifiedData.containsKey(key)) {
-            modifiedData.remove(key);
-            if (oldData.containsKey(key)) {
-                deletedKeys.add(key);
+        if (transaction.modifiedData.containsKey(key)) {
+            transaction.modifiedData.remove(key);
+            transactionLock.readLock().lock();
+            try {
+                if (oldData.containsKey(key)) {
+                    transaction.deletedKeys.add(key);
+                }
+            } finally {
+                transactionLock.readLock().unlock();
             }
         } else {
-            deletedKeys.add(key);
+            transaction.deletedKeys.add(key);
         }
-        if (oldValue != null) {
-            size -= 1;
-        }
-        uncommittedChanges = changesCount();
+        transaction.uncommittedChanges = changesCount(transactionId);
         return oldValue;
     }
 
-    public int size() {
-        return size;
+    public int size(long transactionId) {
+        isCloseChecker();
+        transactionLock.readLock().lock();
+        try {
+            return oldData.size() + diffSize(transactionId);
+        } finally {
+            transactionLock.readLock().unlock();
+        }
     }
 
-    public int commit() {
-        int recordsCommitted = changesCount();
-        for (String keyToDelete : deletedKeys) {
-            oldData.remove(keyToDelete);
-        }
-        for (String keyToAdd : modifiedData.keySet()) {
-            if (modifiedData.get(keyToAdd) != null) {
-                oldData.put(keyToAdd, modifiedData.get(keyToAdd));
+    public int commit(long transactionId) {
+        isCloseChecker();
+        int recordsCommitted = 0;
+        TransactionWithModifies transaction = TransactionPool.getInstance().getTransaction(transactionId);
+        transactionLock.writeLock().lock();
+        try {
+            recordsCommitted = Math.abs(changesCount(transactionId));
+            for (String keyToDelete : transaction.deletedKeys) {
+                oldData.remove(keyToDelete);
             }
-        }
-        deletedKeys.clear();
-        modifiedData.clear();
-        size = oldData.size();
-        TableBuilder tableBuilder = new TableBuilder(provider, this);
-        save(tableBuilder);
-        uncommittedChanges = 0;
+            for (String keyToAdd : transaction.modifiedData.keySet()) {
+                if (transaction.modifiedData.get(keyToAdd) != null) {
+                    oldData.put(keyToAdd, transaction.modifiedData.get(keyToAdd));
+                }
+            }
+            transaction.deletedKeys.clear();
+            transaction.modifiedData.clear();
+            TableBuilder tableBuilder = new TableBuilder(provider, this);
+            save(tableBuilder);
+            transaction.uncommittedChanges = 0;
+            for (String name : provider.indexMap.keySet()) {
+                if ((provider.indexMap.get(name).indexTable.getName().equals(this.getName()))
+                        && (recordsCommitted != 0)) {
+                    provider.indexMap.get(name).updateIndex();
+                }
+            }
+            if (!indexSave()) {
+                throw new IllegalArgumentException("Wrong type of the database");
+            }
 
+        } finally {
+            transactionLock.writeLock().unlock();
+        }
         return recordsCommitted;
     }
 
-    public int rollback() {
-        int recordsDeleted = changesCount();
+    public int rollback(long transactionId) {
+        isCloseChecker();
+        int recordsDeleted = Math.abs(changesCount(transactionId));
 
-        deletedKeys.clear();
-        modifiedData.clear();
-        size = oldData.size();
+        TransactionWithModifies transaction = TransactionPool.getInstance().getTransaction(transactionId);
+        transaction.deletedKeys.clear();
+        transaction.modifiedData.clear();
 
-        uncommittedChanges = 0;
+        transaction.uncommittedChanges = 0;
 
         return recordsDeleted;
     }
 
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
+        isCloseChecker();
         if (columnIndex < 0 || columnIndex >= getColumnsCount()) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("wrong index");
         }
         return columnTypes.get(columnIndex);
     }
 
     public Storeable storeableGet(String key) {
-        return oldData.get(key);
+        transactionLock.readLock().lock();
+        try {
+            return oldData.get(key);
+        } finally {
+            transactionLock.readLock().unlock();
+        }
     }
 
     public void storeablePut(String key, Storeable value) {
-        oldData.put(key, value);
+        transactionLock.writeLock().lock();
+        try {
+            oldData.put(key, value);
+        } finally {
+            transactionLock.writeLock().unlock();
+        }
+    }
+
+    public boolean indexSave() {
+        File indexDir = new File(provider.getDatabaseDirectory(), "indexes");
+        if (indexDir.exists()) {
+            try {
+                DatabaseTableProvider.recRemove(indexDir);
+            } catch (IOException e) {
+                return false;
+            }
+        }
+        if (!indexDir.mkdir()) {
+            System.err.println("Error making directory");
+            return false;
+        }
+
+        for (String key : provider.indexMap.keySet()) {
+            if (provider.indexMap.get(key).indexTable.getName().equals(this.getName())) {
+                File indexTable = new File(indexDir, key);
+                if (!indexTable.mkdir()) {
+                    System.err.println("Error making directory");
+                    return false;
+                }
+                File tableInfo = new File(indexTable, "indexInfo.tsv");
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableInfo))) {
+                    tableInfo.createNewFile();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(key);
+                    sb.append(" ");
+                    sb.append(provider.indexMap.get(key).column);
+                    String index = sb.toString();
+                    writer.write(index);
+                } catch (IOException e) {
+                    System.err.println("error writing table info file");
+                    return false;
+                }
+                File tableIndex = new File(indexTable, "tableIndex.tsv");
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(tableIndex))) {
+                    tableIndex.createNewFile();
+                    StringBuilder sb = new StringBuilder();
+                    for (Object secondaryKey : provider.indexMap.get(key).indexes.keySet()) {
+                        sb.append(secondaryKey);
+                        sb.append(" ");
+                        sb.append(provider.indexMap.get(key).indexes.get(secondaryKey));
+                        String index = sb.toString();
+                        writer.write(index);
+                        writer.newLine();
+                        sb.delete(0, sb.capacity());
+                    }
+                } catch (IOException e) {
+                    System.err.println("error writing index info file");
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public boolean save(TableBuilder tableBuilder) {
-        if (oldData == null) {
-            return true;
+        transactionLock.readLock().lock();
+        try {
+            if (oldData == null) {
+                return true;
+            }
+        } finally {
+            transactionLock.readLock().unlock();
         }
         if (tableName.equals("")) {
             return true;
         }
-        File tablePath = new File(System.getProperty("fizteh.db.dir"), tableName);
+        File tablePath = new File(provider.getDatabaseDirectory(), tableName);
         for (int i = 0; i < 16; i++) {
             String directoryName = String.format("%d.dir", i);
             File path = new File(tablePath, directoryName);
@@ -203,13 +331,18 @@ public class DatabaseTable implements Table {
             for (int j = 0; j < 16; j++) {
                 keys.add(new HashSet<String>());
             }
-            for (String step : oldData.keySet()) {
-                int nDirectory = getDirectoryNum(step);
-                if (nDirectory == i) {
-                    int nFile = getFileNum(step);
-                    keys.get(nFile).add(step);
-                    isDirEmpty = false;
+            transactionLock.readLock().lock();
+            try {
+                for (String step : oldData.keySet()) {
+                    int nDirectory = getDirectoryNum(step);
+                    if (nDirectory == i) {
+                        int nFile = getFileNum(step);
+                        keys.get(nFile).add(step);
+                        isDirEmpty = false;
+                    }
                 }
+            } finally {
+                transactionLock.readLock().unlock();
             }
 
             if (isDirEmpty) {
@@ -248,6 +381,10 @@ public class DatabaseTable implements Table {
         return true;
     }
 
+    public int getUncommittedChangesCount() {
+        return TransactionPool.getInstance().getTransaction(transactionId.get()).uncommittedChanges;
+    }
+
     public boolean saveTable(Set<String> keys, String path, TableBuilder tableBuilder) throws IOException {
         if (keys.isEmpty()) {
             try {
@@ -275,26 +412,62 @@ public class DatabaseTable implements Table {
                 String value = tableBuilder.get(key);
                 temp.write(value.getBytes(StandardCharsets.UTF_8));
             }
+            temp.close();
         } catch (IOException e) {
             return false;
         }
         return true;
     }
 
-    private int changesCount() {
+    private int changesCount(long transactionId) {
         HashSet<String> tempSet = new HashSet<>();
         HashSet<String> toRemove = new HashSet<>();
-        tempSet.addAll(modifiedData.keySet());
-        tempSet.addAll(deletedKeys);
-        for (String key : tempSet) {
-            if (tempSet.contains(key) && compare(oldData.get(key), modifiedData.get(key))) {
-                toRemove.add(key);
+        TransactionWithModifies transaction = TransactionPool.getInstance().getTransaction(transactionId);
+        tempSet.addAll(transaction.modifiedData.keySet());
+        tempSet.addAll(transaction.deletedKeys);
+        transactionLock.readLock().lock();
+        try {
+            for (String key : tempSet) {
+                if (tempSet.contains(key) && compare(oldData.get(key), transaction.modifiedData.get(key))) {
+                    toRemove.add(key);
+                }
             }
+        } finally {
+            transactionLock.readLock().unlock();
         }
         return tempSet.size() - toRemove.size();
     }
 
-    private boolean compare(Storeable key1, Storeable key2) {
+    private int diffSize(long transactionId) {
+        TransactionWithModifies transaction = TransactionPool.getInstance().getTransaction(transactionId);
+        int result = 0;
+        for (final String key : transaction.modifiedData.keySet()) {
+            Storeable oldValue;
+            transactionLock.readLock().lock();
+            try {
+                oldValue = oldData.get(key);
+            } finally {
+                transactionLock.readLock().unlock();
+            }
+            Storeable newValue = transaction.modifiedData.get(key);
+            if (oldValue == null && newValue != null) {
+                result += 1;
+            }
+        }
+        for (final String key : transaction.deletedKeys) {
+            transactionLock.readLock().lock();
+            try {
+                if (oldData.containsKey(key)) {
+                    result -= 1;
+                }
+            } finally {
+                transactionLock.readLock().unlock();
+            }
+        }
+        return result;
+    }
+
+    public static boolean compare(Storeable key1, Storeable key2) {
         if (key1 == null && key2 == null) {
             return true;
         }
@@ -304,7 +477,33 @@ public class DatabaseTable implements Table {
         return key1.equals(key2);
     }
 
+    @Override
+    public Storeable put(String key, Storeable value) throws ColumnFormatException {
+        return put(key, value, transactionId.get());
+    }
+
+    @Override
+    public Storeable remove(String key) {
+        return remove(key, transactionId.get());
+    }
+
+    @Override
+    public int size() {
+        return size(transactionId.get());
+    }
+
+    @Override
+    public int commit() throws IOException {
+        return commit(transactionId.get());
+    }
+
+    @Override
+    public int rollback() {
+        return rollback(transactionId.get());
+    }
+
     public int getColumnsCount() {
+        isCloseChecker();
         return columnTypes.size();
     }
 
@@ -328,5 +527,26 @@ public class DatabaseTable implements Table {
             return;
         }
         throw new ColumnFormatException("Alien storeable with more columns");
+    }
+
+    public void isCloseChecker() {
+        if (isClosed) {
+            throw new IllegalStateException("It is closed");
+        }
+    }
+
+    @Override
+    public String toString() {
+        isCloseChecker();
+        return String.format("%s[%s]", getClass().getSimpleName(), new File(provider.curDir, tableName).toString());
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (isClosed) {
+            return;
+        }
+        rollback();
+        isClosed = true;
     }
 }

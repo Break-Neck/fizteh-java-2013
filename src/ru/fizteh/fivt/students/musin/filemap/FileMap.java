@@ -15,9 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FileMap {
-    File location;
-    HashMap<String, Storeable> map;
-    final int maxLength;
+    private File location;
+    private HashMap<String, Storeable> map;
+    private final int maxLength;
 
     public FileMap(File location) {
         if (location == null) {
@@ -121,7 +121,7 @@ public class FileMap {
                 map.put(key, value);
             }
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(String.format("File %s was not found", location.getName()), e);
         }
     }
 
@@ -130,12 +130,12 @@ public class FileMap {
      */
     public void writeToDisk(MultiFileMap table, FileMapProvider tableProvider) throws IOException {
         if (location.exists() && location.isDirectory()) {
-            throw new RuntimeException("Database can't be written to the specified location");
+            throw new RuntimeException(String.format("Database can't be written to \"%s\"", location.getPath()));
         }
         try {
             if (!location.exists()) {
                 if (!location.createNewFile()) {
-                    throw new RuntimeException("Database can't be written to the specified location");
+                    throw new IOException(String.format("Database can't be written to \"%s\"", location.getPath()));
                 }
             }
         } catch (IOException e) {

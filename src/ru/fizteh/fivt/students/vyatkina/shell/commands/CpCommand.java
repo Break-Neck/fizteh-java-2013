@@ -23,8 +23,7 @@ public class CpCommand extends AbstractCommand<ShellState> {
         Path toPath = Paths.get(args[1]);
         try {
             state.getFileManager().copyFile(fromPath, toPath);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
     }

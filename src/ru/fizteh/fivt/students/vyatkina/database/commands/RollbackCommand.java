@@ -19,8 +19,7 @@ public class RollbackCommand extends DatabaseCommand {
         int deletedChanges = 0;
         try {
             deletedChanges = state.databaseAdapter.rollback();
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             state.printErrorMessage(e.getMessage());
             return;
         }

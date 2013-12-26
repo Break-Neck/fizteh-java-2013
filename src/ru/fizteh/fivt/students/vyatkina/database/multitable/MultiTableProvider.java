@@ -49,8 +49,7 @@ public class MultiTableProvider implements StringTableProvider, TableProviderCon
                     table.putValueFromDisk(entry.getKey(), entry.getValue());
                 }
                 return table;
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new WrappedIOException(e.getMessage());
             }
         } else {
@@ -66,8 +65,7 @@ public class MultiTableProvider implements StringTableProvider, TableProviderCon
         } else {
             try {
                 Files.createDirectory(tableDirectory(tableName));
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new WrappedIOException(e.getMessage());
             }
             MultiTable newTable = new MultiTable(tableName, this);
@@ -82,8 +80,7 @@ public class MultiTableProvider implements StringTableProvider, TableProviderCon
         if (tables.containsKey(tableName)) {
             try {
                 deleteTableFromDisk(tableDirectory(tableName).toFile());
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new WrappedIOException(e.getMessage());
             }
             tables.remove(tableName);
@@ -98,8 +95,7 @@ public class MultiTableProvider implements StringTableProvider, TableProviderCon
         try {
             Set<Path> filesThatChanged = deleteFilesThatChanged(tableDirectory, keysThatValuesHaveChanged);
             rewriteFilesThatChanged(tableDirectory, table.entriesThatChanged(), filesThatChanged);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new WrappedIOException(e.getMessage());
         }
     }

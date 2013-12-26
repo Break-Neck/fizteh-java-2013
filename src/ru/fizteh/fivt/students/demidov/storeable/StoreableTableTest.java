@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,13 +14,13 @@ public class StoreableTableTest {
 	private StoreableTableProvider currentProvider;
 	private StoreableImplementation value1, value2;
 	private List<Class<?>> type;
+	private File tempDirectory;
 	
 	@Before
 	public void setUp() throws IOException {
 		try {
-			File tempDirectory = null;
 			try {
-				tempDirectory = File.createTempFile("StoreableTableProviderTest", null);
+				tempDirectory = File.createTempFile("StoreableTableTest", null);
 			} catch (IOException catchedException) {
 				return;
 			}
@@ -31,12 +30,15 @@ public class StoreableTableTest {
 			if (!tempDirectory.mkdir()) {
 				return;
 			}
-			currentProvider = new StoreableTableProvider(tempDirectory.getPath());
+			StoreableTableProviderFactory factory = new StoreableTableProviderFactory();
+            currentProvider = new StoreableTableProvider(factory, tempDirectory.getPath());
 		} catch (IllegalArgumentException catchedException) {
 			Assert.fail("unable to create StoreableTableProvider example");
-		}
+		} 
 		
-		type = new ArrayList<Class<?>>() {{add(Integer.class); add(Double.class); add(String.class);}};
+		type = new ArrayList<Class<?>>() { {
+		    add(Integer.class); add(Double.class); add(String.class);
+		} };
 		currentTable = currentProvider.createTable("createdTable", type);
 		
 		value1 = new StoreableImplementation(currentTable);
@@ -48,6 +50,13 @@ public class StoreableTableTest {
 		value2.setColumnAt(1, 2.71);
 		value2.setColumnAt(2, "6 a.m.");
 	}
+	
+    @Test
+    public void toStringTest() {
+        Assert.assertEquals(currentTable.toString(), 
+                "StoreableTable[" + (new File(tempDirectory, "createdTable")).getAbsolutePath() + "]");
+    }
+
 
 	//test put
 	@Test
@@ -166,8 +175,64 @@ public class StoreableTableTest {
 		currentTable.getColumnType(-1);
 	}
 	
-	@After
-	public void tearDown() {
-		currentProvider.removeTable("createdTable");
-	}  
+	//close tests
+    @Test (expected = IllegalStateException.class)
+    public void getColumnCountFromClosed() {
+        currentTable.close();
+        currentTable.getColumnsCount();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void getColumnTypeFromClosed() {
+        currentTable.close();
+        currentTable.getColumnType(0);
+    }
+    
+    @Test (expected = IllegalStateException.class)
+    public void getFromClosed() {
+        currentTable.close();
+        currentTable.get("key_1");
+    }    
+
+    @Test (expected = IllegalStateException.class)
+    public void removeFromClosed() {
+        currentTable.close();
+        currentTable.remove("key_1");
+    }
+    
+    @Test (expected = IllegalStateException.class)
+    public void getNameFromClosed() {
+        currentTable.close();
+        currentTable.getName();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void putFromClosed() {
+        currentTable.close();
+        currentTable.put("key_1", value1);
+    }
+    
+    @Test (expected = IllegalStateException.class)
+    public void sizeFromClosed() {
+        currentTable.close();
+        currentTable.size();
+    }
+    
+    @Test (expected = IllegalStateException.class)
+    public void commitFromClosed() throws IOException {
+        currentTable.close();
+        currentTable.commit();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void rollbackFromClosed() {
+        currentTable.close();
+        currentTable.rollback();
+    }
+    
+    @Test
+    public void closeTwice() {
+        currentTable.close();
+        currentTable.close();
+    }
 } 

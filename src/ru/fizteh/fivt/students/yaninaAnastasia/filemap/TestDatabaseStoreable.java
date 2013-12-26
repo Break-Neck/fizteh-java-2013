@@ -1,9 +1,6 @@
 package ru.fizteh.fivt.students.yaninaAnastasia.filemap;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 
@@ -93,8 +90,8 @@ public class TestDatabaseStoreable {
 
     @Test
     public void testColumnFormatIntRight() {
-        storeable.setColumnAt(0, Integer.valueOf(10));
-        Assert.assertEquals(storeable.getIntAt(0), Integer.valueOf(10));
+        storeable.setColumnAt(0, 10);
+        Assert.assertTrue(storeable.getIntAt(0) == 10);
     }
 
     @Test(expected = ColumnFormatException.class)
@@ -110,8 +107,8 @@ public class TestDatabaseStoreable {
 
     @Test
     public void testColumnFormatStringRight() {
-        storeable.setColumnAt(1, String.valueOf("a"));
-        Assert.assertEquals(storeable.getStringAt(1), String.valueOf("a"));
+        storeable.setColumnAt(1, "a");
+        Assert.assertTrue(storeable.getStringAt(1).equals("a"));
     }
 
     @Test(expected = ColumnFormatException.class)
@@ -127,8 +124,8 @@ public class TestDatabaseStoreable {
 
     @Test
     public void testColumnFormatLongRight() {
-        storeable.setColumnAt(2, Long.valueOf(10));
-        Assert.assertEquals(storeable.getLongAt(2), Long.valueOf(10));
+        storeable.setColumnAt(2, 10L);
+        Assert.assertTrue(storeable.getLongAt(2) == 10);
     }
 
     @Test(expected = ColumnFormatException.class)
@@ -144,13 +141,13 @@ public class TestDatabaseStoreable {
 
     @Test
     public void testColumnFormatBooleanRight() {
-        storeable.setColumnAt(3, Boolean.valueOf(true));
-        Assert.assertEquals(storeable.getBooleanAt(3), Boolean.valueOf(true));
+        storeable.setColumnAt(3, true);
+        Assert.assertTrue(storeable.getBooleanAt(3));
     }
 
     @Test(expected = ColumnFormatException.class)
     public void testDoubleColumnFormatExc() {
-        storeable.setColumnAt(5, new Float(10.5));
+        storeable.setColumnAt(5, 10.5d);
         storeable.getDoubleAt(5);
     }
 
@@ -161,8 +158,8 @@ public class TestDatabaseStoreable {
 
     @Test
     public void testColumnFormatDoubleRight() {
-        storeable.setColumnAt(4, Double.valueOf(10.4));
-        Assert.assertEquals(storeable.getDoubleAt(4), Double.valueOf(10.4));
+        storeable.setColumnAt(4, 10.4d);
+        Assert.assertTrue(storeable.getDoubleAt(4) == 10.4);
     }
 
     @Test(expected = ColumnFormatException.class)
@@ -178,8 +175,8 @@ public class TestDatabaseStoreable {
 
     @Test
     public void testColumnFormatFloatRight() {
-        storeable.setColumnAt(5, Float.valueOf(10));
-        Assert.assertEquals(storeable.getFloatAt(5), Float.valueOf(10));
+        storeable.setColumnAt(5, 10f);
+        Assert.assertTrue(storeable.getFloatAt(5) == 10);
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
@@ -189,7 +186,7 @@ public class TestDatabaseStoreable {
 
     @Test(expected = ColumnFormatException.class)
     public void testColumnFormatException() {
-        storeable.setColumnAt(1, Boolean.valueOf(true));
+        storeable.setColumnAt(1, true);
     }
 
     @Test(expected = IndexOutOfBoundsException.class)
@@ -199,13 +196,24 @@ public class TestDatabaseStoreable {
 
     @Test
     public void testGetColumnNoException() {
-        storeable.setColumnAt(0, Integer.valueOf(10));
-        Assert.assertEquals(storeable.getColumnAt(0), Integer.valueOf(10));
+        storeable.setColumnAt(0, 10);
+        Assert.assertTrue(storeable.getColumnAt(0) == 10);
     }
 
     @Test
     public void testSetColumnNoException() {
-        storeable.setColumnAt(1, String.valueOf("a"));
-        Assert.assertEquals(storeable.getColumnAt(1), String.valueOf("a"));
+        storeable.setColumnAt(1, "a");
+        Assert.assertTrue(storeable.getColumnAt(1).equals("a"));
+    }
+
+    @Test
+    public void testToString() throws Exception {
+        storeable.setColumnAt(0, 5);
+        storeable.setColumnAt(1, "Five");
+        storeable.setColumnAt(2, 5L);
+        storeable.setColumnAt(3, true);
+        storeable.setColumnAt(4, 5.5);
+        storeable.setColumnAt(5, 5.5f);
+        Assert.assertEquals(storeable.toString(), "DatabaseStoreable[5,Five,5,true,5.5,5.5]");
     }
 }

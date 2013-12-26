@@ -50,21 +50,19 @@ public class TableProviderChecker implements TableProviderConstants {
         for (int i = 0; i < table.getColumnsCount(); i++) {
             try {
                 if (storeable.getColumnAt(i) != null) {
-                    if (!storeable.getColumnAt(i).equals
-                            (getColumnFromTypeAt(i, table.getColumnType(i), storeable))) {
+                    if (!storeable.getColumnAt(i).equals(
+                            getColumnFromTypeAt(i, table.getColumnType(i), storeable))) {
                         throw new ColumnFormatException();
                     }
                 }
-            }
-            catch (IndexOutOfBoundsException e) {
+            } catch (IndexOutOfBoundsException e) {
                 throw new ColumnFormatException(e);
             }
         }
 
         try {
             storeable.getColumnAt(table.getColumnsCount());
-        }
-        catch (IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             return;
         }
         throw new ColumnFormatException("too big storeable");

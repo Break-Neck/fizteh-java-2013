@@ -23,12 +23,10 @@ public class PutCommand extends DatabaseCommand {
         String oldValue;
         try {
             oldValue = state.databaseAdapter.put(key, value);
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             state.printErrorMessage("Bad argument: " + e.getMessage());
             return;
-        }
-        catch (WrappedIOException e) {
+        } catch (WrappedIOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
 

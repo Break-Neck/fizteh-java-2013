@@ -11,6 +11,9 @@ public class StorableTableLine implements GetColumnTypeStorable {
     private Table table;
 
     public StorableTableLine(Table table) {
+        if (table == null) {
+            throw new IllegalArgumentException("table cannot be null");
+        }
         this.table = table;
         for (int i = 0; i < table.getColumnsCount(); i++) {
             columns.add(null);
@@ -32,7 +35,9 @@ public class StorableTableLine implements GetColumnTypeStorable {
     @Override
     public void setColumnAt(int columnIndex, Object value) throws ColumnFormatException, IndexOutOfBoundsException {
         checkColumnIndexBounds(columnIndex);
-        checkColumnFormat(columnIndex, value.getClass());
+        if (value != null) {
+            checkColumnFormat(columnIndex, value.getClass());
+        }
         columns.set(columnIndex, value);
     }
 
@@ -93,6 +98,9 @@ public class StorableTableLine implements GetColumnTypeStorable {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         if (!obj.getClass().getName().equals(this.getClass().getName())) {
             return false;
         }
@@ -108,5 +116,30 @@ public class StorableTableLine implements GetColumnTypeStorable {
     @Override
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
         return table.getColumnType(columnIndex);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(getClass().getSimpleName());
+        stringBuilder.append("[");
+        boolean first = true;
+        for (Object value : columns) {
+            if (!first) {
+                stringBuilder.append(",");
+            }
+            first = false;
+            if (value != null) {
+                stringBuilder.append(value.toString());
+            }
+        }
+        stringBuilder.append("]");
+
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

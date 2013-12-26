@@ -8,7 +8,9 @@ import java.util.Map;
 
 public class FileMapUtils {
     public static void read(File file, Map<String, String> map, Predicate<String> validator) throws IOException {
-        if (file.length() == 0) return;
+        if (file.length() == 0) {
+            return;
+        }
         try {
             InputStream is = new FileInputStream(file);
             BufferedInputStream bis = new BufferedInputStream(is, 4096);

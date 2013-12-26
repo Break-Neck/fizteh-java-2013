@@ -12,7 +12,7 @@ import org.junit.Test;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 
 public class StoreableTest {
-	private StoreableImplementation value;
+    private StoreableImplementation value;
 	@Before
 	public void setUp() throws IOException {
 		StoreableTableProvider currentProvider = null;
@@ -29,29 +29,37 @@ public class StoreableTest {
 			if (!tempDirectory.mkdir()) {
 				return;
 			}
-			currentProvider = new StoreableTableProvider(tempDirectory.getPath());
+			StoreableTableProviderFactory factory = new StoreableTableProviderFactory();
+            currentProvider = new StoreableTableProvider(factory, tempDirectory.getPath());
 		} catch (IllegalArgumentException catchedException) {
 			Assert.fail("unable to create StoreableTableProvider example");
 		}
 		
-		List<Class<?>> type = new ArrayList<Class<?>>() {{add(Integer.class); add(String.class); add(Long.class); add(Byte.class); 
-									add(Boolean.class); add(Float.class); add(Double.class);}};
+		List<Class<?>> type = new ArrayList<Class<?>>() { {
+		    add(Integer.class); add(String.class); add(Long.class); add(Byte.class); 
+			add(Boolean.class); add(Float.class); add(Double.class);
+		} };
 
 		value = new StoreableImplementation(currentProvider.createTable("createdTable", type));
 
 		value.setColumnAt(0, -1204);
 		value.setColumnAt(1, "just string");
 		value.setColumnAt(2, 865123456711L);
-		value.setColumnAt(3, Byte.valueOf((byte)5));
+		value.setColumnAt(3, Byte.valueOf((byte) 5));
 		value.setColumnAt(4, true);
 		value.setColumnAt(5, 2.71f);
 		value.setColumnAt(6, 3.14);
 	}
 
+	@Test
+    public void toStringTest() {
+        Assert.assertEquals("StoreableImplementation[-1204,just string,865123456711,5,true,2.71,3.14]", value.toString());
+    }
+	
 	//test get from correct column
 	@Test
 	public void getIntFromColumn() {
-		Assert.assertEquals(value.getIntAt(0), (Integer)(-1204));
+		Assert.assertEquals(value.getIntAt(0), (Integer) (-1204));
 	}
 	
 	@Test
@@ -61,7 +69,7 @@ public class StoreableTest {
 
 	@Test
 	public void getLongFromColumn() {
-		Assert.assertEquals(value.getLongAt(2), (Long)865123456711L);
+		Assert.assertEquals(value.getLongAt(2), (Long) 865123456711L);
 	}
 
 	@Test
@@ -76,12 +84,12 @@ public class StoreableTest {
 	
 	@Test
 	public void getFloatFromColumn() {
-		Assert.assertEquals(value.getFloatAt(5), (Float)2.71f);
+		Assert.assertEquals(value.getFloatAt(5), (Float) 2.71f);
 	}
 
 	@Test
 	public void getDoubleFromColumn() {
-		Assert.assertEquals(value.getDoubleAt(6), (Double)3.14);
+		Assert.assertEquals(value.getDoubleAt(6), (Double) 3.14);
 	}
 	
 	//test get from wrong column	

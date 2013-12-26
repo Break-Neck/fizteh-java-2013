@@ -160,4 +160,54 @@ public class TableTest {
         assertEquals(table.getColumnType(1), Double.class);
         assertEquals(table.getColumnType(0), Integer.class);
     }
+
+    @Test(expected = IllegalStateException.class)
+    public void closePutGetClose() throws IOException {
+        NewTable table = (NewTable) provider.createTable("table", list);
+        Storeable st1 = new MyStoreable(table);
+        st1.setColumnAt(0, 1);
+        table.put("key", st1);
+        table.close();
+        table.get("key");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeCommitTest() throws Exception {
+        NewTable table = (NewTable) provider.createTable("table", list);
+        Storeable st1 = new MyStoreable(table);
+        st1.setColumnAt(0, 1);
+        table.put("key", st1);
+        table.close();
+        table.commit();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeRollbackTest() throws Exception {
+        NewTable table = (NewTable) provider.createTable("table", list);
+        Storeable st1 = new MyStoreable(table);
+        st1.setColumnAt(0, 1);
+        table.put("key", st1);
+        table.close();
+        table.rollback();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeSizeTest() throws Exception {
+        NewTable table = (NewTable) provider.createTable("table", list);
+        Storeable st1 = new MyStoreable(table);
+        st1.setColumnAt(0, 1);
+        table.put("key", st1);
+        table.close();
+        table.size();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeRemoveTest() throws Exception {
+        NewTable table = (NewTable) provider.createTable("table", list);
+        Storeable st1 = new MyStoreable(table);
+        st1.setColumnAt(0, 1);
+        table.put("key", st1);
+        table.close();
+        table.remove("key");
+    }
 }

@@ -23,9 +23,9 @@ public class StorableTableProviderTest implements TableProviderConstants {
 
     private TableProviderFactory factory = new StorableTableProviderFactory();
     private TableProvider tableProvider;
-    private final String NORMAL_TABLE_NAME = "OkTable";
-    private final String RUSSIAN_NORMAL_TABLE = "ХорошийТаблица";
-    private final String FUNNY_TABLE_NAME = "^_^";
+    private static final String NORMAL_TABLE_NAME = "OkTable";
+    private static final String RUSSIAN_NORMAL_TABLE = "ХорошийТаблица";
+    private static final String FUNNY_TABLE_NAME = "^_^";
     private final List<Class<?>> classList;
 
     public StorableTableProviderTest() {

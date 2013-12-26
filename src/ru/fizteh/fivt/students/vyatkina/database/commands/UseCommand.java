@@ -22,12 +22,10 @@ public class UseCommand extends DatabaseCommand {
         boolean tableExists;
         try {
             tableExists = state.databaseAdapter.useTable(tableName);
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             state.printErrorMessage(e.getMessage());
             return;
-        }
-        catch (WrappedIOException e) {
+        } catch (WrappedIOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
         if (tableExists) {

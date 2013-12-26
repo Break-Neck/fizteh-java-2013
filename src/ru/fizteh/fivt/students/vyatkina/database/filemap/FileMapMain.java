@@ -42,8 +42,7 @@ public class FileMapMain {
                 shell = new Shell(commands, Shell.Mode.PACKET, state);
             }
             shell.startWork(args);
-        }
-        catch (TimeToFinishException e) {
+        } catch (TimeToFinishException e) {
             Thread.currentThread().isInterrupted();
         }
 

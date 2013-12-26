@@ -23,8 +23,7 @@ public class RemoveCommand extends DatabaseCommand {
         String result = null;
         try {
             result = state.databaseAdapter.remove(key);
-        }
-        catch (WrappedIOException e) {
+        } catch (WrappedIOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
         if (result == null) {

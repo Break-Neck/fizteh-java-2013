@@ -47,7 +47,8 @@ public class CommandRunner {
             Scanner input = new Scanner(System.in);
             while (true) {
                 try {
-                    System.out.print(String.format("%s$ ", path.getCanonicalPath()));
+                    // System.out.print(String.format("%s$ ", path.getCanonicalPath()));
+                    System.out.print(" $ ");
                 } catch (Exception e) {
                     System.err.println("Something went wrong!");
                     return;

@@ -38,8 +38,7 @@ public class TestClass {
                 System.out.println("thread 1 table.get(key0) = " + table.get("key0"));
                 try {
                     TimeUnit.SECONDS.sleep(5);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
 
@@ -47,8 +46,7 @@ public class TestClass {
                 try {
                     System.out.println("thread 1 table.commit () = " + table.commit());
                     System.out.println("thread 1 table.rollback () = " + table.rollback());
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
@@ -60,8 +58,7 @@ public class TestClass {
             Table table = tableProvider.getTable("table");
             try {
                 TimeUnit.SECONDS.sleep(1);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 Assert.fail(e.getMessage());
             }
             Storeable storeable = tableProvider.createFor(table);
@@ -81,8 +78,7 @@ public class TestClass {
                 //table.put ("key0", storeable);
                 System.out.println("thread 2 table.get(key0) = " + table.get("key0"));
                 System.out.println("thread 2 table.rollback () = " + table.rollback());
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
             System.out.println("thread 2 commited table.get(key0) = " + table.get("key0"));

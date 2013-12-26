@@ -15,8 +15,7 @@ public class MultiTableProviderFactory implements TableProviderFactory {
         try {
             Path directory = SuperTableProviderFactory.directoryCheck(dir);
             return new MultiTableProvider(directory);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new WrappedIOException(e.getMessage());
         }
     }

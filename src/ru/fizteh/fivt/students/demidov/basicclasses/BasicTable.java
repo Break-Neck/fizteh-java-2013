@@ -8,21 +8,25 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import ru.fizteh.fivt.students.demidov.storeable.WrongTypeException;
 
 abstract public class BasicTable<ElementType> {
 	private volatile FilesMap<ElementType> filesMap;
-	private String tableName;	
 	private ThreadLocal<HashMap<String, ElementType>> putDiff;
 	private ThreadLocal<HashSet<String>> removeDiff;
 	private ReadWriteLock readWriteLock;
+	protected boolean closeIndicator;
+	protected String tablePath;
+	protected String tableName;   
 
 	public BasicTable(String path, String tableName) throws IOException {
 		this.filesMap = new FilesMap<ElementType>(path, this);
 		this.tableName = tableName;
 		
+		tablePath = path;
+		
 		readWriteLock = new ReentrantReadWriteLock(true);
+		closeIndicator = false;
 		
 		putDiff = new ThreadLocal<HashMap<String, ElementType>>() {
 		    protected HashMap<String, ElementType> initialValue() {
@@ -37,10 +41,13 @@ abstract public class BasicTable<ElementType> {
 	}
 	
 	public String getName() {
+	    tableCloseCheck();
 		return tableName;
 	}
 
 	public ElementType get(String key) {
+	    tableCloseCheck();
+	    
 		checkKey(key);
 		
 		if (removeDiff.get().contains(key)) {
@@ -59,6 +66,8 @@ abstract public class BasicTable<ElementType> {
 	}
 
 	public ElementType put(String key, ElementType value) {
+	    tableCloseCheck();
+	    
 		checkKey(key);
 		if (value == null) {
 			throw new IllegalArgumentException("null or empty parameter");
@@ -73,6 +82,8 @@ abstract public class BasicTable<ElementType> {
 	}
 	
 	public ElementType remove(String key) {
+	    tableCloseCheck();
+	    
 		checkKey(key);
 		ElementType removed = get(key);
 		if (removed != null) {
@@ -83,6 +94,8 @@ abstract public class BasicTable<ElementType> {
 	}
 
 	public int size() {
+	    tableCloseCheck();
+	    
 		readWriteLock.readLock().lock();
 		
 		int previousSize = filesMap.getSize();
@@ -104,12 +117,15 @@ abstract public class BasicTable<ElementType> {
 	    return previousSize;
 	}
 
-	public int commit() throws IOException {	
+	public int commit() throws IOException {
+	    tableCloseCheck();
+	    
 		readWriteLock.writeLock().lock();	 
 		int changesNumber = getChangesNumber();
 		if (changesNumber != 0) {
 			autoCommit();
-		}		
+		}	
+		filesMap.writeData();  
 		readWriteLock.writeLock().unlock();
 		
 		putDiff.get().clear();
@@ -130,6 +146,8 @@ abstract public class BasicTable<ElementType> {
 	}
 	
 	public int rollback() {
+	    tableCloseCheck();
+	    
 		int changesNumber = getChangesNumber();
 		
 		putDiff.get().clear();
@@ -138,6 +156,8 @@ abstract public class BasicTable<ElementType> {
 	}
 
 	public int getChangesNumber() {
+	    tableCloseCheck();
+	    
 		int changesNumber = 0;
 		Iterator<String> removeDiffIterator = removeDiff.get().iterator();
 		
@@ -169,7 +189,7 @@ abstract public class BasicTable<ElementType> {
 		return filesMap;
 	}
 	
-	public void checkKey(String key) {
+	private void checkKey(String key) {
 		if ((key == null) || (key.trim().isEmpty())) {
 			throw new IllegalArgumentException("null or empty key");
 		}
@@ -183,7 +203,12 @@ abstract public class BasicTable<ElementType> {
 		}
 	}
 	
-	abstract public String serialize(ElementType value) throws IOException;
+    protected void tableCloseCheck() {
+        if (closeIndicator) {
+            throw new IllegalStateException("table is closed");
+        }
+    }
 	
-	abstract public ElementType deserialize(String value) throws IOException;
+    public abstract String serialize(ElementType value) throws IOException;	
+    public abstract ElementType deserialize(String value) throws IOException;
 }

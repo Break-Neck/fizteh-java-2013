@@ -2,6 +2,7 @@ package ru.fizteh.fivt.students.elenav.storeable.tests;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProvider;
@@ -19,21 +21,21 @@ import ru.fizteh.fivt.students.elenav.storeable.StoreableTableProvider;
 import ru.fizteh.fivt.students.elenav.utils.Functions;
 
 public class StoreableTableTest {
-	
-	private static final File tablePath = new File("D:/TableTest");
+    
+    private static final File TABLE_PATH = new File("D:/TableTest");
 
-	private static TableProvider provider;
+    private static TableProvider provider;
     private static Table testTable;
 
     @BeforeClass
     public static void initDir() {
-        tablePath.mkdir();
+        TABLE_PATH.mkdir();
     }
 
     @AfterClass
     public static void clearDir() {
         try {
-            Functions.deleteRecursively(tablePath);
+            Functions.deleteRecursively(TABLE_PATH);
         } catch (IOException e) {
             // do nothing
         }
@@ -44,7 +46,7 @@ public class StoreableTableTest {
         List<Class<?>> columns = new ArrayList<>();
         columns.add(Integer.class);
         columns.add(String.class);
-        provider = new StoreableTableProvider(tablePath, System.err);
+        provider = new StoreableTableProvider(TABLE_PATH, System.err);
         testTable = provider.createTable("first", columns);
     }
 
@@ -150,7 +152,8 @@ public class StoreableTableTest {
     @Test
     public void testRollback() throws Exception {
         for (int i = 0; i < 7; ++i) {
-            testTable.put("rollbackKey" + i, provider.deserialize(testTable, "<row><col>5</col><col>value</col></row>"));
+            testTable.put("rollbackKey" + i, 
+                    provider.deserialize(testTable, "<row><col>5</col><col>value</col></row>"));
         }
         testTable.commit();
         testTable.put("rollbackKey4", provider.deserialize(testTable, "<row><col>5</col><col>value222</col></row>"));
@@ -160,5 +163,15 @@ public class StoreableTableTest {
         Assert.assertEquals(testTable.get("rollbackKey4").toString(),
                 provider.deserialize(testTable, "<row><col>5</col><col>value</col></row>").toString());
     }
-	
+    
+    @Test
+    public void testCommitRollback() throws ColumnFormatException, ParseException, IOException {
+        Storeable st = provider.deserialize(testTable, "<row><col>5</col><col>value</col></row>");
+        testTable.put("Key1", st);
+        testTable.commit();
+        testTable.rollback();
+        Assert.assertEquals(st, testTable.get("Key1"));
+        Assert.assertEquals(st, testTable.put("Key1", st));
+    }
+    
 }

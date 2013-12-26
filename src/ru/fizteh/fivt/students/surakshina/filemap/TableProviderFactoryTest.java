@@ -4,12 +4,11 @@ import java.io.IOException;
 
 import org.junit.*;
 
-import ru.fizteh.fivt.storage.structured.TableProviderFactory;
-
 public class TableProviderFactoryTest {
+    private NewTableProviderFactory factory = new NewTableProviderFactory();
+
     @Test(expected = IllegalArgumentException.class)
     public void testCreateNull() throws IOException {
-        TableProviderFactory factory = new NewTableProviderFactory();
         factory.create(null);
     }
 

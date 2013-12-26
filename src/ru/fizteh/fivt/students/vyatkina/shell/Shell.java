@@ -25,7 +25,7 @@ import java.util.Set;
 public class Shell implements ShellConstants {
 
     private State state;
-    private Map<String, Command> COMMAND_MAP = new HashMap<>();
+    private Map<String, Command> commandHashMap = new HashMap<>();
     private Mode mode;
 
     public enum Mode {
@@ -36,7 +36,7 @@ public class Shell implements ShellConstants {
     public Shell(Collection<Command> commands, Mode mode, State state) {
         this.state = state;
         for (Command c : commands) {
-            COMMAND_MAP.put(c.getName(), c);
+            commandHashMap.put(c.getName(), c);
         }
         this.mode = mode;
     }
@@ -49,6 +49,10 @@ public class Shell implements ShellConstants {
             }
             case PACKET: {
                 startPacketMode(concatenateArgs(args));
+                break;
+            }
+            default: {
+
             }
         }
     }
@@ -58,8 +62,7 @@ public class Shell implements ShellConstants {
             for (CommandToExecute cmd : prepareArgs(input)) {
                 cmd.execute();
             }
-        }
-        catch (IllegalStateException | IllegalArgumentException | CommandExecutionException e) {
+        } catch (IllegalStateException | IllegalArgumentException | CommandExecutionException e) {
             state.printErrorMessage(e.getMessage());
             Thread.currentThread().isInterrupted();
             throw new TimeToFinishException(TimeToFinishException.DEATH_MESSAGE);
@@ -74,8 +77,7 @@ public class Shell implements ShellConstants {
             try {
                 CommandToExecute cmd = parseCommandLine(line);
                 cmd.execute();
-            }
-            catch (CommandExecutionException | IllegalArgumentException | IllegalStateException e) {
+            } catch (CommandExecutionException | IllegalArgumentException | IllegalStateException e) {
                 state.printErrorMessage(e.getMessage());
 
             }
@@ -110,8 +112,7 @@ public class Shell implements ShellConstants {
                 commandsToExecute.add(parseCommandLine(commandLine));
             }
 
-        }
-        catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             state.printErrorMessage(e.getMessage());
             throw new IllegalStateException(BAD_ARGUMENTS);
         }
@@ -131,11 +132,11 @@ public class Shell implements ShellConstants {
             commandSignature = "";
         }
 
-        if (!COMMAND_MAP.containsKey(commandName)) {
+        if (!commandHashMap.containsKey(commandName)) {
             throw new IllegalArgumentException(UNKNOWN_COMMAND + commandName);
         }
 
-        Command command = COMMAND_MAP.get(commandName);
+        Command command = commandHashMap.get(commandName);
         String[] commandArgs = command.parseArgs(commandSignature);
         return new CommandToExecute(command, commandArgs);
     }

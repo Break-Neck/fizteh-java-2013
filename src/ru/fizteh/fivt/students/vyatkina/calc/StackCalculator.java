@@ -142,8 +142,7 @@ public class StackCalculator {
 
                 int result = sc.calculateExpression(expression);
                 System.out.println(Integer.toString(result, sc.RADIX));
-            }
-            catch (IllegalArgumentException iae) {
+            } catch (IllegalArgumentException iae) {
                 System.err.println(iae.getMessage());
                 System.exit(1);
             }

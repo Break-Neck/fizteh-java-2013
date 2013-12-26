@@ -19,7 +19,7 @@ public class ShellMkdir implements Command {
                 throw new IllegalArgumentException("mkdir: directory can't be created");
             }
         }
-        if (!dir.mkdir()) {
+        if (!dir.mkdirs()) {
             throw new IllegalArgumentException("mkdir: directory can't be created");
         }
         return 0;

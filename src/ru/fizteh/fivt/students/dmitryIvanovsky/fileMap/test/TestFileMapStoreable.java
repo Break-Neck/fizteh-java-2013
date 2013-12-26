@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.dmitryIvanovsky.fileMap.test;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.students.dmitryIvanovsky.fileMap.FileMapStoreable;
@@ -175,5 +174,13 @@ public class TestFileMapStoreable {
     @Test(expected = ColumnFormatException.class)
     public void getWrongStringType() {
         stInt.getStringAt(0);
+    }
+
+    @Test()
+    public void correctToString() throws IOException {
+        stIntString.setColumnAt(0, 1);
+        stIntString.setColumnAt(1, "qwe");
+        assertEquals(stIntString.toString(),
+                String.format("%s[%s]", "FileMapStoreable", "1,qwe"));
     }
 }

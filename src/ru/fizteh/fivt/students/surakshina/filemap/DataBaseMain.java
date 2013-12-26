@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+
 import ru.fizteh.fivt.students.surakshina.shell.Command;
 import ru.fizteh.fivt.students.surakshina.shell.Shell;
 
@@ -18,16 +19,23 @@ public class DataBaseMain {
         NewTableProvider provider = null;
         try {
             provider = (NewTableProvider) factory.create(workingDirectory);
+            TableState state = new TableState(new File(workingDirectory), provider);
+            Set<Command> commands = tableCommands(state);
+            Shell shell = new Shell(state, commands);
+            shell.startWork(args);
         } catch (IOException | IllegalArgumentException e) {
             System.err.println(e.getMessage());
             System.exit(1);
+        } finally {
+            try {
+                factory.close();
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                System.exit(1);
+            }
         }
-        TableState state = new TableState(new File(workingDirectory), provider);
-        Set<Command> commands = tableCommands(state);
-        Shell shell = new Shell(state, commands);
-        shell.startWork(args);
     }
-    
+
     public static Set<Command> tableCommands(TableState state) {
         Set<Command> tableCommands = new HashSet<Command>();
         tableCommands.add(new CommandCommit(state));

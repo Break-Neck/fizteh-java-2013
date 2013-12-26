@@ -3,12 +3,12 @@ package ru.fizteh.fivt.students.vyatkina.database.storable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
-import ru.fizteh.fivt.storage.structured.RemoteTableProvider;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.vyatkina.WrappedIOException;
 import ru.fizteh.fivt.students.vyatkina.database.StorableTable;
 import ru.fizteh.fivt.students.vyatkina.database.StorableTableProvider;
+import ru.fizteh.fivt.students.vyatkina.database.logging.CloseState;
 import ru.fizteh.fivt.students.vyatkina.database.superior.Type;
 
 import java.io.IOException;
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -28,33 +27,32 @@ import static ru.fizteh.fivt.students.vyatkina.database.superior.TableProviderCh
 import static ru.fizteh.fivt.students.vyatkina.database.superior.TableProviderUtils.*;
 
 
-public class StorableTableProviderImp implements StorableTableProvider, RemoteTableProvider {
+public class StorableTableProviderImp implements StorableTableProvider {
 
     private volatile Map<String, StorableTable> tables = new HashMap<>();
     private final Path location;
     final ReadWriteLock databaseKeeper = new ReentrantReadWriteLock(true);
-    private AtomicBoolean isClosed = new AtomicBoolean(false);
+    private final CloseState closeState;
 
     public StorableTableProviderImp(Path location) {
         this.location = location.toAbsolutePath();
+        this.closeState = new CloseState(this + " is closed");
     }
 
     @Override
-    public Table getTable(String name) {
-        isClosedCheck();
+    public StorableTable getTable(String name) {
+        closeState.isClosedCheck();
         validTableNameCheck(name);
         databaseKeeper.writeLock().lock();
         try {
             loadTable(name);
             return tables.get(name);
-        }
-        finally {
+        } finally {
             databaseKeeper.writeLock().unlock();
         }
-
     }
 
-    public void loadTable(String tableName) {
+    private void loadTable(String tableName) {
         if (tables.containsKey(tableName)) {
             return;
         }
@@ -75,8 +73,7 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
                 }
                 table.putValuesFromDisk(deserializedDiskValues);
                 tables.put(table.getName(), table);
-            }
-            catch (IOException | ParseException e) {
+            } catch (IOException | ParseException e) {
                 throw new WrappedIOException();
             }
         } else {
@@ -86,7 +83,7 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
 
     @Override
     public Table createTable(String name, List<Class<?>> columnTypes) throws IOException {
-        isClosedCheck();
+        closeState.isClosedCheck();
         validTableNameCheck(name);
         databaseKeeper.writeLock().lock();
         try {
@@ -100,18 +97,17 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
             table.putValuesFromDisk(new HashMap<String, Storeable>());
 
             tables.put(name, table);
-            Files.createDirectory(location.resolve(name));
+            Files.createDirectories(location.resolve(name));
             writeTableSignature(tableDirectory(name), columnTypes);
             return table;
-        }
-        finally {
+        } finally {
             databaseKeeper.writeLock().unlock();
         }
     }
 
     @Override
     public void removeTable(String name) throws IOException {
-        isClosedCheck();
+        closeState.isClosedCheck();
         validTableNameCheck(name);
         databaseKeeper.writeLock().lock();
         try {
@@ -121,25 +117,23 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
             }
             deleteTableFromDisk(tableDirectory(name).toFile());
             tables.remove(name);
-        }
-        finally {
+        } finally {
             databaseKeeper.writeLock().unlock();
         }
     }
 
-    void removeReference(Table table) {
+    void removeOldReference(Table table) throws IOException {
         try {
             databaseKeeper.writeLock().lock();
             tables.remove(table.getName());
-        }
-        finally {
+        } finally {
             databaseKeeper.writeLock().unlock();
         }
     }
 
     @Override
     public Storeable deserialize(Table table, String value) throws ParseException {
-        isClosedCheck();
+        closeState.isClosedCheck();
         try {
             JSONArray jsonArray = new JSONArray(value);
             Storeable result = createFor(table);
@@ -173,15 +167,14 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
                 }
             }
             return result;
-        }
-        catch (JSONException e) {
+        } catch (JSONException e) {
             throw new ParseException(e.getMessage(), 0);
         }
     }
 
     @Override
     public String serialize(Table table, Storeable value) throws ColumnFormatException {
-        isClosedCheck();
+        closeState.isClosedCheck();
         storableForThisTableCheck(table, value);
         JSONArray jsonArray = new JSONArray();
 
@@ -211,7 +204,7 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
 
     @Override
     public Storeable createFor(Table table) {
-        isClosedCheck();
+        closeState.isClosedCheck();
         List<Class<?>> columnTypes = new ArrayList<>();
         for (int i = 0; i < table.getColumnsCount(); i++) {
             columnTypes.add(table.getColumnType(i));
@@ -221,7 +214,7 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
 
     @Override
     public Storeable createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException {
-        isClosedCheck();
+        closeState.isClosedCheck();
         List<Class<?>> columnTypes = new ArrayList<>();
         for (int i = 0; i < table.getColumnsCount(); i++) {
             columnTypes.add(table.getColumnType(i));
@@ -233,16 +226,15 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
 
     @Override
     public void saveChangesOnExit() {
+        closeState.isClosedCheck();
         try {
             databaseKeeper.writeLock().lock();
             for (StorableTable table : tables.values()) {
                 table.commit();
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new WrappedIOException(e);
-        }
-        finally {
+        } finally {
             databaseKeeper.writeLock().unlock();
         }
     }
@@ -253,7 +245,7 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
 
     @Override
     public List<Class<?>> parseStructedSignature(String structedSignature) {
-        isClosedCheck();
+        closeState.isClosedCheck();
         if (structedSignature.trim().isEmpty()) {
             throw new IllegalArgumentException("wrong type (empty)");
         }
@@ -271,20 +263,17 @@ public class StorableTableProviderImp implements StorableTableProvider, RemoteTa
 
     @Override
     public void close() throws IOException {
+        if (closeState.isAlreadyClosed()) {
+            return;
+        }
         try {
             databaseKeeper.writeLock().lock();
             for (StorableTable table : tables.values()) {
                 table.close();
             }
-        }
-        finally {
+            closeState.close();
+        } finally {
             databaseKeeper.writeLock().unlock();
-        }
-    }
-
-    private void isClosedCheck() {
-        if (isClosed.get()) {
-            throw new IllegalStateException("TableProvider is closed");
         }
     }
 

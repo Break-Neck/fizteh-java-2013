@@ -7,6 +7,7 @@ import ru.fizteh.fivt.students.vyatkina.database.DatabaseAdapter;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseState;
 import ru.fizteh.fivt.students.vyatkina.database.StorableDatabaseAdapter;
 import ru.fizteh.fivt.students.vyatkina.database.commands.*;
+import ru.fizteh.fivt.students.vyatkina.database.servlet.TransactionManager;
 import ru.fizteh.fivt.students.vyatkina.database.superior.TableProviderConstants;
 import ru.fizteh.fivt.students.vyatkina.shell.Shell;
 
@@ -16,8 +17,9 @@ import java.util.Set;
 
 public class StorableMain {
 
-    static Set<Command> getStorableCommands(DatabaseState state) {
+    static Set<Command> getStorableCommands(DatabaseState state, StorableTableProviderImp tableProvider) {
         Set commands = new HashSet();
+        TransactionManager manager = new TransactionManager(state, tableProvider);
         commands.add(new GetCommand(state));
         commands.add(new PutCommand(state));
         commands.add(new RemoveCommand(state));
@@ -28,6 +30,8 @@ public class StorableMain {
         commands.add(new CommitCommand(state));
         commands.add(new SizeCommand(state));
         commands.add(new RollbackCommand(state));
+        commands.add(new StartHttpCommand(state, manager));
+        commands.add(new StopHttpCommand(state, manager));
 
         return commands;
     }
@@ -39,15 +43,14 @@ public class StorableMain {
         StorableTableProviderImp tableProvider = null;
         try {
             tableProvider = StorableTableProviderImp.class.cast(factory.create(location));
-        }
-        catch (IllegalArgumentException | IOException | WrappedIOException e) {
-            System.err.print(e.getMessage());
+        } catch (IllegalArgumentException | IOException | WrappedIOException e) {
+            System.err.print(e);
             System.exit(-1);
         }
 
         DatabaseAdapter databaseAdapter = new StorableDatabaseAdapter(tableProvider, null);
         DatabaseState state = new DatabaseState(databaseAdapter);
-        Set<Command> commands = getStorableCommands(state);
+        Set<Command> commands = getStorableCommands(state, tableProvider);
         Shell shell;
 
         if (args.length == 0) {
@@ -59,12 +62,18 @@ public class StorableMain {
 
         try {
             shell.startWork(args);
-        }
-        catch (TimeToFinishException e) {
-            if (e.getMessage() == (TimeToFinishException.DEATH_MESSAGE)) {
-                System.exit(-1);
-            } else {
+        } catch (TimeToFinishException e) {
+            if (e.getMessage() == null) {
                 System.exit(0);
+            } else {
+                System.exit(-1);
+            }
+        } finally {
+            try {
+                factory.close();
+            } catch (IOException e) {
+                System.err.print(e);
+                System.exit(-1);
             }
         }
     }

@@ -3,7 +3,6 @@ package ru.fizteh.fivt.students.nlevashov.factory;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.storage.structured.TableProvider;
 import ru.fizteh.fivt.students.nlevashov.shell.Shell;
 
 import java.io.BufferedInputStream;
@@ -13,6 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 
 /**
  * Представляет интерфейс для работы с таблицей, содержащей ключи-значения. Ключи должны быть уникальными.
@@ -22,14 +24,21 @@ import java.util.*;
  *
  * Данный интерфейс не является потокобезопасным.
  */
-public class MyTable implements Table {
+public class MyTable implements Table, AutoCloseable {
 
     Path addr;
-    HashMap<String, Storeable> oldMap;
     HashMap<String, Storeable> map;
     String tableName;
     List<Class<?>> types;
-    TableProvider provider;
+    MyTableProvider provider;
+    volatile boolean isClosed;
+
+    ThreadLocal<HashMap<String, Storeable>> rewritings;
+    ThreadLocal<HashSet<String>> removings;
+
+    private final ReentrantReadWriteLock readWriteLocker = new ReentrantReadWriteLock(true);
+    private final Lock readLocker = readWriteLocker.readLock();
+    private final Lock writeLocker = readWriteLocker.writeLock();
 
     /**
      * Конструктор. Открывает и читают базу.
@@ -41,10 +50,11 @@ public class MyTable implements Table {
      * @throws ru.fizteh.fivt.storage.structured.ColumnFormatException -
      *                                                          В файле "signature.tsv" встречается неразрешенный тип.
      */
-    public MyTable(Path address, TableProvider selfProvider) throws ColumnFormatException, IOException {
+    public MyTable(Path address, MyTableProvider selfProvider) throws ColumnFormatException, IOException {
         addr = address;
         tableName = addr.getFileName().toString();
         provider = selfProvider;
+        isClosed = false;
 
         String s;
         try (BufferedInputStream i = new BufferedInputStream(Files.newInputStream(addr.resolve("signature.tsv")))) {
@@ -92,6 +102,7 @@ public class MyTable implements Table {
         }
 
         map = new HashMap<>();
+
         for (int dirNum = 0; dirNum < 16; dirNum++) {
             Path dir = addr.resolve(Integer.toString(dirNum) + ".dir");
             for (int fileNum = 0; fileNum < 16; fileNum++) {
@@ -168,8 +179,20 @@ public class MyTable implements Table {
                 }
             }
         }
-        oldMap = new HashMap<>();
-        oldMap.putAll(map);
+
+        rewritings = new ThreadLocal<HashMap<String, Storeable>>() {
+            @Override
+            public HashMap<String, Storeable> initialValue() {
+                return new HashMap<>();
+            }
+        };
+
+        removings = new ThreadLocal<HashSet<String>>() {
+            @Override
+            public HashSet<String> initialValue() {
+                return new HashSet<>();
+            }
+        };
     }
 
     /**
@@ -179,6 +202,7 @@ public class MyTable implements Table {
      */
     @Override
     public String getName() {
+        checkClose();
         return tableName;
     }
 
@@ -192,10 +216,26 @@ public class MyTable implements Table {
      */
     @Override
     public Storeable get(String key) {
+        checkClose();
         if ((key == null) || key.trim().isEmpty() || key.matches(".*[\\s\\t\\n].*")) {
             throw new IllegalArgumentException("Table.get: key is null or consists illegal symbol/symbols");
         }
-        return map.get(key);
+
+        if (removings.get().contains(key)) {
+            return null;
+        } else {
+            Storeable s = rewritings.get().get(key);
+            if (s == null) {
+                readLocker.lock();
+                try {
+                    return map.get(key);
+                } finally {
+                    readLocker.unlock();
+                }
+            } else {
+                    return s;
+            }
+        }
     }
 
     /**
@@ -212,6 +252,7 @@ public class MyTable implements Table {
      */
     @Override
     public Storeable put(String key, Storeable value) throws ColumnFormatException {
+        checkClose();
         if ((key == null) || key.trim().isEmpty() || key.matches(".*[\\s\\t\\n].*")) {
             throw new IllegalArgumentException("Table.put: key is null or consists illegal symbol/symbols");
         }
@@ -222,7 +263,7 @@ public class MyTable implements Table {
             value.getColumnAt(types.size());
             throw new ColumnFormatException("Table.put: value has other number of columns");
         } catch (IndexOutOfBoundsException e) {
-            try {                                                                    //!!!!ЗДЕСЬ ОГРОМНЕЙШИЙ КОСТЫЛЬ!!!!
+            try {
                 for (int i = 0; i < getColumnsCount(); ++i) {
                     Class<?> c = getColumnType(i);
                     Object o = value.getColumnAt(i);
@@ -247,13 +288,35 @@ public class MyTable implements Table {
                         throw new ColumnFormatException("Table.put: wrong type");
                     }
                 }
-                return map.put(key, value);
+                Storeable s;
+                readLocker.lock();
+                try {
+                    s = map.get(key);
+                } finally {
+                    readLocker.unlock();
+                }
+                if (removings.get().contains(key)) {
+                    removings.get().remove(key);
+                    if (!(s == value)) {
+                        rewritings.get().put(key, value);
+                    }
+                    return null;
+                } else {
+                    if (s == null) {
+                        return rewritings.get().put(key, value);
+                    } else {
+                        Storeable ss = rewritings.get().put(key, value);
+                        if (ss == null) {
+                            return s;
+                        } else {
+                            return ss;
+                        }
+                    }
+                }
             } catch (IndexOutOfBoundsException e1) {
                 throw new ColumnFormatException("Table.put: value has other number of columns");
             }
         }
-        //это без проверки на вшивость не верно:
-        //return map.put(key, value);
     }
 
     /**
@@ -266,10 +329,32 @@ public class MyTable implements Table {
      */
     @Override
     public Storeable remove(String key) {
+        checkClose();
         if ((key == null) || key.trim().isEmpty() || key.matches(".*[\\s\\t\\n].*")) {
             throw new IllegalArgumentException("Table.remove: key is null or consists illegal symbol/symbols");
         }
-        return map.remove(key);
+        if (removings.get().contains(key)) {
+            return null;
+        } else {
+            Storeable s;
+            readLocker.lock();
+            try {
+                s = map.get(key);
+            } finally {
+                readLocker.unlock();
+            }
+            if (s == null) {
+                return rewritings.get().remove(key);
+            } else {
+                removings.get().add(key);
+                Storeable ss = rewritings.get().remove(key);
+                if (ss == null) {
+                    return s;
+                } else {
+                    return ss;
+                }
+            }
+        }
     }
 
     /**
@@ -279,7 +364,21 @@ public class MyTable implements Table {
      */
     @Override
     public int size() {
-        return map.size();
+        checkClose();
+        int mapSize;
+        int inserts = 0;
+        readLocker.lock();
+        try {
+            mapSize = map.size();
+            for (Map.Entry<String, Storeable> entry : rewritings.get().entrySet()) {
+                if (!map.containsKey(entry.getKey())) {
+                    inserts++;
+                }
+            }
+        } finally {
+            readLocker.unlock();
+        }
+        return (mapSize + inserts - removings.get().size());
     }
 
     /**
@@ -291,10 +390,21 @@ public class MyTable implements Table {
      */
     @Override
     public int commit() throws IOException {
-        int difference = mapsDifference();
-        oldMap.clear();
-        oldMap.putAll(map);
-        refreshDiskData();
+        checkClose();
+        int difference;
+        writeLocker.lock();
+        try {
+            difference = diff();
+            for (String s : removings.get()) {
+                map.remove(s);
+            }
+            map.putAll(rewritings.get());
+            refreshDiskData();
+        } finally {
+            writeLocker.unlock();
+        }
+        rewritings.get().clear();
+        removings.get().clear();
         return difference;
     }
 
@@ -305,9 +415,16 @@ public class MyTable implements Table {
      */
     @Override
     public int rollback() {
-        int difference = mapsDifference();
-        map.clear();
-        map.putAll(oldMap);
+        checkClose();
+        int difference;
+        readLocker.lock();
+        try {
+            difference = diff();
+        } finally {
+            readLocker.unlock();
+        }
+        rewritings.get().clear();
+        removings.get().clear();
         return difference;
     }
 
@@ -318,6 +435,7 @@ public class MyTable implements Table {
      */
     @Override
     public int getColumnsCount() {
+        checkClose();
         return types.size();
     }
 
@@ -331,32 +449,69 @@ public class MyTable implements Table {
      */
     @Override
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
+        checkClose();
         if ((columnIndex < 0) || (columnIndex >= types.size())) {
             throw new IndexOutOfBoundsException("Storable.getColumnAt: Incorrect index");
         }
         return types.get(columnIndex);
     }
 
-    /**
-     * Считает "разницу" map и oldMap, то есть минимальное количество опрераций встаки, переименования и удаления,
-     *                                              с помощью которых одну коллекцию можно преобразовать к другой.
-     */
-    public int mapsDifference() {
-        int difference = 0;
-        for (Map.Entry<String, Storeable> entry : map.entrySet()) {
-            if (!oldMap.containsKey(entry.getKey())) {
-                difference++;
-            } else if (!oldMap.get(entry.getKey()).equals(entry.getValue())) {
-                difference++;
-            }
+    @Override
+    public void close() {
+        if (!isClosed) {
+            rollback();
+            isClosed = true;
+        }
+    }
 
+    private void checkClose() {
+        if (isClosed) {
+            throw new IllegalStateException("TableProvider: provider closed");
         }
-        for (Map.Entry<String, Storeable> entry : oldMap.entrySet()) {
-            if (!map.containsKey(entry.getKey())) {
-                difference++;
+    }
+
+    @Override
+    public String toString() {
+        checkClose();
+        return getClass().getSimpleName() + "[" + addr.toAbsolutePath().toString() + "]";
+    }
+
+    /**
+     * Считает минимальное количество опрераций вставки, переименования и удаления, требуемых для обновления.
+     * Подсчет ведется с помощью функции diff(). Потокобезопасна.
+     */
+    public int threadSafeDifference() {
+        checkClose();
+        readLocker.lock();
+        try {
+            return diff();
+        } finally {
+            readLocker.unlock();
+        }
+    }
+
+    /**
+     * Считает минимальное количество опрераций вставки, переименования и удаления, требуемых для обновления.
+     * Непотокобезопасна.
+     */
+    private int diff() {
+        int similars = 0;
+        for (Map.Entry<String, Storeable> entry : rewritings.get().entrySet()) {
+            Storeable s = map.get(entry.getKey());
+            if (s != null) {
+                boolean flag = true;
+                for (int i = 0; i < types.size(); ++i) {
+                    if (!(entry.getValue().getColumnAt(i).equals(s.getColumnAt(i)))) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    similars++;
+                }
             }
         }
-        return difference;
+        return rewritings.get().size() - similars + removings.get().size();
     }
 
     /**

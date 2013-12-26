@@ -15,9 +15,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class FileMapProvider implements TableProvider {
-    File location;
-    HashMap<String, MultiFileMap> used;
+public class FileMapProvider implements TableProvider, AutoCloseable {
+    private File location;
+    private HashMap<String, MultiFileMap> used;
+    private TransactionPool transactionPool;
+    private volatile boolean valid;
 
     public FileMapProvider(File location) {
         if (location == null) {
@@ -25,6 +27,8 @@ public class FileMapProvider implements TableProvider {
         }
         this.location = location;
         used = new HashMap<>();
+        valid = true;
+        transactionPool = new TransactionPool(5);
     }
 
     private boolean badSymbolCheck(String string) {
@@ -64,6 +68,7 @@ public class FileMapProvider implements TableProvider {
     }
 
     public boolean isValidLocation() {
+        checkState();
         if (!location.exists() || location.exists() && !location.isDirectory()) {
             return false;
         }
@@ -71,6 +76,7 @@ public class FileMapProvider implements TableProvider {
     }
 
     public boolean isValidContent() {
+        checkState();
         if (!isValidLocation()) {
             return false;
         }
@@ -82,7 +88,13 @@ public class FileMapProvider implements TableProvider {
         return true;
     }
 
-    public MultiFileMap getTable(String name) {
+    public TransactionPool getTransactionPool() {
+        checkState();
+        return transactionPool;
+    }
+
+    public synchronized MultiFileMap getTable(String name) {
+        checkState();
         if (name == null) {
             throw new IllegalArgumentException("Null name");
         }
@@ -103,22 +115,24 @@ public class FileMapProvider implements TableProvider {
             throw new RuntimeException(String.format("%s is not a directory", name));
         }
         MultiFileMap newMap = used.get(name);
-        if (newMap != null) {
+        if (newMap != null && !newMap.isClosed()) {
             return newMap;
         } else {
-            newMap = new MultiFileMap(dir, 16, this);
+            newMap = new MultiFileMap(dir, 16, this, transactionPool);
             try {
                 newMap.loadFromDisk();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Error loading from disk:", e);
             } catch (ParseException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Error loading from disk:", e);
             }
+            used.put(name, newMap);
             return newMap;
         }
     }
 
-    public MultiFileMap createTable(String name, List<Class<?>> columnTypes) throws IOException {
+    public synchronized MultiFileMap createTable(String name, List<Class<?>> columnTypes) throws IOException {
+        checkState();
         if (name == null) {
             throw new IllegalArgumentException("Null name");
         }
@@ -140,7 +154,8 @@ public class FileMapProvider implements TableProvider {
                 }
             }
             if (!check) {
-                throw new IllegalArgumentException(String.format("wrong type %s not supported", columnType.toString()));
+                throw new IllegalArgumentException(String.format("wrong type (%s not supported)",
+                        columnType.toString()));
             }
         }
         if (name.equals("")) {
@@ -162,13 +177,14 @@ public class FileMapProvider implements TableProvider {
         if (!dir.mkdir()) {
             throw new RuntimeException("Can't create directory for the table");
         }
-        MultiFileMap result = new MultiFileMap(dir, 16, this, columnTypes);
+        MultiFileMap result = new MultiFileMap(dir, 16, this, transactionPool, columnTypes);
         result.writeToDisk();
         used.put(name, result);
         return result;
     }
 
-    public void removeTable(String name) throws IOException {
+    public synchronized void removeTable(String name) throws IOException {
+        checkState();
         if (name == null) {
             throw new IllegalArgumentException("Null name");
         }
@@ -191,10 +207,14 @@ public class FileMapProvider implements TableProvider {
         if (!FileSystemRoutine.deleteDirectoryOrFile(dir)) {
             throw new RuntimeException("Unable to delete some files");
         }
-        used.remove(name);
+        MultiFileMap table = used.remove(name);
+        if (table != null) {
+            table.close();
+        }
     }
 
     public FixedList deserialize(Table table, String value) throws ParseException {
+        checkState();
         if (value == null) {
             throw new IllegalArgumentException("Null string as argument");
         }
@@ -212,7 +232,7 @@ public class FileMapProvider implements TableProvider {
             for (int i = 0; i < columnCount; i++) {
                 Object object = array.get(i);
                 if (object.equals(null)) {
-                     newList.setColumnAt(i, null);
+                    newList.setColumnAt(i, null);
                 } else if (columnTypes.get(i) == Integer.class) {
                     if (object.getClass() == Integer.class) {
                         newList.setColumnAt(i, object);
@@ -284,6 +304,7 @@ public class FileMapProvider implements TableProvider {
     }
 
     public String serialize(Table table, Storeable value) throws ColumnFormatException {
+        checkState();
         int columnCount = table.getColumnsCount();
         Object[] objects = new Object[columnCount];
         for (int i = 0; i < columnCount; i++) {
@@ -298,6 +319,7 @@ public class FileMapProvider implements TableProvider {
     }
 
     public FixedList createFor(Table table) {
+        checkState();
         ArrayList<Class<?>> columnTypes = new ArrayList<>();
         int columnCount = table.getColumnsCount();
         for (int i = 0; i < columnCount; i++) {
@@ -307,6 +329,7 @@ public class FileMapProvider implements TableProvider {
     }
 
     public FixedList createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException {
+        checkState();
         ArrayList<Class<?>> columnTypes = new ArrayList<>();
         int columnCount = table.getColumnsCount();
         for (int i = 0; i < columnCount; i++) {
@@ -320,5 +343,29 @@ public class FileMapProvider implements TableProvider {
             newList.setColumnAt(i, values.get(i));
         }
         return newList;
+    }
+
+    @Override
+    public String toString() {
+        checkState();
+        try {
+            return String.format("%s[%s]", this.getClass().getSimpleName(), location.getCanonicalPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void checkState() {
+        if (!valid) {
+            throw new IllegalStateException("TableProvider is closed");
+        }
+    }
+
+    public synchronized void close() {
+        valid = false;
+        for (MultiFileMap entry : used.values()) {
+            entry.close();
+        }
+        used.clear();
     }
 }

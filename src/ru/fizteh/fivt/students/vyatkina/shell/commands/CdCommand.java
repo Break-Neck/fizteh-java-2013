@@ -21,8 +21,7 @@ public class CdCommand extends AbstractCommand<ShellState> {
         Path newDirectory = Paths.get(args[0]);
         try {
             state.getFileManager().changeCurrentDirectory(newDirectory);
-        }
-        catch (IOException | IllegalArgumentException e) {
+        } catch (IOException | IllegalArgumentException e) {
             throw new CommandExecutionException(e.getMessage());
         }
     }

@@ -24,6 +24,9 @@ public class DatabaseStoreable implements Storeable {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         Storeable st = (Storeable) obj;
         for (int i = 0; i < columns.size(); i++) {
             Object value1 = this.getColumnAt(i);
@@ -50,6 +53,7 @@ public class DatabaseStoreable implements Storeable {
     public void setColumnAt(int columnNum, Object value) throws ColumnFormatException, IndexOutOfBoundsException {
         indexOfBounds(columnNum);
         if (value != null) {
+            isColumnTypeValid(columnNum, value.getClass());
             if ((value.getClass().getName().equals("java.lang.String"))
                     && ((String) value).trim().isEmpty()) {
                 columns.set(columnNum, value);
@@ -126,25 +130,31 @@ public class DatabaseStoreable implements Storeable {
     private void isColumnTypeValid(int columnIndex, Class<?> value) throws ColumnFormatException {
         if (!value.isAssignableFrom(classes.get(columnIndex))) {
             throw new ColumnFormatException(String.format("Incorrect type: expected %s, but is %s",
-                    classes.get(columnIndex).getName(), value.getClass().getName()));
+                    classes.get(columnIndex).getName(), value.getName()));
         }
+    }
+
+    public static String join(List<?> list, boolean nameNulls, String delimiter) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (final Object listEntry : list) {
+            if (!first) {
+                sb.append(delimiter);
+            }
+            first = false;
+            if (listEntry == null) {
+                if (nameNulls) {
+                    sb.append("null");
+                }
+            } else {
+                sb.append(listEntry.toString());
+            }
+        }
+        return sb.toString();
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        boolean first = true;
-        for (final Object column : columns) {
-            if (!first) {
-                builder.append(" ");
-            }
-            first = false;
-            if (column == null) {
-                builder.append("null");
-            } else {
-                builder.append(column.toString());
-            }
-        }
-        return builder.toString();
+        return String.format("%s[%s]", getClass().getSimpleName(), join(columns, false, ","));
     }
 }

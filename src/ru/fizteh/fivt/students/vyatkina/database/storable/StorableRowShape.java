@@ -25,7 +25,8 @@ public class StorableRowShape {
     public void columnFormatCheck(int columnIndex, Class<?> type) {
         indexInBoundsCheck(columnIndex);
         if (!type.equals(classes.get(columnIndex))) {
-            throw new ColumnFormatException("Expected " + classes.get(columnIndex) + " in column " + columnIndex + " but found " + type);
+            throw new ColumnFormatException(
+                    "Expected " + classes.get(columnIndex) + " in column " + columnIndex + " but found " + type);
         }
     }
 

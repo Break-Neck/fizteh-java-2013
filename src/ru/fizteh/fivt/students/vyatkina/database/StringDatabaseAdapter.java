@@ -40,8 +40,7 @@ public class StringDatabaseAdapter implements DatabaseAdapter {
     public boolean dropTable(String name) {
         try {
             tableProvider.removeTable(name);
-        }
-        catch (IllegalStateException e) {
+        } catch (IllegalStateException e) {
             return false;
         }
         return true;

@@ -4,6 +4,7 @@ package ru.fizteh.fivt.students.vyatkina.database.storable;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.students.vyatkina.database.StorableTable;
+import ru.fizteh.fivt.students.vyatkina.database.logging.CloseState;
 import ru.fizteh.fivt.students.vyatkina.database.superior.DatabaseUtils;
 import ru.fizteh.fivt.students.vyatkina.database.superior.TableChecker;
 import ru.fizteh.fivt.students.vyatkina.database.superior.TableProviderChecker;
@@ -18,7 +19,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -30,29 +30,67 @@ public class StorableTableImp2 implements StorableTable {
     private final String name;
     private final StorableTableProviderImp tableProvider;
     private final StorableRowShape shape;
-    private AtomicBoolean isClosed = new AtomicBoolean(false);
     private volatile Map<String, Storeable> mainMap;
-    private ThreadLocal<Map<String, Storeable>> localMap = new ThreadLocal<Map<String, Storeable>>() {
+    protected ThreadLocal<Map<String, Storeable>> localMap = new ThreadLocal<Map<String, Storeable>>() {
         protected Map<String, Storeable> initialValue() {
             return new HashMap<>();
         }
     };
+    private final Map<Integer, Map<String, Storeable>> transactionMap = new HashMap<>();
+    private ThreadLocal<Map<String, Storeable>> threadTable = new ThreadLocal<>();
     private final ReadWriteLock tableKeeper = new ReentrantReadWriteLock(true);
+    protected final CloseState closeState;
 
     public StorableTableImp2(String name, StorableRowShape shape, StorableTableProviderImp tableProvider) {
         this.name = name;
         this.shape = shape;
         this.tableProvider = tableProvider;
+        this.closeState = new CloseState(this + " is closed");
+    }
+
+    public void useTransantion(int id) {
+        closeState.isClosedCheck();
+        if (localMap.get() == null) {
+            threadTable.set(localMap.get());
+        }
+        if (!transactionMap.containsKey(id)) {
+            transactionMap.put(id, new HashMap<String, Storeable>());
+        }
+        localMap.set(transactionMap.get(id));
+    }
+
+    public void retrieveThreadTable() {
+        Map<String, Storeable> transaction = threadTable.get();
+        if (transaction != null) {
+            threadTable.set(transaction);
+        }
+    }
+
+    public void removeTransaction(int id) {
+        closeState.isClosedCheck();
+        Map<String, Storeable> transaction = transactionMap.get(id);
+        if (transaction != null) {
+            if (transaction == localMap.get()) {
+                localMap.set(threadTable.get());
+            }
+        }
+        transactionMap.remove(id);
+    }
+
+    @Override
+    public boolean isClosed() {
+        return closeState.isAlreadyClosed();
     }
 
     @Override
     public String getName() {
-        isClosedCheck();
+        closeState.isClosedCheck();
         return name;
     }
 
     @Override
     public Storeable get(String key) {
+        closeState.isClosedCheck();
         TableChecker.keyValidCheck(key);
         tableKeeper.readLock().lock();
         try {
@@ -61,26 +99,26 @@ public class StorableTableImp2 implements StorableTable {
             } else {
                 return mainMap.get(key);
             }
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
     }
 
     @Override
     public Storeable put(String key, Storeable value) throws ColumnFormatException {
-
+        closeState.isClosedCheck();
         TableChecker.keyValidCheck(key);
         TableChecker.valueIsNullCheck(value);
         TableProviderChecker.storableForThisTableCheck(this, value);
 
         Storeable oldValue = get(key);
-        localMap.get().put (key,value);
+        localMap.get().put(key, value);
         return oldValue;
     }
 
     @Override
     public Storeable remove(String key) {
+        closeState.isClosedCheck();
         TableChecker.keyValidCheck(key);
         Storeable oldValue = null;
         try {
@@ -90,8 +128,7 @@ public class StorableTableImp2 implements StorableTable {
             } else if (mainMap.containsKey(key)) {
                 oldValue = mainMap.get(key);
             }
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
         localMap.get().put(key, null);
@@ -100,6 +137,7 @@ public class StorableTableImp2 implements StorableTable {
 
     @Override
     public int size() {
+        closeState.isClosedCheck();
         tableKeeper.readLock().lock();
         try {
             int size = mainMap.size();
@@ -115,14 +153,14 @@ public class StorableTableImp2 implements StorableTable {
                 }
             }
             return size;
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
     }
 
     @Override
     public int commit() throws IOException {
+        closeState.isClosedCheck();
         Map<Path, List<DatabaseUtils.KeyValue>> databaseChanges = new HashMap<>();
         Path tableLocation = tableProvider.tableDirectory(name);
         tableKeeper.writeLock().lock();
@@ -146,8 +184,7 @@ public class StorableTableImp2 implements StorableTable {
 
             TableProviderUtils.writeTable(databaseChanges);
             return commitChanges;
-        }
-        finally {
+        } finally {
             tableKeeper.writeLock().unlock();
         }
     }
@@ -176,19 +213,19 @@ public class StorableTableImp2 implements StorableTable {
 
     @Override
     public int rollback() {
+        closeState.isClosedCheck();
         int rollbackSize;
         tableKeeper.readLock().lock();
         try {
             rollbackSize = difference();
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
         localMap.get().clear();
         return rollbackSize;
     }
 
-    public int difference() {
+    private int difference() {
         int diff = 0;
         for (Map.Entry<String, Storeable> entry : localMap.get().entrySet()) {
             if (mainMap.containsKey(entry.getKey())) {
@@ -206,35 +243,35 @@ public class StorableTableImp2 implements StorableTable {
 
     @Override
     public int unsavedChanges() {
+        closeState.isClosedCheck();
         tableKeeper.readLock().lock();
         try {
             return difference();
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
     }
 
     @Override
     public void putValuesFromDisk(Map<String, Storeable> diskValues) {
+        closeState.isClosedCheck();
         try {
             tableKeeper.writeLock().lock();
             this.mainMap = diskValues;
-        }
-        finally {
+        } finally {
             tableKeeper.writeLock().unlock();
         }
     }
 
     @Override
     public int getColumnsCount() {
-        isClosedCheck();
+        closeState.isClosedCheck();
         return shape.getColumnsCount();
     }
 
     @Override
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
-        isClosedCheck();
+        closeState.isClosedCheck();
         return shape.getColumnType(columnIndex);
     }
 
@@ -244,15 +281,13 @@ public class StorableTableImp2 implements StorableTable {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
+        if (closeState.isAlreadyClosed()) {
+            return;
+        }
         rollback();
-        tableProvider.removeReference(this);
-        isClosed.set(true);
+        tableProvider.removeOldReference(this);
+        closeState.close();
     }
 
-    private void isClosedCheck() {
-        if (isClosed.get()) {
-            throw new IllegalStateException("Table " + name + "is closed");
-        }
-    }
 }

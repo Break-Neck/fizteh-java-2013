@@ -22,6 +22,8 @@ public class Main {
         arr.add(new DataBaseSize(tableProvider));
         arr.add(new DataBaseCommit(tableProvider));
         arr.add(new DataBaseRollback(tableProvider));
+        arr.add(new ServletStart(tableProvider));
+        arr.add(new ServletStop(tableProvider));
         return arr;
     }
 
@@ -37,6 +39,8 @@ public class Main {
         arr.add("size");
         arr.add("commit");
         arr.add("rollback");
+        arr.add("starthttp");
+        arr.add("stophttp");
         return arr;
     }
 

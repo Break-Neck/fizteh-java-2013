@@ -15,10 +15,10 @@ import java.io.IOException;
 
 public class MultiTableTest {
 
-    private final static String SAMPLE_TABLE_NAME1 = "MultiTableTestClassTable1";
-    private final static String SAMPLE_TABLE_NAME2 = "MultiTableTestClassTable2";
-    private final static String SAMPLE_KEY1 = "house";
-    private final static String SAMPLE_VALUE1 = "ThisIsTheHouseThatJackBuilt";
+    private static final String SAMPLE_TABLE_NAME1 = "MultiTableTestClassTable1";
+    private static final String SAMPLE_TABLE_NAME2 = "MultiTableTestClassTable2";
+    private static final String SAMPLE_KEY1 = "house";
+    private static final String SAMPLE_VALUE1 = "ThisIsTheHouseThatJackBuilt";
     private Table table;
 
     private static MultiTableProvider tableProvider;

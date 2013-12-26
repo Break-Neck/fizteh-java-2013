@@ -55,7 +55,7 @@ public class FileUtils {
                 throw new IllegalArgumentException("failed to create file " + name);
             }
         } catch (IOException e) {
-            throw new IllegalArgumentException("failed to create file " + name);
+            throw new IllegalArgumentException("failed to create file " + name, e);
         }
 
         return file;

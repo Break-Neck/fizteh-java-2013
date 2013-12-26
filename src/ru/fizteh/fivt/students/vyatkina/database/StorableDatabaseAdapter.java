@@ -32,13 +32,9 @@ public class StorableDatabaseAdapter implements DatabaseAdapter {
     public boolean createTable(String name, String structuredSignature) {
         List<Class<?>> columnTypes = tableProvider.parseStructedSignature(structuredSignature);
         try {
-            if (tableProvider.createTable(name, columnTypes) != null) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-        catch (IOException e) {
+            return (tableProvider.createTable(name, columnTypes) != null);
+
+        } catch (IOException e) {
             throw new WrappedIOException(e.getMessage());
         }
     }
@@ -61,11 +57,9 @@ public class StorableDatabaseAdapter implements DatabaseAdapter {
             if (table != null && table.getName().equals(name)) {
                 table = null;
             }
-        }
-        catch (IllegalStateException e) {
+        } catch (IllegalStateException e) {
             return false;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new WrappedIOException(e.getMessage());
         }
         return true;
@@ -84,8 +78,7 @@ public class StorableDatabaseAdapter implements DatabaseAdapter {
         } else {
             try {
                 return tableProvider.serialize(table, value);
-            }
-            catch (ColumnFormatException e) {
+            } catch (ColumnFormatException e) {
                 throw new WrappedIOException(e.getMessage());
             }
         }
@@ -96,8 +89,7 @@ public class StorableDatabaseAdapter implements DatabaseAdapter {
         Storeable structuredValue;
         try {
             structuredValue = tableProvider.deserialize(table, value);
-        }
-        catch (ParseException e) {
+        } catch (ParseException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
 
@@ -105,8 +97,7 @@ public class StorableDatabaseAdapter implements DatabaseAdapter {
         if (oldStructuredValue != null) {
             try {
                 return tableProvider.serialize(table, oldStructuredValue);
-            }
-            catch (ColumnFormatException e) {
+            } catch (ColumnFormatException e) {
                 throw new IllegalArgumentException(e.getMessage());
             }
         } else {
@@ -120,8 +111,7 @@ public class StorableDatabaseAdapter implements DatabaseAdapter {
         if (oldStructuredValue != null) {
             try {
                 return tableProvider.serialize(table, oldStructuredValue);
-            }
-            catch (ColumnFormatException e) {
+            } catch (ColumnFormatException e) {
                 throw new WrappedIOException(e.getMessage());
             }
         } else {
@@ -134,8 +124,7 @@ public class StorableDatabaseAdapter implements DatabaseAdapter {
         int savedChanges;
         try {
             savedChanges = table.commit();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new WrappedIOException(e.getMessage());
         }
         return savedChanges;
@@ -158,4 +147,5 @@ public class StorableDatabaseAdapter implements DatabaseAdapter {
         }
         return table.unsavedChanges();
     }
+
 }

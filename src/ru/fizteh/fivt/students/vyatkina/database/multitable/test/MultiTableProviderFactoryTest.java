@@ -44,8 +44,7 @@ public class MultiTableProviderFactoryTest {
                 Files.createFile(filePath);
             }
             factory.create(FILE_SAMPLE_NAME);
-        }
-        finally {
+        } finally {
             Files.deleteIfExists(filePath);
         }
     }

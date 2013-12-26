@@ -42,7 +42,8 @@ public class FileManager {
         }
         if (!currentDirectory.toFile().exists() || !currentDirectory.toFile().isDirectory()) {
             currentDirectory = oldDirectory;
-            throw new IllegalArgumentException("Unable to enter directory [" + newDirectory + "] it doesn't exists or is a file");
+            throw new IllegalArgumentException(
+                    "Unable to enter directory [" + newDirectory + "] it doesn't exists or is a file");
         }
 
         try {
@@ -50,8 +51,7 @@ public class FileManager {
                 currentDirectory = currentDirectory.getRoot();
             }
 
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new IOException("Unable to enter directory [" + newDirectory + "]: some root problems");
         }
     }
@@ -60,8 +60,7 @@ public class FileManager {
         try {
             String normalized = new URI(path.toString()).normalize().getPath();
             return Paths.get(normalized);
-        }
-        catch (URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Unable to enter directory [" + path.toString() + "]");
         }
     }
@@ -133,8 +132,7 @@ public class FileManager {
                 Files.walkFileTree(fromPath, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
                         Integer.MAX_VALUE, new CopyDirectoryVisitor(fromPath, destination));
 
-            }
-            catch (IOException | WrappedIOException e) {
+            } catch (IOException | WrappedIOException e) {
                 throw new IOException("Fail to copy [" + fromPath + "] to [" + toPath + "] " + e);
             }
         } else {
@@ -158,11 +156,9 @@ public class FileManager {
             Path newDir = toPath.resolve(fromPath.relativize(dir));
             try {
                 Files.copy(dir, newDir, copyOption);
-            }
-            catch (FileAlreadyExistsException e) {
+            } catch (FileAlreadyExistsException e) {
                 // ignore
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new WrappedIOException("Unable to create: [" + newDir + "] " + e);
             }
             return FileVisitResult.CONTINUE;
@@ -173,8 +169,7 @@ public class FileManager {
             try {
                 Files.copy(file, toPath.resolve(fromPath.relativize(file)),
                         copyOption);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new WrappedIOException("Unable to copy file [" + file + "] " + e);
             }
 
@@ -188,8 +183,7 @@ public class FileManager {
                 try {
                     FileTime time = Files.getLastModifiedTime(dir);
                     Files.setLastModifiedTime(newDir, time);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw new WrappedIOException("Unable to copy all attributes to: [" + newDir + "] " + e);
                 }
             }
@@ -222,8 +216,7 @@ public class FileManager {
         } else {
             try {
                 Files.walkFileTree(file, new DeleteDirectoryVisitor());
-            }
-            catch (IOException | WrappedIOException e) {
+            } catch (IOException | WrappedIOException e) {
                 throw new IOException("Unable to delete file [" + file + "] " + e);
             }
         }
@@ -235,8 +228,7 @@ public class FileManager {
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             try {
                 Files.delete(file);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new WrappedIOException("Unable to delete file [" + file + "] " + e);
             }
             return FileVisitResult.CONTINUE;
@@ -247,8 +239,7 @@ public class FileManager {
             if (exc == null) {
                 try {
                     Files.delete(dir);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     throw new WrappedIOException("Unable to delete directory [" + dir + "] " + e);
                 }
             }
@@ -279,8 +270,7 @@ public class FileManager {
         try {
             Path destination = Files.isDirectory(toPath) ? toPath.resolve(fromPath.getFileName()) : toPath;
             Files.move(fromPath, destination, StandardCopyOption.REPLACE_EXISTING);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new IOException("Fail to move [" + fromPath + "] to [" + toPath + "] " + e);
         }
     }

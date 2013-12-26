@@ -12,12 +12,15 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestsDatabaseProvider {
     DatabaseTableProviderFactory factory;
     DatabaseTableProvider provider;
     List<Class<?>> columnTypes = new ArrayList<>();
     List<Class<?>> multiColumnTypes = new ArrayList<>();
+    private static Table table;
+    private AtomicInteger counter;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -190,5 +193,122 @@ public class TestsDatabaseProvider {
         Storeable testStoreable = provider.createFor(testTable, columnTypes);
         Assert.assertEquals(testStoreable.getColumnAt(0), Integer.class);
         provider.removeTable("testTable");
+    }
+
+    @Test
+    public void testThreadsCreateTwice() throws Exception {
+        Thread first = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                table = provider.createTable("myTable", columnTypes);
+            }
+        });
+        Thread second = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                table = provider.createTable("myTable", columnTypes);
+            }
+        });
+        first.start();
+        second.start();
+        first.join();
+        second.join();
+        Assert.assertEquals(null, table);
+    }
+
+    @Test
+    public void testThreadsCreate() throws Exception {
+        Thread first = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertNotNull(provider.createTable("testTable1", columnTypes));
+            }
+        });
+        Thread second = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Assert.assertNotNull(provider.createTable("testTable2", columnTypes));
+            }
+        });
+        first.start();
+        second.start();
+        first.join();
+        second.join();
+        Table requiredTable1 = new DatabaseTable("testTable1", columnTypes, provider);
+        Table requiredTable2 = new DatabaseTable("testTable2", columnTypes, provider);
+        Assert.assertEquals(requiredTable1.getColumnsCount(), provider.getTable("testTable1").getColumnsCount());
+        Assert.assertEquals(requiredTable2.getColumnsCount(), provider.getTable("testTable2").getColumnsCount());
+        provider.removeTable("testTable1");
+        provider.removeTable("testTable2");
+    }
+
+    @Test
+    public void testThreadsCreateRemove() throws Exception {
+        Thread first = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                provider.createTable("testTable", columnTypes);
+                provider.removeTable("testTable");
+            }
+        });
+        Thread second = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (provider.tables.containsKey("testTable")) {
+                    provider.removeTable("testTable");
+                }
+            }
+        });
+        first.start();
+        second.start();
+        first.join();
+        second.join();
+        Assert.assertNull(provider.getTable("testTable"));
+    }
+
+    @Test
+    public void testThreadsCountNewTables() throws Exception {
+        counter = new AtomicInteger(0);
+        Thread first = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (provider.createTable("testTable", columnTypes) != null) {
+                    counter.getAndIncrement();
+                }
+            }
+        });
+        Thread second = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (provider.createTable("testTable", columnTypes) != null) {
+                    counter.getAndIncrement();
+                }
+            }
+        });
+        first.start();
+        second.start();
+        first.join();
+        second.join();
+        Assert.assertEquals(1, counter.get());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testCloseRemove() throws Exception {
+        table = provider.createTable("testCloseTable", columnTypes);
+        provider.close();
+        provider.removeTable("testCloseTable");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testCloseGet() throws Exception {
+        table = provider.createTable("testCloseTable", columnTypes);
+        provider.close();
+        provider.getTable("testCloseTable");
+    }
+
+    @Test
+    public void testToString() throws Exception {
+        Assert.assertEquals(provider.toString(),
+                String.format("DatabaseTableProvider[%s]", folder.getRoot().getPath()));
     }
 }

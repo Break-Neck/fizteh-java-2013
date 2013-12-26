@@ -9,7 +9,16 @@ import java.util.Map;
 
 public interface StorableTable extends Table, Closeable {
 
-    public int unsavedChanges();
+    int unsavedChanges();
 
-    public void putValuesFromDisk(Map<String, Storeable> diskValues);
+    void putValuesFromDisk(Map<String, Storeable> diskValues);
+
+    void useTransantion(int id);
+
+    void retrieveThreadTable();
+
+    void removeTransaction(int id);
+
+    boolean isClosed();
+
 }

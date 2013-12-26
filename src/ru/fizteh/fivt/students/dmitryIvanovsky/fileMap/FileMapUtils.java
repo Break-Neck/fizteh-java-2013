@@ -121,24 +121,6 @@ public class FileMapUtils {
         }
     }
 
-    static int getHashDir(String key) {
-        int hashcode = key.hashCode();
-        int ndirectory = hashcode % 16;
-        if (ndirectory < 0) {
-            ndirectory *= -1;
-        }
-        return ndirectory;
-    }
-
-    static int getHashFile(String key) {
-        int hashcode = key.hashCode();
-        int nfile = hashcode / 16 % 16;
-        if (nfile < 0) {
-            nfile *= -1;
-        }
-        return nfile;
-    }
-
     static String[] myParsing(String[] args) {
         String arg = args[0].trim();
         StringBuilder key = new StringBuilder();

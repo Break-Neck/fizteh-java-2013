@@ -8,7 +8,6 @@ import java.util.Map;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.storage.structured.TableProvider;
 import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 import ru.fizteh.fivt.students.ichalovaDiana.shell.Command;
 import ru.fizteh.fivt.students.ichalovaDiana.shell.Interpreter;
@@ -18,16 +17,39 @@ public class FileMap {
     private static Map<String, Command> commands = new HashMap<String, Command>();
     private static Interpreter interpreter;
     
-    private static TableProvider database;
+    private static TableProviderImplementation database;
     private static TableImplementation table;
     private static String currentTableName; // delete?
-
+    
+    private static JettyServer server;
+    
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                if (server != null && server.isStarted()) {
+                    try {
+                        server.stop();
+                    } catch (Exception e) {
+                    }
+                }
+                
+                try {
+                    database.close();
+                } catch (Exception e) {
+                }
+            }
+        });
+    }
+    
     static {
         try {
             String dbDir = System.getProperty("fizteh.db.dir");
 
             TableProviderFactory factory = new TableProviderFactoryImplementation();
-            database = factory.create(dbDir);
+            database = (TableProviderImplementation) factory.create(dbDir);
+            
+            server = new JettyServer(database);
             
         } catch (Exception e) {
             System.out.println(((e.getMessage() != null) ? e.getMessage() : "unknown error"));
@@ -43,6 +65,8 @@ public class FileMap {
         commands.put("commit", new Commit());
         commands.put("rollback", new Rollback());
         commands.put("size", new Size());
+        commands.put("starthttp", new StartHTTP());
+        commands.put("stophttp", new StopHTTP());
         commands.put("exit", new Exit());
 
         interpreter = new Interpreter(commands);
@@ -162,7 +186,7 @@ public class FileMap {
                 String tableName = arguments[1];
                 
                 if (FileMap.table != null) {
-                    int changesNumber = FileMap.table.countChanges();
+                    int changesNumber = FileMap.table.countChanges(TableImplementation.NO_TRANSACTION);
                     if (changesNumber > 0) {
                         System.out.println(changesNumber + " unsaved changes");
                         return;
@@ -378,6 +402,64 @@ public class FileMap {
                 throw new Exception(arguments[0] + ": " + e.getMessage());
             }
         }
+    }
+    
+    static class StartHTTP extends Command {
+        static final int ARG_NUM = 1;
+        public boolean rawArgumentsNeeded = false;
+
+        @Override
+        protected void execute(String... arguments) throws Exception {
+            try {
+
+                if (arguments.length != ARG_NUM && arguments.length != ARG_NUM + 1) {
+                    throw new IllegalArgumentException("Illegal number of arguments");
+                }
+                
+                if (arguments.length == ARG_NUM + 1) {
+                    int port = Integer.parseInt(arguments[1]);
+                    server.init(port);
+                } else {
+                    server.init();
+                }
+                
+                server.start();
+                
+                System.out.println("started at " + server.getPort());
+                
+            } catch (Exception e) {
+                throw new Exception(arguments[0] + ": not started: " + e.getMessage());
+            }
+            
+        }
+        
+    }
+
+    static class StopHTTP extends Command {
+        static final int ARG_NUM = 1;
+        public boolean rawArgumentsNeeded = false;
+
+        @Override
+        protected void execute(String... arguments) throws Exception {
+            try {
+
+                if (arguments.length != ARG_NUM) {
+                    throw new IllegalArgumentException("Illegal number of arguments");
+                }
+                
+                if (server.isStarted()) {
+                    server.stop();
+                    System.out.println("stopped at " + server.getPort());
+                } else {
+                    System.out.println("not started");
+                }
+                
+            } catch (Exception e) {
+                throw new Exception(arguments[0] + ": " + e.getMessage());
+            }
+            
+        }
+        
     }
 
     static class Exit extends Command {

@@ -37,16 +37,14 @@ public class FileMapTableProvider implements StringTableProvider {
             return;
         }
 
-        try (DataInputStream in = new DataInputStream(new BufferedInputStream
-                (new FileInputStream(fileName.toFile())))) {
+        try (DataInputStream in = new DataInputStream(new BufferedInputStream(
+                new FileInputStream(fileName.toFile())))) {
 
             while (in.available() != 0) {
                 DatabaseUtils.KeyValue pair = DatabaseUtils.readKeyValue(in);
                 table.putValueFromDisk(pair.key, pair.value);
             }
-        }
-
-        catch (IllegalArgumentException | IOException e) {
+        } catch (IllegalArgumentException | IOException e) {
             throw new WrappedIOException("Unable to read from file: " + e.getMessage());
         }
 
@@ -60,20 +58,18 @@ public class FileMapTableProvider implements StringTableProvider {
         try {
             Files.deleteIfExists(fileName);
             Files.createFile(fileName);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new WrappedIOException(e.getMessage());
         }
 
-        try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream
-                (new FileOutputStream(fileName.toFile(), true)))) {
+        try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
+                new FileOutputStream(fileName.toFile(), true)))) {
 
             for (String key : table.getKeys()) {
                 String value = table.get(key);
                 DatabaseUtils.writeKeyValue(new DatabaseUtils.KeyValue(key, value), out);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new WrappedIOException("Unable to write to file: " + e.getMessage());
         }
     }

@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.Set;
 
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
@@ -15,18 +17,33 @@ import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.TableProvider;
 
-public class DataBase implements Table {
-    protected HashMap<String, Storeable> dataMap;
-    protected HashMap<String, Storeable> oldDataMap;
+public class DataBase implements Table, AutoCloseable {
+    protected ThreadLocal<HashMap<String, Storeable>> dataMap = new ThreadLocal<HashMap<String, Storeable>>() {
+        @Override
+        public HashMap<String, Storeable> initialValue() {
+            return new HashMap<>();
+        }
+    };
+    protected HashMap<String, Storeable> commonDataMap = new HashMap<>();
     protected ArrayList<Class<?>> typesList;
     protected DataBaseProvider provider;
 
+    private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
+    private Lock read = readWriteLock.readLock();
+    private Lock write = readWriteLock.writeLock();
+
     private String currTable = "";
     private static String rootDir = "";
-    private boolean removed = false;
+    private volatile boolean closed = false;
 
     public void setRemoved() {
-        removed = true;
+        closed = true;
+    }
+
+    private void checkClosed() {
+        if (closed) {
+            throw new IllegalStateException("table is closed");
+        }
     }
 
     public DataBase(String tableName, String root, TableProvider prov) {
@@ -53,13 +70,15 @@ public class DataBase implements Table {
         if (!(new File(rootDir + tableName).exists())) {
             throw new IllegalStateException("Table not exists");
         }
-        dataMap = new HashMap<>();
-        oldDataMap = new HashMap<>();
     }
 
     public void setHashMap(HashMap<String, Storeable> map) {
-        copyMap(dataMap, map);
-        copyMap(oldDataMap, map);
+        write.lock();
+        try {
+            copyMap(commonDataMap, map);
+        } finally {
+            write.unlock();
+        }
     }
 
     public void setTypes(List<Class<?>> columnTypes) {
@@ -78,52 +97,13 @@ public class DataBase implements Table {
     }
 
     protected void unloadData() {
-        for (int i = 0; i < 16; ++i) {
-            File currentDir = getDirWithNum(i);
-            if (!currentDir.exists()) {
-                if (!currentDir.mkdir()) {
-                    throw new RuntimeException("Cannot unload data: cannot create directory "
-                            + currentDir.getAbsolutePath());
-                }
-            }
-            for (int j = 0; j < 16; ++j) {
-                File currentFile = getFileWithNum(j, i);
-                if (!currentFile.exists()) {
-                    try {
-                        if (!currentFile.createNewFile()) {
-                            throw new RuntimeException("Cannot unload data: cannot create file "
-                                    + currentFile.getAbsolutePath());
-                        }
-                    } catch (IOException e) {
-                        throw new RuntimeException("Cannot unload data: cannot create file "
-                                + currentFile.getAbsolutePath());
-                    }
-                }
-            }
-        }
-        unloadMap();
-        for (int i = 0; i < 16; ++i) {
-            File currentDir = getDirWithNum(i);
-            if (currentDir.list().length == 0) {
-                if (!currentDir.delete()) {
-                    throw new RuntimeException("Cannot unload data: cannot delete directory "
-                            + currentDir.getAbsolutePath());
-                }
-            }
-        }
-    }
-
-    protected void unloadMap() {
         RandomAccessFile[] filesArray = new RandomAccessFile[256];
+        write.lock();
         try {
             for (int i = 0; i < 16; ++i) {
-                for (int j = 0; j < 16; ++j) {
-                    filesArray[i * 16 + j] = new RandomAccessFile(getFileWithNum(j, i), "rw");
-                    filesArray[i * 16 + j].setLength(0);
-                }
+                DataBaseProvider.doDelete(getDirWithNum(i));
             }
-
-            Set<Entry<String, Storeable>> entries = dataMap.entrySet();
+            Set<Entry<String, Storeable>> entries = commonDataMap.entrySet();
             for (Map.Entry<String, Storeable> entry : entries) {
                 String key = entry.getKey();
                 Storeable value = entry.getValue();
@@ -135,6 +115,23 @@ public class DataBase implements Table {
                     b = (byte) Math.abs(keyBytes[0]);
                     int ndirectory = b % 16;
                     int nfile = b / 16 % 16;
+                    if (filesArray[ndirectory * 16 + nfile] == null) {
+                        File directory = getDirWithNum(ndirectory);
+                        if (!directory.exists()) {
+                            if (!directory.mkdirs()) {
+                                throw new RuntimeException("Cannot unload data correctly: cannot create directory "
+                                        + directory.getAbsolutePath());
+                            }
+                        }
+                        File file = getFileWithNum(nfile, ndirectory);
+                        if (!file.exists()) {
+                            if (!file.createNewFile()) {
+                                throw new RuntimeException("Cannot unload data correctly: cannot create file "
+                                        + file.getAbsolutePath());
+                            }
+                        }
+                        filesArray[ndirectory * 16 + nfile] = new RandomAccessFile(file, "rw");
+                    }
                     filesArray[ndirectory * 16 + nfile].writeInt(keyBytes.length);
                     filesArray[ndirectory * 16 + nfile].writeInt(valueBytes.length);
                     filesArray[ndirectory * 16 + nfile].write(keyBytes);
@@ -144,29 +141,34 @@ public class DataBase implements Table {
         } catch (IOException e) {
             throw new RuntimeException("Cannot unload file correctly", e);
         } finally {
-            try {
-                for (int i = 0; i < 16; ++i) {
-                    for (int j = 0; j < 16; ++j) {
-                        if (filesArray[i * 16 + j] != null && filesArray[i * 16 + j].length() == 0) {
-                            try {
-                                filesArray[i * 16 + j].close();
-                            } catch (Throwable e1) {
-                                // not OK
-                            }
-                            getFileWithNum(j, i).delete();
-                        }
-                        if (filesArray[i * 16 + j] != null) {
-                            try {
-                                filesArray[i * 16 + j].close();
-                            } catch (Throwable e1) {
-                                // not OK
-                            }
-                        }
+            for (int i = 0; i < 256; ++i) {
+                if (filesArray[i] != null) {
+                    try {
+                        filesArray[i].close();
+                    } catch (Throwable e) {
+                        // not OK
                     }
                 }
-            } catch (Throwable e) {
-                // not OK
             }
+            write.unlock();
+        }
+    }
+
+    private void mergeMaps() {
+        write.lock();
+        try {
+            for (Map.Entry<String, Storeable> entry : dataMap.get().entrySet()) {
+                String key = entry.getKey();
+                Storeable val = entry.getValue();
+                if (val == null) {
+                    commonDataMap.remove(key);
+
+                } else {
+                    commonDataMap.put(key, val);
+                }
+            }
+        } finally {
+            write.unlock();
         }
     }
 
@@ -174,15 +176,18 @@ public class DataBase implements Table {
         dest.clear();
         Set<Map.Entry<String, Storeable>> entries = source.entrySet();
         for (Map.Entry<String, Storeable> entry : entries) {
-            dest.put(entry.getKey(), entry.getValue());
+            write.lock();
+            try {
+                dest.put(entry.getKey(), entry.getValue());
+            } finally {
+                write.unlock();
+            }
         }
     }
 
     @Override
     public String getName() {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
+        checkClosed();
         return currTable;
     }
 
@@ -200,109 +205,159 @@ public class DataBase implements Table {
 
     @Override
     public Storeable get(String key) {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
+        checkClosed();
         checkKey(key);
-        return dataMap.get(key);
+        Storeable val = null;
+        if (dataMap.get().containsKey(key)) {
+            val = dataMap.get().get(key);
+        } else {
+            read.lock();
+            try {
+                val = commonDataMap.get(key);
+            } finally {
+                read.unlock();
+            }
+        }
+        return val;
     }
 
     @Override
     public Storeable put(String key, Storeable value) throws ColumnFormatException {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
+        checkClosed();
         checkKey(key);
         if (value == null) {
             throw new IllegalArgumentException("Value is null");
         }
         provider.checkColumns(this, value);
-        Storeable oldValue = dataMap.get(key);
-        dataMap.put(key, value);
+        Storeable oldValue = null;
+        if (dataMap.get().containsKey(key)) {
+            oldValue = dataMap.get().get(key);
+        } else {
+            read.lock();
+            try {
+                oldValue = commonDataMap.get(key);
+            } finally {
+                read.unlock();
+            }
+        }
+        dataMap.get().put(key, value);
         return oldValue;
     }
 
     @Override
     public Storeable remove(String key) throws IllegalArgumentException {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
+        checkClosed();
         checkKey(key);
-        Storeable val = dataMap.get(key);
+        Storeable val = null;
+        if (dataMap.get().containsKey(key)) {
+            val = dataMap.get().get(key);
+        } else {
+            read.lock();
+            try {
+                val = commonDataMap.get(key);
+            } finally {
+                read.unlock();
+            }
+        }
         if (val != null) {
-            dataMap.put(key, null);
+            dataMap.get().put(key, null);
         }
         return val;
     }
 
     @Override
     public int size() {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
-        int count = 0;
-        Set<Map.Entry<String, Storeable>> entries = dataMap.entrySet();
-        for (Map.Entry<String, Storeable> entry : entries) {
-            if (entry.getValue() != null) {
-                ++count;
+        checkClosed();
+        int size = 0;
+        read.lock();
+        try {
+            size = commonDataMap.size();
+            for (Map.Entry<String, Storeable> entry : dataMap.get().entrySet()) {
+                String key = entry.getKey();
+                Storeable value = entry.getValue();
+                if (value == null && commonDataMap.containsKey(key)) {
+                    --size;
+                }
+                if (value != null && !commonDataMap.containsKey(key)) {
+                    ++size;
+                }
             }
+        } finally {
+            read.unlock();
         }
-        return count;
+        return size;
     }
 
     @Override
     public int commit() throws IOException {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
+        checkClosed();
         int changesCount = countChanges();
+        mergeMaps();
+        dataMap.get().clear();
         unloadData();
-        copyMap(oldDataMap, dataMap);
         return changesCount;
     }
 
-    protected int countChanges() {
+    public int countChanges() {
         int count = 0;
-        Set<Map.Entry<String, Storeable>> entries = dataMap.entrySet();
-        for (Map.Entry<String, Storeable> entry : entries) {
-            String key = entry.getKey();
-            TableRow value = (TableRow) entry.getValue();
-            TableRow oldValue = (TableRow) oldDataMap.get(key);
-            if (value != oldValue
-                    || ((value != null) && (oldValue != null) && !provider.serialize(this, value).equals(
-                            provider.serialize(this, oldValue)))) {
-                count++;
+        Set<Map.Entry<String, Storeable>> entries = dataMap.get().entrySet();
+        read.lock();
+        try {
+            for (Map.Entry<String, Storeable> entry : entries) {
+                String key = entry.getKey();
+                Storeable value = entry.getValue();
+                Storeable oldValue = null;
+                oldValue = commonDataMap.get(key);
+                if ((((value == null) || (oldValue == null)) && (value != oldValue))
+                        || ((value != null) && (oldValue != null) && !provider.serialize(this, value).equals(
+                                provider.serialize(this, oldValue)))) {
+                    count++;
+                }
             }
+        } finally {
+            read.unlock();
         }
         return count;
     }
 
     @Override
     public int rollback() {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
+        checkClosed();
         int changesCount = countChanges();
-        copyMap(dataMap, oldDataMap);
+        dataMap.get().clear();
         return changesCount;
     }
 
     @Override
     public int getColumnsCount() {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
+        checkClosed();
         return typesList.size();
     }
 
     @Override
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
-        if (removed) {
-            throw new IllegalStateException("table not exists");
-        }
+        checkClosed();
         if (columnIndex < 0 || columnIndex >= typesList.size()) {
             throw new IndexOutOfBoundsException("Incorrect index " + columnIndex);
         }
         return typesList.get(columnIndex);
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (!closed) {
+            rollback();
+            closed = true;
+        }
+        provider.closeTable(currTable);
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer str = new StringBuffer(getClass().getSimpleName());
+        str.append("[");
+        str.append(rootDir + currTable);
+        str.append("]");
+        return str.toString();
     }
 }

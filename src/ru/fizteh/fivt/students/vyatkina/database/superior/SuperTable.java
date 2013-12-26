@@ -2,7 +2,6 @@ package ru.fizteh.fivt.students.vyatkina.database.superior;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -25,7 +24,7 @@ public class SuperTable<ValueType> {
     public ValueType get(String key) {
 
         TableChecker.keyValidCheck(key);
-        Diff<ValueType> diff = null;
+        Diff<ValueType> diff;
         try {
             tableKeeper.readLock().lock();
             diff = values.get(key);
@@ -34,8 +33,7 @@ public class SuperTable<ValueType> {
                 value = diff.getValue();
             }
             return value;
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
     }
@@ -60,8 +58,7 @@ public class SuperTable<ValueType> {
                 oldStringValue = oldValue.getValue();
                 oldValue.setValue(value);
             }
-        }
-        finally {
+        } finally {
             tableKeeper.writeLock().unlock();
         }
 
@@ -79,8 +76,7 @@ public class SuperTable<ValueType> {
             } else {
                 return null;
             }
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
     }
@@ -105,8 +101,7 @@ public class SuperTable<ValueType> {
                     ++realSize;
                 }
             }
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
         return realSize;
@@ -121,8 +116,7 @@ public class SuperTable<ValueType> {
                     ++changes;
                 }
             }
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
         return changes;
@@ -149,8 +143,7 @@ public class SuperTable<ValueType> {
             tableKeeper.writeLock().lock();
             Diff<ValueType> valueFromDisk = new Diff(value, value);
             values.put(key, valueFromDisk);
-        }
-        finally {
+        } finally {
             tableKeeper.writeLock().unlock();
         }
     }
@@ -162,8 +155,7 @@ public class SuperTable<ValueType> {
                 Diff<ValueType> valueFromDisk = new Diff(entry.getValue(), entry.getValue());
                 values.put(entry.getKey(), valueFromDisk);
             }
-        }
-        finally {
+        } finally {
             tableKeeper.writeLock().unlock();
         }
     }
@@ -177,8 +169,7 @@ public class SuperTable<ValueType> {
                     ++unsavedChanges;
                 }
             }
-        }
-        finally {
+        } finally {
             tableKeeper.readLock().unlock();
         }
         return unsavedChanges;
@@ -194,14 +185,5 @@ public class SuperTable<ValueType> {
         return result;
     }
 
-    protected void removeNullValues() {
-        Iterator<Map.Entry<String, Diff<ValueType>>> it = values.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, Diff<ValueType>> entry = it.next();
-            if (entry.getValue().isRemoved()) {
-                it.remove();
-            }
-        }
-    }
 
 }

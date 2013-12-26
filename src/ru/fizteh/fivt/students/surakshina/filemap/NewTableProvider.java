@@ -18,13 +18,14 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProvider;
 
-public class NewTableProvider implements TableProvider {
+public class NewTableProvider implements TableProvider, AutoCloseable {
     private File workingDirectory;
     private NewTable currentTable = null;
     private HashMap<String, NewTable> tables = new HashMap<>();
     private HashMap<String, Class<?>> providerTypes;
     private HashMap<Class<?>, String> providerTypesNames;
     private Lock providerController = new ReentrantLock(true);
+    private CloseState state = new CloseState();
 
     public NewTableProvider(File dir) throws IOException {
         workingDirectory = dir;
@@ -46,23 +47,7 @@ public class NewTableProvider implements TableProvider {
         providerTypes.put("String", String.class);
         providerTypesNames.put(String.class, "String");
         for (File file : workingDirectory.listFiles()) {
-            if (checkTableName(file.getName())) {
-                if (file.isDirectory()) {
-                    tables.put(file.getName(), new NewTable(file.getName(), this));
-                    File tableFile = new File(workingDirectory, file.getName());
-                    HashMap<String, Storeable> map;
-                    try {
-                        map = load(tableFile, file.getName());
-                        tables.get(file.getName()).loadCommitedValues(map);
-                    } catch (ParseException e) {
-                        throw new IOException(e.getMessage(), e);
-                    }
-                } else {
-                    throw new IllegalArgumentException("not a directory");
-                }
-            } else {
-                throw new IllegalArgumentException("wrong type (incorrect table name)");
-            }
+            readTable(file);
         }
     }
 
@@ -82,13 +67,6 @@ public class NewTableProvider implements TableProvider {
         return currentTable;
     }
 
-    public File getCurrentTableFile() {
-        if (currentTable == null) {
-            return null;
-        }
-        return new File(workingDirectory, currentTable.getName());
-    }
-
     public void setCurrentTable(NewTable table) {
         currentTable = table;
     }
@@ -103,6 +81,7 @@ public class NewTableProvider implements TableProvider {
 
     @Override
     public Table getTable(String name) {
+        state.checkClosed();
         if (!checkTableName(name)) {
             throw new IllegalArgumentException("wrong type (Incorrect table name)");
         }
@@ -112,11 +91,44 @@ public class NewTableProvider implements TableProvider {
                 currentTable = tables.get(name);
                 return currentTable;
             } else {
-                return null;
+                File file = new File(workingDirectory, name);
+                if (file.exists()) {
+                    NewTable table;
+                    try {
+                        table = readTable(file);
+                    } catch (IOException e) {
+                        throw new IllegalStateException(e.getMessage(), e);
+                    }
+                    return table;
+                } else {
+                    return null;
+                }
             }
         } finally {
             providerController.unlock();
         }
+    }
+
+    private NewTable readTable(File file) throws IOException {
+        if (checkTableName(file.getName())) {
+            if (file.isDirectory()) {
+                tables.put(file.getName(), new NewTable(file.getName(), this));
+                File tableFile = new File(workingDirectory, file.getName());
+                HashMap<String, Storeable> map;
+                try {
+                    map = load(tableFile, file.getName());
+                    tables.get(file.getName()).loadCommitedValues(map);
+                    return tables.get(file.getName());
+                } catch (ParseException e) {
+                    throw new IOException(e.getMessage(), e);
+                }
+            } else {
+                throw new IllegalArgumentException("not a directory");
+            }
+        } else {
+            throw new IllegalArgumentException("wrong type (incorrect table name)");
+        }
+
     }
 
     private HashMap<String, Storeable> load(File tableFile, String name) throws IOException, ParseException {
@@ -209,6 +221,7 @@ public class NewTableProvider implements TableProvider {
 
     @Override
     public void removeTable(String name) {
+        state.checkClosed();
         if (!checkTableName(name)) {
             throw new IllegalArgumentException("wrong type (Incorrect table name)");
         }
@@ -249,6 +262,7 @@ public class NewTableProvider implements TableProvider {
 
     @Override
     public Table createTable(String name, List<Class<?>> columnTypes) throws IOException {
+        state.checkClosed();
         if (!checkTableName(name)) {
             throw new IllegalArgumentException("wrong type (Incorrect table name)");
         }
@@ -274,7 +288,9 @@ public class NewTableProvider implements TableProvider {
                         throw new IllegalArgumentException("wrong type (Incorrect column name)");
                     }
                     newFile.print(getNameString(columnTypes.get(i)));
-                    newFile.print(" ");
+                    if (i != columnTypes.size() - 1) {
+                        newFile.print(" ");
+                    }
                 }
                 newFile.close();
             }
@@ -301,6 +317,7 @@ public class NewTableProvider implements TableProvider {
 
     @Override
     public Storeable deserialize(Table table, String value) throws ParseException {
+        state.checkClosed();
         if (value == null || value.trim().isEmpty()) {
             throw new ParseException("Illegal value", 0);
         }
@@ -326,6 +343,7 @@ public class NewTableProvider implements TableProvider {
 
     @Override
     public String serialize(Table table, Storeable value) throws ColumnFormatException {
+        state.checkClosed();
         if (value == null) {
             throw new ColumnFormatException("wrong type (Incorrect column name)");
         }
@@ -334,12 +352,43 @@ public class NewTableProvider implements TableProvider {
 
     @Override
     public Storeable createFor(Table table) {
+        state.checkClosed();
         return new MyStoreable(table);
     }
 
     @Override
     public Storeable createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException {
+        state.checkClosed();
         return new MyStoreable(table, values);
+    }
+
+    @Override
+    public void close() throws Exception {
+        providerController.lock();
+        try {
+            for (NewTable table : tables.values()) {
+                table.close();
+            }
+            state.setClose();
+        } finally {
+            providerController.unlock();
+        }
+
+    }
+
+    public void setClose(String name) {
+        providerController.lock();
+        try {
+            tables.remove(name);
+        } finally {
+            providerController.unlock();
+        }
+    }
+
+    @Override
+    public String toString() {
+        state.checkClosed();
+        return this.getClass().getSimpleName() + "[" + workingDirectory.getAbsolutePath() + "]";
     }
 
 }

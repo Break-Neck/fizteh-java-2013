@@ -19,12 +19,10 @@ public class DropCommand extends DatabaseCommand {
         boolean tableIsDropped;
         try {
             tableIsDropped = state.databaseAdapter.dropTable(tableName);
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             state.printErrorMessage(e.getMessage());
             return;
-        }
-        catch (WrappedIOException e) {
+        } catch (WrappedIOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
         if (tableIsDropped) {

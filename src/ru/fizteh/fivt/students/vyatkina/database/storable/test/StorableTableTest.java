@@ -7,8 +7,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-import ru.fizteh.fivt.storage.structured.Storeable;
-import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.vyatkina.database.StorableTable;
 import ru.fizteh.fivt.students.vyatkina.database.storable.StorableRow;
 import ru.fizteh.fivt.students.vyatkina.database.storable.StorableRowShape;
@@ -19,14 +17,7 @@ import ru.fizteh.fivt.students.vyatkina.database.superior.TableChecker;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class StorableTableTest {
 
@@ -34,19 +25,19 @@ public class StorableTableTest {
     private static StorableTableProviderImp tableProvider;
     private static StorableTableProviderFactory factory;
     private final String tableName = "LittleTestTable";
-    private final List<Class<?>> classList;
-    private final StorableRow SAMPLE_VALUE1;
-    private final StorableRow SAMPLE_VALUE2;
-    private final String SAMPLE_KEY1 = "ohMyGod";
-    private final String SAMPLE_KEY2 = "dearLeasy";
-    private final String SAMPLE_KEY3 = "hahahahas";
-    private final String NOT_EXISTING_KEY = "VeryLonelyKey";
+    private static final List<Class<?>> CLASS_LIST;
+    private static final StorableRow SAMPLE_VALUE1;
+    private static final StorableRow SAMPLE_VALUE2;
+    private static final String SAMPLE_KEY1 = "ohMyGod";
+    private static final String SAMPLE_KEY2 = "dearLeasy";
+    private static final String SAMPLE_KEY3 = "hahahahas";
+    private static final String NOT_EXISTING_KEY = "VeryLonelyKey";
 
-    public StorableTableTest() {
-        classList = new ArrayList<>();
-        classList.add(String.class);
-        classList.add(Integer.class);
-        StorableRowShape shape = new StorableRowShape(classList);
+    static {
+        CLASS_LIST = new ArrayList<>();
+        CLASS_LIST.add(String.class);
+        CLASS_LIST.add(Integer.class);
+        StorableRowShape shape = new StorableRowShape(CLASS_LIST);
         SAMPLE_VALUE1 = new StorableRow(shape);
         ArrayList<Object> valueList = new ArrayList<>();
         valueList.add(new String("Bla"));
@@ -64,7 +55,7 @@ public class StorableTableTest {
     public void setup() throws IOException {
         factory = new StorableTableProviderFactory();
         tableProvider = StorableTableProviderImp.class.cast(factory.create(folder.getRoot().toString()));
-        table = StorableTableImp2.class.cast(tableProvider.createTable(tableName, classList));
+        table = StorableTableImp2.class.cast(tableProvider.createTable(tableName, CLASS_LIST));
     }
 
     @After
@@ -153,7 +144,8 @@ public class StorableTableTest {
 
     @Test
     public void removeKeyThatDoesNotExistShouldReturnNull() {
-        Assert.assertEquals("Remove table that does not exist should return null", null, table.remove(NOT_EXISTING_KEY));
+        Assert.assertEquals("Remove table that does not exist should return null", null, table.remove(
+                NOT_EXISTING_KEY));
     }
 
     @Test

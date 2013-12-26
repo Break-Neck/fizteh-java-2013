@@ -14,13 +14,18 @@ import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProvider;
 import ru.fizteh.fivt.students.demidov.basicclasses.BasicTableProvider;
 
-public class StoreableTableProvider extends BasicTableProvider<StoreableTable> implements TableProvider {
-	public StoreableTableProvider(String root) throws IOException {
-		super(root);
+public class StoreableTableProvider extends BasicTableProvider<StoreableTable> implements TableProvider, AutoCloseable {
+    private StoreableTableProviderFactory factory;
+    
+	public StoreableTableProvider(StoreableTableProviderFactory factory, String root) throws IOException {
+	    super(root);
+	    this.factory = factory;
 	}
 	
 	public StoreableTable createTable(String name, List<Class<?>> columnTypes) throws IOException {
-		if ((name == null) || (!(name.matches("\\w+")))) {
+	    providerCloseCheck();
+	    
+	    if ((name == null) || (!(name.matches("\\w+")))) {
 			throw new IllegalArgumentException("wrong table name " + name);
 		}
 		
@@ -64,8 +69,34 @@ public class StoreableTableProvider extends BasicTableProvider<StoreableTable> i
 			providerLock.writeLock().unlock();
 		}
 	}
-
+	
+	public StoreableTable getTable(String name) {    
+	    providerCloseCheck();
+	    
+        if ((name == null) || (!(name.matches("\\w+")))) {
+            throw new IllegalArgumentException("wrong table name: " + name);
+        }
+        
+        providerLock.readLock().lock();     
+        
+        try {
+            if ((tables.get(name) == null) && (new File(root, name).isDirectory())) {
+                try {
+                    tables.put(name, new StoreableTable(root + File.separator + name, name, this));
+                    tables.get(name).getFilesMap().readData();
+                } catch (IOException catchedException) {
+                    //do nothing
+                }
+            }
+            return tables.get(name);
+        } finally {     
+            providerLock.readLock().unlock();
+        }
+    }
+	
 	public StoreableImplementation deserialize(Table table, String value) throws ParseException {
+	    providerCloseCheck();
+	    
 	    providerLock.readLock().lock();
 		try {
 			return StoreableUtils.deserialize(table, value);
@@ -77,6 +108,8 @@ public class StoreableTableProvider extends BasicTableProvider<StoreableTable> i
 	}
 
 	public String serialize(Table table, Storeable value) throws ColumnFormatException {
+	    providerCloseCheck();
+	    
 	    providerLock.readLock().lock();
 		try {
 			return StoreableUtils.serialize(table, value);
@@ -88,6 +121,8 @@ public class StoreableTableProvider extends BasicTableProvider<StoreableTable> i
 	}
 
 	public StoreableImplementation createFor(Table table) {
+	    providerCloseCheck();
+	    
 	    providerLock.readLock().lock();
 		try {
 		    return new StoreableImplementation(table);
@@ -97,6 +132,8 @@ public class StoreableTableProvider extends BasicTableProvider<StoreableTable> i
 	}
 
 	public StoreableImplementation createFor(Table table, List<?> values) throws ColumnFormatException {
+	    providerCloseCheck();
+	    
 	    StoreableImplementation builtStoreable = null;
 	    
 	    providerLock.readLock().lock();	   
@@ -115,6 +152,21 @@ public class StoreableTableProvider extends BasicTableProvider<StoreableTable> i
 
 		return builtStoreable;
 	}
+	
+	public String toString() {
+        return getClass().getSimpleName() + "[" + (new File(root)).getAbsolutePath() + "]";
+    }
+	
+    public void close() {
+        if (!(closeIndicator)) {
+            factory.closeTableProvider(this);
+            
+            for (String key: tables.keySet()) {
+                tables.get(key).close();
+            }   
+            closeIndicator = true;
+        }
+    }
 
 	public void readFilesMaps() throws IOException {
 		for (String subdirectory : (new File(root)).list()) {

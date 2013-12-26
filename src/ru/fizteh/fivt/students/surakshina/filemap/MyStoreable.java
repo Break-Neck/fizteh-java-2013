@@ -209,4 +209,23 @@ public class MyStoreable implements Storeable {
         return String.class.cast(values.get(columnIndex));
     }
 
+    @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder(this.getClass().getSimpleName());
+        str.append("[");
+        int i = 0;
+        for (Object value : values) {
+            if (i != 0) {
+                str.append(",");
+                ++i;
+            }
+            if (value != null) {
+                str.append(value);
+                ++i;
+            }
+        }
+        str.append("]");
+        return str.toString();
+    }
+
 }

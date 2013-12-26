@@ -20,8 +20,7 @@ public class SizeCommand extends DatabaseCommand {
         int tableSize;
         try {
             tableSize = state.databaseAdapter.size();
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             state.printErrorMessage(e.getMessage());
             return;
         }

@@ -10,12 +10,10 @@ import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.storage.structured.TableProvider;
-import ru.fizteh.fivt.storage.structured.TableProviderFactory;
 
 public class TableProviderTest {
-    private TableProviderFactory factory;
-    private TableProvider provider;
+    private NewTableProviderFactory factory;
+    private NewTableProvider provider;
     private ArrayList<Class<?>> list;
 
     @Rule
@@ -24,7 +22,7 @@ public class TableProviderTest {
     @Before
     public void begin() throws IOException {
         factory = new NewTableProviderFactory();
-        provider = factory.create(folder.newFolder().toString());
+        provider = (NewTableProvider) factory.create(folder.newFolder().toString());
         list = new ArrayList<Class<?>>();
         list.add(Integer.class);
         list.add(Double.class);
@@ -67,11 +65,21 @@ public class TableProviderTest {
 
     @Test(expected = IllegalStateException.class)
     public void checkTableExist() {
-        try {
-            provider.removeTable("param");
-        } catch (IOException e) {
-            // ok
-        }
+        provider.removeTable("param");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeRemoveTest() throws Exception {
+        NewTable table = (NewTable) provider.createTable("testCloseTable", list);
+        provider.close();
+        provider.removeTable(table.getName());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void closeGetTest() throws Exception {
+        NewTable table = (NewTable) provider.createTable("testCloseTable", list);
+        provider.close();
+        provider.getTable(table.getName());
     }
 
 }

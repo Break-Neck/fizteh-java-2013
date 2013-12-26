@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 
 public class CommandMkdir implements Command {
-    private static final String name = "mkdir";
     private ShellState state;
 
     public CommandMkdir(ShellState state) {
@@ -14,7 +13,7 @@ public class CommandMkdir implements Command {
     }
 
     public String getName() {
-        return name;
+        return "mkdir";
     }
 
     public int getArgCount() {

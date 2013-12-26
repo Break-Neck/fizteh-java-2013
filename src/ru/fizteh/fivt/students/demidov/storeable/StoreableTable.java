@@ -1,5 +1,6 @@
 package ru.fizteh.fivt.students.demidov.storeable;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.demidov.basicclasses.BasicTable;
 
-public class StoreableTable extends BasicTable<Storeable> implements Table {
+public class StoreableTable extends BasicTable<Storeable> implements Table, AutoCloseable {
 	private StoreableTableProvider currentProvider;
 	private List<Class<?>> columnClasses;
 	
@@ -54,10 +55,12 @@ public class StoreableTable extends BasicTable<Storeable> implements Table {
 	}
 	
 	public int getColumnsCount() {
+	    tableCloseCheck();
 		return columnClasses.size();
 	}
 
 	public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
+	    tableCloseCheck();
 		return columnClasses.get(columnIndex);
 	}
 
@@ -76,4 +79,16 @@ public class StoreableTable extends BasicTable<Storeable> implements Table {
 			throw new WrongTypeException(catchedException);
 		}
 	}
+	
+    public String toString() {
+        return getClass().getSimpleName() + "[" + (new File(tablePath)).getAbsolutePath() + "]";
+    }
+    
+    public void close() {
+        if (!(closeIndicator)) {      
+            rollback();
+            currentProvider.closeTable(tableName);
+            closeIndicator = true;
+        }
+    }
 }

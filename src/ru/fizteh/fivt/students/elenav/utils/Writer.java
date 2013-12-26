@@ -6,13 +6,13 @@ import java.nio.charset.StandardCharsets;
 
 public class Writer {
 
-	public static void writePair(String key, String value, DataOutputStream out) throws IOException {
-		byte[] bkey = key.getBytes(StandardCharsets.UTF_8);
-		out.writeInt(bkey.length);
-		byte[] bvalue = value.getBytes(StandardCharsets.UTF_8);
-		out.writeInt(bvalue.length);
-		out.write(bkey);
-		out.write(bvalue);
-	}
+    public static void writePair(String key, String value, DataOutputStream out) throws IOException {
+        byte[] bkey = key.getBytes(StandardCharsets.UTF_8);
+        out.writeInt(bkey.length);
+        byte[] bvalue = value.getBytes(StandardCharsets.UTF_8);
+        out.writeInt(bvalue.length);
+        out.write(bkey);
+        out.write(bvalue);
+    }
 
 }

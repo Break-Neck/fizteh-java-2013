@@ -17,11 +17,9 @@ public class ExitDatabaseCommand extends DatabaseCommand {
     public void execute(String[] args) {
         try {
             state.databaseAdapter.saveChangesOnExit();
-        }
-        catch (WrappedIOException e) {
+        } catch (WrappedIOException e) {
             state.printErrorMessage(e.getMessage());
-        }
-        finally {
+        } finally {
             throw new TimeToFinishException();
         }
     }

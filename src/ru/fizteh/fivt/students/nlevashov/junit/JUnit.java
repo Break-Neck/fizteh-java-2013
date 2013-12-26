@@ -707,13 +707,3 @@ public class JUnit {
         s.getStringAt(1);
     }
 }
-
-
-/*
-stack trace - ХЗ
-//checkstyle
-tests
-//tempfolder
-//vector
-
-*/

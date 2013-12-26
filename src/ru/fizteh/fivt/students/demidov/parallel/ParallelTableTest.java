@@ -13,6 +13,7 @@ import org.junit.Test;
 import ru.fizteh.fivt.students.demidov.storeable.StoreableImplementation;
 import ru.fizteh.fivt.students.demidov.storeable.StoreableTable;
 import ru.fizteh.fivt.students.demidov.storeable.StoreableTableProvider;
+import ru.fizteh.fivt.students.demidov.storeable.StoreableTableProviderFactory;
 
 public class ParallelTableTest {
 	private volatile StoreableTable currentTable;
@@ -35,7 +36,8 @@ public class ParallelTableTest {
 			if (!tempDirectory.mkdir()) {
 				return;
 			}
-			currentProvider = new StoreableTableProvider(tempDirectory.getPath());
+			StoreableTableProviderFactory factory = new StoreableTableProviderFactory();
+            currentProvider = new StoreableTableProvider(factory, tempDirectory.getPath());
 		} catch (IllegalArgumentException catchedException) {
 			Assert.fail("unable to create StoreableTableProvider example");
 		}

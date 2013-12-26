@@ -22,8 +22,7 @@ public class MvCommand extends AbstractCommand<ShellState> {
             Path fromPath = Paths.get(args[0]);
             Path toPath = Paths.get(args[1]);
             state.getFileManager().moveFile(fromPath, toPath);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new CommandExecutionException(e.getMessage());
         }
     }

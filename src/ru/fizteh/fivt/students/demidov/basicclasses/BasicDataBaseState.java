@@ -32,10 +32,10 @@ public abstract class BasicDataBaseState<ElementType, TableType extends BasicTab
 		}
 	}
 	
-	abstract public void use(String tableName) throws IOException;	
-	abstract public void create(String name) throws IOException;
-	abstract public void create(String name, List<Class<?>> columnTypes) throws IOException;	
-	abstract public String get(String key) throws IOException;
-	abstract public String put(String key, String value) throws IOException;	
-	abstract public String remove(String key) throws IOException;
+	public abstract void use(String tableName) throws IOException;	
+	public abstract void create(String name) throws IOException;
+	public abstract void create(String name, List<Class<?>> columnTypes) throws IOException;	
+	public abstract String get(String key) throws IOException;
+	public abstract String put(String key, String value) throws IOException;	
+	public abstract String remove(String key) throws IOException;
 }

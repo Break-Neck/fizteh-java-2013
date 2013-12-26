@@ -15,73 +15,72 @@ import ru.fizteh.fivt.students.elenav.utils.Writer;
 
 public class FileMapState extends FilesystemState {
 
-	public HashMap<String, String> map = new HashMap<>();
-	
-	public FileMapState(String n, File wd, PrintStream s) {
-		super(n, wd, s);
-	}
-	
-	public void writeFile(File out) throws IOException {
-		DataOutputStream s = new DataOutputStream(new FileOutputStream(out));
-		Set<Entry<String, String>> set = map.entrySet();
-		for (Entry<String, String> element : set) {
-			Writer.writePair(element.getKey(), element.getValue(), s);
-		}
-		s.close();
-	}
+    public HashMap<String, String> map = new HashMap<>();
+    
+    public FileMapState(String n, File wd, PrintStream s) {
+        super(n, wd, s);
+    }
+    
+    public void writeFile(File out) throws IOException {
+        DataOutputStream s = new DataOutputStream(new FileOutputStream(out));
+        Set<Entry<String, String>> set = map.entrySet();
+        for (Entry<String, String> element : set) {
+            Writer.writePair(element.getKey(), element.getValue(), s);
+        }
+        s.close();
+    }
 
-	public String get(String key) {
-		return map.get(key);
-	}
-	
-	@Override
-	public String getValue(String key) {
-		return get(key);
-	}
+    public String get(String key) {
+        return map.get(key);
+    }
+    
+    @Override
+    public String getValue(String key) {
+        return get(key);
+    }
 
-	@Override
-	public String put(String key, String value) {
-		return map.put(key, value);
-	}
+    @Override
+    public String put(String key, String value) {
+        return map.put(key, value);
+    }
 
-	public String remove(String key) {
-		return map.remove(key);
-	}
-	
-	@Override
-	public String removeKey(String key) {
-		return remove(key);
-	}
+    public String remove(String key) {
+        return map.remove(key);
+    }
+    
+    @Override
+    public String removeKey(String key) {
+        return remove(key);
+    }
 
-	@Override
-	public int commit() {
-		throw new UnsupportedOperationException("Sorry, your shell not pass");
-	}
+    @Override
+    public int commit() {
+        throw new UnsupportedOperationException("Command isn't supported in this implementation");
+    }
 
-	@Override
-	public int rollback() {
-		throw new UnsupportedOperationException("Sorry, your shell not pass");
-	}
+    @Override
+    public int rollback() {
+        throw new UnsupportedOperationException("Command isn't supported in this implementation");
+    }
 
-	@Override
-	public int size() {
-		throw new UnsupportedOperationException("Sorry, your shell not pass");
-	}
+    @Override
+    public int size() {
+        throw new UnsupportedOperationException("Command isn't supported in this implementation");
+    }
 
-	@Override
-	public int getNumberOfChanges() {
-		throw new UnsupportedOperationException("Sorry, your shell not pass");
-	}
+    @Override
+    public int getNumberOfChanges() {
+        throw new UnsupportedOperationException("Command isn't supported in this implementation");
+    }
 
-	@Override
-	public void read() {
-		throw new UnsupportedOperationException("Sorry, your shell not pass");
-	}
+    @Override
+    public void read() {
+        throw new UnsupportedOperationException("Command isn't supported in this implementation");
+    }
 
-	@Override
-	public Storeable put(String string, Storeable string2) {
-		throw new UnsupportedOperationException("Sorry, your shell not pass");
-	}
-                                                                                                                                                                 
-
+    @Override
+    public Storeable put(String string, Storeable string2) {
+        throw new UnsupportedOperationException("Command isn't supported in this implementation");
+    }                                                                  
+    
 }

@@ -108,16 +108,18 @@ public class FileMap<ElementType> {
 					positionOfValues = nextOffset;
 				} else {
 					checkKey(previousKey);
-					currentTable.put(previousKey, table.deserialize(readString(dataBaseFile, previousOffset, nextOffset)));
+					currentTable.put(previousKey, 
+					        table.deserialize(readString(dataBaseFile, previousOffset, nextOffset)));
 				}
 			
 				previousOffset = nextOffset;		
 				dataBaseFile.seek(keyPosition);
-				readPosition = (int)dataBaseFile.getFilePointer();
+				readPosition = (int) dataBaseFile.getFilePointer();
 			} 
 	
 			checkKey(readKey);
-			currentTable.put(readKey, table.deserialize(readString(dataBaseFile, previousOffset, (int)dataBaseFile.length())));
+			currentTable.put(readKey, 
+			        table.deserialize(readString(dataBaseFile, previousOffset, (int)dataBaseFile.length())));
 		
 			dataBaseFile.close();
 		}
@@ -142,7 +144,7 @@ public class FileMap<ElementType> {
 				writenPosition = dataBaseFile.getFilePointer();
 				dataBaseFile.seek(offset);
 				dataBaseFile.write(table.serialize(currentPair.getValue()).getBytes("UTF-8"));
-				offset = (int)dataBaseFile.getFilePointer();
+				offset = (int) dataBaseFile.getFilePointer();
 			}
 		
 			if (dataBaseFile.length() == 0) {

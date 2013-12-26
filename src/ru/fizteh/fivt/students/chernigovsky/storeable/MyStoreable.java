@@ -17,7 +17,7 @@ import java.util.ArrayList;
  * Для установки объекта а колонку воспользуйтесь {@link #setColumnAt(int, Object)} .
  */
 public class MyStoreable implements Storeable {
-    private ArrayList<Object> columns;
+    private ArrayList<Object> values;
     private Table table;
 
     public MyStoreable(Table newTable) {
@@ -25,9 +25,9 @@ public class MyStoreable implements Storeable {
             throw new IllegalArgumentException("table is null");
         }
         table = newTable;
-        columns = new ArrayList<>();
+        values = new ArrayList<>();
         for (int i = 0; i < table.getColumnsCount(); ++i) {
-            columns.add(null);
+            values.add(null);
         }
 
     }
@@ -42,13 +42,13 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public void setColumnAt(int columnIndex, Object value) throws ColumnFormatException, IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
         if (value != null && !table.getColumnType(columnIndex).equals(value.getClass())) {
             throw new ColumnFormatException();
         }
-        columns.set(columnIndex, value);
+        values.set(columnIndex, value);
     }
 
     /**
@@ -58,10 +58,10 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public Object getColumnAt(int columnIndex) throws IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
-        return columns.get(columnIndex);
+        return values.get(columnIndex);
     }
 
     /**
@@ -72,13 +72,13 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public Integer getIntAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
         if (!table.getColumnType(columnIndex).equals(Integer.class)) {
             throw new ColumnFormatException();
         }
-        return (Integer) columns.get(columnIndex);
+        return (Integer) values.get(columnIndex);
     }
 
     /**
@@ -89,13 +89,13 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public Long getLongAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
         if (!table.getColumnType(columnIndex).equals(Long.class)) {
             throw new ColumnFormatException();
         }
-        return (Long) columns.get(columnIndex);
+        return (Long) values.get(columnIndex);
     }
 
     /**
@@ -106,13 +106,13 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public Byte getByteAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
         if (!table.getColumnType(columnIndex).equals(Byte.class)) {
             throw new ColumnFormatException();
         }
-        return (Byte) columns.get(columnIndex);
+        return (Byte) values.get(columnIndex);
     }
 
     /**
@@ -123,13 +123,13 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public Float getFloatAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
         if (!table.getColumnType(columnIndex).equals(Float.class)) {
             throw new ColumnFormatException();
         }
-        return (Float) columns.get(columnIndex);
+        return (Float) values.get(columnIndex);
     }
 
     /**
@@ -140,13 +140,13 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public Double getDoubleAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
         if (!table.getColumnType(columnIndex).equals(Double.class)) {
             throw new ColumnFormatException();
         }
-        return (Double) columns.get(columnIndex);
+        return (Double) values.get(columnIndex);
     }
 
     /**
@@ -157,13 +157,13 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public Boolean getBooleanAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
         if (!table.getColumnType(columnIndex).equals(Boolean.class)) {
             throw new ColumnFormatException();
         }
-        return (Boolean) columns.get(columnIndex);
+        return (Boolean) values.get(columnIndex);
     }
 
     /**
@@ -174,13 +174,34 @@ public class MyStoreable implements Storeable {
      * @throws IndexOutOfBoundsException - Неверный индекс колонки.
      */
     public String getStringAt(int columnIndex) throws ColumnFormatException, IndexOutOfBoundsException {
-        if (columnIndex < 0 || columnIndex >= columns.size()) {
+        if (columnIndex < 0 || columnIndex >= values.size()) {
             throw new IndexOutOfBoundsException();
         }
         if (!table.getColumnType(columnIndex).equals(String.class)) {
             throw new ColumnFormatException();
         }
-        return (String) columns.get(columnIndex);
+        return (String) values.get(columnIndex);
     }
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(getClass().getSimpleName());
+        builder.append("[");
+
+        for (Object value : values) {
+            if (value != null) {
+                builder.append(value);
+            }
+
+            builder.append(",");
+        }
+
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append("]");
+
+        return builder.toString();
+    }
+
 }
 

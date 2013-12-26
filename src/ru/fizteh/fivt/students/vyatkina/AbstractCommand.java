@@ -1,19 +1,19 @@
 package ru.fizteh.fivt.students.vyatkina;
 
-abstract public class AbstractCommand<State> implements Command {
+public abstract class AbstractCommand<State> implements Command {
 
     protected String name;
     protected int argsCount;
     public State state;
 
-    public static String WRONG_NUMBER_OF_ARGUMENTS = "Wrong number of arguments";
+    public static final String WRONG_NUMBER_OF_ARGUMENTS = "Wrong number of arguments";
 
     public AbstractCommand(State state) {
         this.state = state;
     }
 
     @Override
-    abstract public void execute(String[] args) throws CommandExecutionException;
+    public abstract void execute(String[] args) throws CommandExecutionException;
 
     @Override
     public String getName() {
@@ -31,8 +31,6 @@ abstract public class AbstractCommand<State> implements Command {
             return new String[0];
         }
         String[] args = signature.split("\\s+");
-        for (String arg : args) {
-        }
         if (args.length != getArgumentCount()) {
             throw new IllegalArgumentException(WRONG_NUMBER_OF_ARGUMENTS);
         }

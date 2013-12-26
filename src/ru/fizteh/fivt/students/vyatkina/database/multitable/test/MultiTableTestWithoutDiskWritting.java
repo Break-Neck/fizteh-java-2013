@@ -14,11 +14,9 @@ import ru.fizteh.fivt.students.vyatkina.database.superior.TableChecker;
 public class MultiTableTestWithoutDiskWritting {
 
 
-    private final String SAMPLE_KEY1 = "house";
-    private final String SAMPLE_VALUE1 = "ThisIsTheHouseThatJackBuilt";
-    private final String NOT_EXISTING_KEY = "VeryLonelyKey";
-
-
+    private static final String SAMPLE_KEY1 = "house";
+    private static final String SAMPLE_VALUE1 = "ThisIsTheHouseThatJackBuilt";
+    private static final String NOT_EXISTING_KEY = "VeryLonelyKey";
     private final String name = "MyLittleTestTable";
     MultiTable table;
     private static MultiTableProvider tableProvider;
@@ -119,7 +117,8 @@ public class MultiTableTestWithoutDiskWritting {
 
     @Test
     public void removeKeyThatDoesNotExistShouldReturnNull() {
-        Assert.assertEquals("Remove table that does not exist should return null", null, table.remove(NOT_EXISTING_KEY));
+        Assert.assertEquals("Remove table that does not exist should return null", null,
+                table.remove(NOT_EXISTING_KEY));
     }
 
     @Test

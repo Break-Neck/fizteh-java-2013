@@ -15,13 +15,13 @@ import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 
-public class NewTable implements Table {
+public class NewTable implements Table, AutoCloseable {
     private final String name;
     private HashMap<String, Storeable> dataMap = new HashMap<>();
     private final NewTableProvider provider;
     private final ArrayList<Class<?>> types;
     private ReadWriteLock controller = new ReentrantReadWriteLock(true);
-
+    private CloseState state = new CloseState();
     private ThreadLocal<HashMap<String, Storeable>> localMap = new ThreadLocal<HashMap<String, Storeable>>() {
         @Override
         protected HashMap<String, Storeable> initialValue() {
@@ -94,6 +94,7 @@ public class NewTable implements Table {
 
     @Override
     public String getName() {
+        state.checkClosed();
         return name;
     }
 
@@ -110,6 +111,7 @@ public class NewTable implements Table {
 
     @Override
     public int commit() throws IOException {
+        state.checkClosed();
         int count = 0;
         controller.writeLock().lock();
         try {
@@ -139,6 +141,7 @@ public class NewTable implements Table {
 
     @Override
     public Storeable put(String key, Storeable value) throws ColumnFormatException {
+        state.checkClosed();
         if (checkName(key)) {
             throw new IllegalArgumentException("wrong type (incorrect key)");
         }
@@ -200,6 +203,7 @@ public class NewTable implements Table {
 
     @Override
     public Storeable remove(String key) {
+        state.checkClosed();
         checkKey(key);
         Storeable oldVal = null;
         if (localMap.get().containsKey(key)) {
@@ -220,6 +224,7 @@ public class NewTable implements Table {
 
     @Override
     public Storeable get(String key) {
+        state.checkClosed();
         checkKey(key);
         if (!localMap.get().containsKey(key)) {
             controller.readLock().lock();
@@ -235,6 +240,7 @@ public class NewTable implements Table {
 
     @Override
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
+        state.checkClosed();
         checkIndex(columnIndex);
         return types.get(columnIndex);
     }
@@ -247,11 +253,13 @@ public class NewTable implements Table {
 
     @Override
     public int getColumnsCount() {
+        state.checkClosed();
         return types.size();
     }
 
     @Override
     public int rollback() {
+        state.checkClosed();
         int count = unsavedChanges();
         localMap.get().clear();
         return count;
@@ -259,6 +267,7 @@ public class NewTable implements Table {
 
     @Override
     public int size() {
+        state.checkClosed();
         int count = 0;
         controller.readLock().lock();
         try {
@@ -302,6 +311,23 @@ public class NewTable implements Table {
 
     public NewTableProvider getTableProvider() {
         return provider;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (!state.isClose()) {
+            rollback();
+            state.setClose();
+            provider.setClose(name);
+        }
+
+    }
+
+    @Override
+    public String toString() {
+        state.checkClosed();
+        File file = new File(provider.getCurrentDirectory(), name);
+        return this.getClass().getSimpleName() + "[" + file.getAbsolutePath() + "]";
     }
 
 }

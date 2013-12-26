@@ -14,12 +14,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class StoreableTableProvider extends AbstractTableProvider<ExtendedStoreableTable> implements ExtendedStoreableTableProvider {
+public class StoreableTableProvider extends AbstractTableProvider<ExtendedStoreableTable> implements ExtendedStoreableTableProvider, AutoCloseable {
+    private boolean isClosed;
+
     public StoreableTableProvider(File newDbDirectory, boolean flag) {
         super(newDbDirectory, flag);
+        isClosed = false;
         if (newDbDirectory != null) {
             for (String string : newDbDirectory.list()) {
-                ExtendedStoreableTable newTable = new StoreableTable(string, flag, null);
+                ExtendedStoreableTable newTable = new StoreableTable(string, flag, null, this);
                 tableHashMap.put(string, newTable);
                 try {
                     StoreableUtils.readTable(newTable, this);
@@ -38,6 +41,9 @@ public class StoreableTableProvider extends AbstractTableProvider<ExtendedStorea
      * @throws IllegalArgumentException Если название таблицы null или имеет недопустимое значение.
      */
     public ExtendedStoreableTable createTable(String name, List<Class<?>> columnTypes) throws IOException {
+        if (isClosed) {
+            throw new IllegalStateException("table provider is closed");
+        }
         if (name == null) {
             throw new IllegalArgumentException("name is null");
         }
@@ -45,8 +51,13 @@ public class StoreableTableProvider extends AbstractTableProvider<ExtendedStorea
             throw new IllegalArgumentException("wrong table name");
         }
 
-        if (tableHashMap.get(name) != null) {
-            return null;
+        try {
+            tableProviderLock.readLock().lock();
+            if (tableHashMap.get(name) != null) {
+                return null;
+            }
+        } finally {
+            tableProviderLock.readLock().unlock();
         }
 
         if (columnTypes == null) {
@@ -58,50 +69,55 @@ public class StoreableTableProvider extends AbstractTableProvider<ExtendedStorea
         }
 
 
-
-        File tableDirectory = new File(getDbDirectory(), name);
-        if (!tableDirectory.mkdir()) {
-            throw new IllegalArgumentException("directory making error");
-        }
-
-        File signature = new File(tableDirectory, "signature.tsv");
-        if (!signature.createNewFile()) {
-            throw new IllegalArgumentException("signature making error");
-        }
-
-        FileOutputStream fileOutputStream = new FileOutputStream(signature);
-        fileOutputStream.getChannel().truncate(0); // Clear file
-        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-        DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (Class<?> type : columnTypes) {
-            if (type == null) {
-                throw new IllegalArgumentException("wrong column type");
-            }
-            TypeEnum typesEnum = TypeEnum.getByClass(type);
-            if (typesEnum == null) {
-                throw new IllegalArgumentException("wrong column type");
-            }
-            stringBuilder.append(TypeEnum.getByClass(type).getSignature());
-            stringBuilder.append(' ');
-        }
-
-        String typeString = stringBuilder.toString();
-
-        typeString = typeString.substring(0, typeString.length() - 1);
-
         try {
-            dataOutputStream.write(typeString.getBytes("UTF-8"));
+            tableProviderLock.writeLock().lock();
+            File tableDirectory = new File(getDbDirectory(), name);
+            if (!tableDirectory.mkdir()) {
+                throw new IllegalArgumentException("directory making error");
+            }
+
+            File signature = new File(tableDirectory, "signature.tsv");
+            if (!signature.createNewFile()) {
+                throw new IllegalArgumentException("signature making error");
+            }
+
+            FileOutputStream fileOutputStream = new FileOutputStream(signature);
+            fileOutputStream.getChannel().truncate(0); // Clear file
+            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+            DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            for (Class<?> type : columnTypes) {
+                if (type == null) {
+                    throw new IllegalArgumentException("wrong column type");
+                }
+                TypeEnum typesEnum = TypeEnum.getByClass(type);
+                if (typesEnum == null) {
+                    throw new IllegalArgumentException("wrong column type");
+                }
+                stringBuilder.append(TypeEnum.getByClass(type).getSignature());
+                stringBuilder.append(' ');
+            }
+
+            String typeString = stringBuilder.toString();
+
+            typeString = typeString.substring(0, typeString.length() - 1);
+
+            try {
+                dataOutputStream.write(typeString.getBytes("UTF-8"));
+            } finally {
+                dataOutputStream.close();
+            }
+
+            ExtendedStoreableTable newTable = new StoreableTable(name, autoCommit, columnTypes, this);
+
+            tableHashMap.put(name, newTable);
+
+            return newTable;
         } finally {
-            dataOutputStream.close();
+            tableProviderLock.writeLock().unlock();
         }
-
-        ExtendedStoreableTable newTable = new StoreableTable(name, autoCommit, columnTypes);
-
-        tableHashMap.put(name, newTable);
-        return newTable;
     }
 
     /**
@@ -114,6 +130,10 @@ public class StoreableTableProvider extends AbstractTableProvider<ExtendedStorea
      * @throws java.text.ParseException - при каких-либо несоответстиях в прочитанных данных.
      */
     public MyStoreable deserialize(Table table, String value) throws ParseException {
+        if (isClosed) {
+            throw new IllegalStateException("table provider is closed");
+        }
+
         if (table == null) {
             throw new IllegalArgumentException();
         }
@@ -173,6 +193,10 @@ public class StoreableTableProvider extends AbstractTableProvider<ExtendedStorea
      * @throws ru.fizteh.fivt.storage.structured.ColumnFormatException При несоответствии типа в {@link ru.fizteh.fivt.storage.structured.Storeable} и типа колонки в таблице.
      */
     public String serialize(Table table, Storeable value) throws ColumnFormatException {
+        if (isClosed) {
+            throw new IllegalStateException("table provider is closed");
+        }
+
         Object[] serializedValue = new Object[table.getColumnsCount()];
 
         StoreableUtils.checkValue(table, value);
@@ -191,6 +215,10 @@ public class StoreableTableProvider extends AbstractTableProvider<ExtendedStorea
      * @return Пустой {@link ru.fizteh.fivt.storage.structured.Storeable}, нацеленный на использование с этой таблицей.
      */
     public MyStoreable createFor(Table table) {
+        if (isClosed) {
+            throw new IllegalStateException("table provider is closed");
+        }
+
         if (table == null) {
             throw new IllegalArgumentException("null table");
         }
@@ -207,6 +235,10 @@ public class StoreableTableProvider extends AbstractTableProvider<ExtendedStorea
      * @throws IndexOutOfBoundsException При несоответствии числа переданных значений и числа колонок.
      */
     public MyStoreable createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException {
+        if (isClosed) {
+            throw new IllegalStateException("table provider is closed");
+        }
+
         if (table == null || values == null || values.isEmpty()) {
             throw new IllegalArgumentException("null value or table");
         }
@@ -222,4 +254,62 @@ public class StoreableTableProvider extends AbstractTableProvider<ExtendedStorea
 
         return storeable;
     }
+
+    public String toString() {
+        if (isClosed) {
+            throw new IllegalStateException("table provider is closed");
+        }
+
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(getClass().getSimpleName());
+        builder.append("[");
+        builder.append(getDbDirectory().getAbsolutePath());
+        builder.append("]");
+
+        return builder.toString();
+    }
+
+    public ExtendedStoreableTable getTable(String name) {
+        if (isClosed) {
+            throw new IllegalStateException("table provider is closed");
+        }
+
+        StoreableTable table = (StoreableTable) super.getTable(name);
+        if (table == null) {
+            return null;
+        }
+        if (table.isClosed()) {
+            StoreableTable newTable = new StoreableTable(table);
+            tableHashMap.put(newTable.getName(), newTable);
+            return newTable;
+        } else {
+            return table;
+        }
+    }
+
+    public void removeTable(String name) {
+        if (isClosed) {
+            throw new IllegalStateException("table provider is closed");
+        }
+
+        super.removeTable(name);
+    }
+
+
+
+    public synchronized void close() {
+        if (isClosed) {
+            return;
+        }
+        for (Map.Entry<String, ExtendedStoreableTable> entry : tableHashMap.entrySet()) {
+            try {
+                entry.getValue().close();
+            } catch (Exception ex) {
+                throw new RuntimeException("close error");
+            }
+        }
+        isClosed = true;
+    }
+
 }

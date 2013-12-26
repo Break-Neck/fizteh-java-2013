@@ -4,7 +4,16 @@ import ru.fizteh.fivt.students.vyatkina.Command;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseAdapter;
 import ru.fizteh.fivt.students.vyatkina.database.DatabaseState;
 import ru.fizteh.fivt.students.vyatkina.database.StringDatabaseAdapter;
-import ru.fizteh.fivt.students.vyatkina.database.commands.*;
+import ru.fizteh.fivt.students.vyatkina.database.commands.CommitCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.CreateCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.DropCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.ExitDatabaseCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.GetCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.PutCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.RemoveCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.RollbackCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.SizeCommand;
+import ru.fizteh.fivt.students.vyatkina.database.commands.UseCommand;
 import ru.fizteh.fivt.students.vyatkina.database.superior.TableProviderConstants;
 import ru.fizteh.fivt.students.vyatkina.shell.Shell;
 
@@ -36,8 +45,7 @@ public class MultiTableMain {
         MultiTableProvider tableProvider = null;
         try {
             tableProvider = MultiTableProvider.class.cast(multiTableProviderFactory.create(location));
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             System.err.print(e.getMessage());
             System.exit(-1);
         }
