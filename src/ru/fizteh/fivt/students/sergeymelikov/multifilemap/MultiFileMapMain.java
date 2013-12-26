@@ -9,7 +9,7 @@ public class MultiFileMapMain {
         MultiFileMapState st = null;
         try {
             st = new MultiFileMapState(System.in, System.out);
-        } catch (IllegalArgumentException e) {
+        } catch (IOException e) {
             System.err.println(e.getMessage());
             System.exit(1);
         }
