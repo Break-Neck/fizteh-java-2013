@@ -53,4 +53,8 @@ public abstract class BaseShellCommand implements ShellCommand {
     public String getArg(final int index) {
         return args.getArg(index);
     }
+
+    public String getSpacedArg(final int index) {
+        return args.getSpacedArg(index);
+    }
 }

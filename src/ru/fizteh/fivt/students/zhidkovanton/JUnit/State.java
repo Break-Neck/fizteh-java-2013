@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+
 
 public class State {
     public Map<String, String> state;
@@ -36,12 +39,30 @@ public class State {
             RandomAccessFile in = new RandomAccessFile(input, "rw");
 
             in.getChannel().truncate(0);
-            for (Map.Entry<String, String> curPair : state.entrySet()) {
+            int size = 0;
 
-                in.writeInt(curPair.getKey().getBytes("UTF-8").length);
-                in.writeInt(curPair.getValue().getBytes("UTF-8").length);
-                in.write(curPair.getKey().getBytes("UTF-8"));
-                in.write(curPair.getValue().getBytes("UTF-8"));
+            ArrayList<String> keys = new ArrayList<String>();
+
+            for (String key : state.keySet()) {
+                 keys.add(key);
+            }
+
+            for (int i = 0; i < keys.size(); ++i) {
+                size += keys.get(i).getBytes(StandardCharsets.UTF_8).length + 5;
+            }
+
+            for (int i = 0; i < keys.size(); ++i) {
+
+                in.write(keys.get(i).getBytes("UTF-8"));
+                in.write('\0');
+                in.writeInt(size);
+                size += keys.get(i).getBytes(StandardCharsets.UTF_8).length;
+
+            }
+
+            for (int i = 0; i < keys.size(); ++i) {
+
+                in.write(state.get(keys.get(i)).getBytes("UTF-8"));
 
             }
             in.close();
@@ -91,29 +112,42 @@ public class State {
             if (input.exists()) {
                 RandomAccessFile in = new RandomAccessFile(input, "rw");
 
-                while (in.getFilePointer() < in.length() - 1) {
-                    int keyLength = in.readInt();
-                    int valueLength = in.readInt();
-                    if ((keyLength <= 0) || (valueLength <= 0)) {
-                        in.close();
-                        throw new IllegalArgumentException("wrong format");
+                ArrayList<Integer> offsets = new ArrayList<Integer>();
+                ArrayList<String> keys = new ArrayList<String>();
+
+                do {
+                    ArrayList<Byte> myKey = new ArrayList<Byte>();
+                    byte b = in.readByte();
+
+                    while (b != 0) {
+                        myKey.add(b);
+                        b = in.readByte();
+                    }
+                    if (myKey.size() == 0) {
+                        throw new FileAccessException("Empty key");
                     }
 
-                    byte[] key;
-                    byte[] value;
-
-                    try {
-                        key = new byte[keyLength];
-                        value = new byte[valueLength];
-                    } catch (OutOfMemoryError e) {
-                        in.close();
-                        throw new IllegalArgumentException("too large key or value");
+                    byte[] keyInBytes = new byte[myKey.size()];
+                    for (int i = 0; i < keyInBytes.length; ++i) {
+                        keyInBytes[i] = myKey.get(i);
                     }
-                    in.read(key);
-                    in.read(value);
-                    String keyString = new String(key, "UTF-8");
-                    String valueString = new String(value, "UTF-8");
-                    state.put(keyString, valueString);
+
+                    String key = new String(keyInBytes, "UTF-8");
+
+                    keys.add(key);
+
+                    int offset = in.readInt();
+                    if (offset < 0) {
+                        throw new FileAccessException("Bad offset");
+                    }
+                    offsets.add(offset);
+                } while (in.getFilePointer() != offsets.get(0));
+
+
+                for (int i = 0; i < keys.size(); ++i) {
+                    byte[] bytes = new byte[offsets.get(i + 1) - offsets.get(i)];
+                    in.read(bytes);
+                    state.put(keys.get(i), new String(bytes, "UTF-8"));
                 }
                 in.close();
             }

@@ -25,6 +25,21 @@ public class Command {
         return argList[index];
     }
 
+
+    public String getSpacedArg(final int index) {
+        int currentIndex = 0;
+
+        for (int i = 0; i < index; ++i) {
+            currentIndex = initialCommand.indexOf(argList[i], currentIndex) + argList[i].length();
+        }
+
+        if (currentIndex + 1 > initialCommand.length()) {
+            return "";
+        } else {
+            return initialCommand.substring(currentIndex + 1, initialCommand.length());
+        }
+    }
+
     public int length() {
         return argList.length;
     }
