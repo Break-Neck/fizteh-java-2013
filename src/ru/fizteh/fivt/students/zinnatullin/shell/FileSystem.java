@@ -75,15 +75,13 @@ public class FileSystem {
         if (source.isDirectory()) {
             try {
                 if (!dest.mkdir()) {
-                    System.out.println(
-							command + ": \'" + dest.getAbsolutePath() + "\': couldn't create directory"
-					);
+					String error = command + ": \'" + dest.getAbsolutePath() + "\': couldn't create directory";
+                    System.out.println(error);
                     return false;
                 }
             } catch (SecurityException e) {
-                System.out.println(
-						command + ": \'" + dest.getAbsolutePath() + "\': haven't rights to create directory"
-				);
+				String error = command + ": \'" + dest.getAbsolutePath() + "\': haven't rights to create directory";
+                System.out.println(error);
                 return false;
             }
             File[] files = source.listFiles();
