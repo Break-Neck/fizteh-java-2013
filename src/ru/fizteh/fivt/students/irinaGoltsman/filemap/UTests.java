@@ -79,13 +79,12 @@ public class UTests {
 
     @Test
     public void consoleApp() throws IOException {
-        String[] args = new String[6];
+        String[] args = new String[5];
         args[0] = "create check (String int long boolean float double byte String);";
         args[1] = "use check;";
         args[2] = "put keyX [\"keyX\",1024,1025,true,1024.1,1024.1,null,\"05bf9c3c5d9031e21babab85fd3bbb3cзначение\"];";
         args[3] = "put keyZ [\"keyZ\",40,41,true,40.1,40.1,null,\"8a14e407cadf8d9b8863ba0f93ee7b50значение\"];";
         args[4] = "commit;";
-        args[5] = "exit";
 
         try {
             tableProvider.removeTable("check");
@@ -127,7 +126,6 @@ public class UTests {
         args[2] = "get keyZ;";
         args[3] = "get key;";
         args[4] = "get key2;";
-        args[5] = "exit;";
 
         output.delete();
         output.createNewFile();
@@ -168,9 +166,8 @@ public class UTests {
 
         output.delete();
         output.createNewFile();
-        String[] args2 = new String[2];
+        String[] args2 = new String[1];
         args2[0] = "use check;";
-        args2[1] = "exit;";
         try (PrintStream st = new PrintStream(output)) {
             System.setOut(st);
             System.setErr(st);
@@ -185,5 +182,10 @@ public class UTests {
             }
         }
         dataBase.closeDB();
+        try {
+            tableProvider.removeTable("check");
+        } catch (IllegalStateException e) {
+            //ignore
+        }
     }
 }

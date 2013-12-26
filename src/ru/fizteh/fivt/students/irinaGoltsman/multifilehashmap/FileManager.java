@@ -565,12 +565,12 @@ public class FileManager {
             return null;
         }
         File dat = new File(dir, Integer.toString(indexDat) + ".dat");
+        if (!dat.exists()) {
+            return null;
+        }
         try (RandomAccessFile datFile = new RandomAccessFile(dat, "rw")) {
             long length;
             length = datFile.length();
-            if (length == 0) {
-                return null;
-            }
             datFile.seek(0);
             while (length > 0) {
                 LineOfDB line = readLineOfDatFile(datFile, length, indexDir, indexDat);
