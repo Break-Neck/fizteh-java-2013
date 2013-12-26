@@ -62,10 +62,10 @@ public class TransactionPool {
             }
             transactionDiff.put(lastId, new HashMap<String, Storeable>());
             transactionTableName.put(lastId, tableName);
+            return  lastId;
         } finally {
             writeLock.unlock();
         }
-        return  lastId;
     }
 
     public void deleteTransaction(int transactionId) {
