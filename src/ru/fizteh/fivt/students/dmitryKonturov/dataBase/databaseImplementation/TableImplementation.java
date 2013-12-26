@@ -37,6 +37,13 @@ public class TableImplementation implements Table {
     private final Lock writeLock = readWriteLock.writeLock();
     private final int localTransactionId; // for library version
 
+    private ThreadLocal<Map<String, Storeable>> currentChangesMapDiff = new ThreadLocal<Map<String, Storeable>>() {
+        @Override
+        protected Map<String, Storeable> initialValue() {
+            return new HashMap<>();
+        }
+    };
+
     /**
      * loads database from its folder
      */
@@ -111,9 +118,17 @@ public class TableImplementation implements Table {
         return result;
     }
 
-    public int getUnsavedChangesCount() { //need external sync
+    private Map<String, Storeable> getCurrentChanges(int transactionId) {
+        if (transactionId < 0) {
+            return currentChangesMapDiff.get();
+        } else {
+            return tableProvider.getTransactionPool().getDiffTable(transactionId);
+        }
+    }
+
+    public int getUnsavedChangesCount(int transactionId) { //need external sync
         int changesNum = 0;
-        Map<String, Storeable> currentChangesMap = tableProvider.getTransactionPool().getDiffTable(localTransactionId);
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
         for (Map.Entry<String, Storeable> entry : currentChangesMap.entrySet()) {
             String key = entry.getKey();
             Storeable value = entry.getValue();
@@ -153,6 +168,10 @@ public class TableImplementation implements Table {
         }
     }
 
+    public int getLocalTransactionId() {
+        return localTransactionId;
+    }
+
     @Override
     public String getName() {
         checkTableState();
@@ -169,7 +188,7 @@ public class TableImplementation implements Table {
             throw new IllegalArgumentException("Empty key");
         }
         checkTableState();
-        Map<String, Storeable> currentChangesMap = tableProvider.getTransactionPool().getDiffTable(transactionId);
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
         //todo synctonize currentChanges
         if (currentChangesMap.containsKey(key)) {
             return currentChangesMap.get(key);
@@ -198,9 +217,9 @@ public class TableImplementation implements Table {
         StoreableUtils.checkStoreableBelongsToTable(this, value);
 
         //todo sync changes
-        Map<String, Storeable> currentChangesMap = tableProvider.getTransactionPool().getDiffTable(transactionId);
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
-        Storeable toReturn = get(key);
+        Storeable toReturn = get(key, transactionId);
         currentChangesMap.put(key, value);
         return toReturn;
 
@@ -218,10 +237,10 @@ public class TableImplementation implements Table {
         checkTableState();
 
         //todo sync changes
-        Map<String, Storeable> currentChangesMap = tableProvider.getTransactionPool().getDiffTable(transactionId);
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
 
-        Storeable toReturn = get(key);
+        Storeable toReturn = get(key, transactionId);
         currentChangesMap.put(key, null);
         return toReturn;
     }
@@ -238,7 +257,7 @@ public class TableImplementation implements Table {
             int tableSize = savedMap.size();
 
             //todo sync changes
-            Map<String, Storeable> currentChangesMap = tableProvider.getTransactionPool().getDiffTable(transactionId);
+            Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
             for (Map.Entry<String, Storeable> entry : currentChangesMap.entrySet()) {
                 String key = entry.getKey();
@@ -272,7 +291,7 @@ public class TableImplementation implements Table {
             int changesNumber = 0;
             boolean[] changedTableHash = new boolean[16];
             //todo sync changes
-            Map<String, Storeable> currentChangesMap = tableProvider.getTransactionPool().getDiffTable(transactionId);
+            Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
             for (Map.Entry<String, Storeable> entry : currentChangesMap.entrySet()) {
                 String key = entry.getKey();
@@ -342,11 +361,11 @@ public class TableImplementation implements Table {
         checkTableState();
         int toReturn;
         //todo sync changes
-        Map<String, Storeable> currentChangesMap = tableProvider.getTransactionPool().getDiffTable(transactionId);
+        Map<String, Storeable> currentChangesMap = getCurrentChanges(transactionId);
 
         readLock.lock();
         try {
-            toReturn = getUnsavedChangesCount();
+            toReturn = getUnsavedChangesCount(transactionId);
         } finally {
             readLock.unlock();
         }

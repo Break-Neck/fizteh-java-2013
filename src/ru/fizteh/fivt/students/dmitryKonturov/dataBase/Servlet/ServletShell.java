@@ -33,7 +33,10 @@ public class ServletShell extends ShellEmulator {
         if (tidString.length() != len) {
             throw new NumberFormatException();
         }
-
-        return Integer.parseInt(tidString);
+        int toReturn = Integer.parseInt(tidString);
+        if (toReturn < 0) {
+            throw new NumberFormatException();
+        }
+        return toReturn;
     }
 }

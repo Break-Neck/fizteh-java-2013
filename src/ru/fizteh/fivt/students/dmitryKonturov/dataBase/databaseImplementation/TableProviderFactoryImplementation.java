@@ -18,6 +18,10 @@ public class TableProviderFactoryImplementation implements TableProviderFactory 
      */
     @Override
     public TableProvider create(String path) throws IOException {
+        return create(path, -1);
+    }
+
+    public TableProvider create(String path, int isLocal) throws IOException {
         if (path == null) {
             throw new IllegalArgumentException("Null path");
         }
@@ -26,7 +30,7 @@ public class TableProviderFactoryImplementation implements TableProviderFactory 
         }
         TableProvider toReturn;
         try {
-            toReturn = new TableProviderImplementation(Paths.get(path));
+            toReturn = new TableProviderImplementation(Paths.get(path), isLocal);
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
@@ -34,4 +38,6 @@ public class TableProviderFactoryImplementation implements TableProviderFactory 
         }
         return toReturn;
     }
+
+
 }

@@ -59,7 +59,7 @@ public class StoreableFileMapShell extends ShellEmulator {
             TableImplementation table = (TableImplementation) info.getProperty("CurrentTable");
             if (table != null) {
                 try {
-                    int unsavedChanges = table.getUnsavedChangesCount();
+                    int unsavedChanges = table.getUnsavedChangesCount(table.getLocalTransactionId());
                     if (unsavedChanges > 0) {
                         table.commit();
                     }
