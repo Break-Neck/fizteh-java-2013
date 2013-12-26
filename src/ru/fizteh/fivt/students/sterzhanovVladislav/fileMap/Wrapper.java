@@ -1,13 +1,15 @@
 package ru.fizteh.fivt.students.sterzhanovVladislav.fileMap;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 
+import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.network.TelnetServerContext;
 import ru.fizteh.fivt.students.sterzhanovVladislav.shell.Command;
 import ru.fizteh.fivt.students.sterzhanovVladislav.shell.ShellUtility;
 
 public class Wrapper {
-
-    private static HashMap<String, Command> cmdMap = new HashMap<String, Command>();
     
     public static void main(String[] args) {
         String dbDir = System.getProperty("fizteh.db.dir");
@@ -15,19 +17,40 @@ public class Wrapper {
             System.out.println("fizteh.db.dir not set");
             System.exit(-1);
         }
-        try (DatabaseContext context = new DatabaseContext(dbDir)) {
-            cmdMap.put("put", new FileMapCommands.Put().setContext(context));
-            cmdMap.put("get", new FileMapCommands.Get().setContext(context));
-            cmdMap.put("remove", new FileMapCommands.Remove().setContext(context));
-            cmdMap.put("create", new FileMapCommands.Create().setContext(context));
-            cmdMap.put("drop", new FileMapCommands.Drop().setContext(context));
-            cmdMap.put("use", new FileMapCommands.Use().setContext(context));
-            cmdMap.put("exit", new FileMapCommands.Exit().setContext(context));
-            cmdMap.put("commit", new FileMapCommands.Commit().setContext(context));
-            cmdMap.put("rollback", new FileMapCommands.Rollback().setContext(context));
-            cmdMap.put("size", new FileMapCommands.Size().setContext(context));
-
-            ShellUtility.execShell(args, cmdMap);
+        FileMapProvider provider = null;
+        try {
+            provider = new FileMapProvider(dbDir);
+        } catch (IllegalArgumentException | IOException e) {
+            System.out.println(e.getMessage());
+            System.exit(-1);
+        }
+        try (final DatabaseContext dbContext = new DatabaseContext(provider);
+                final TelnetServerContext serverContext = new TelnetServerContext(provider)) {
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        dbContext.close();
+                    } catch (Exception e) {
+                        // Ignore
+                    }
+                    try {
+                        serverContext.close();
+                    } catch (IllegalStateException | InterruptedException e) {
+                        // Ignore
+                    }
+                }
+            });
+            HashMap<String, Command> cmdMap = ShellUtility.initCmdMap(dbContext, serverContext);
+            boolean isInteractiveMode = true;
+            InputStream cmdStream = System.in;
+            PrintStream errorStream = System.err;
+            if (args.length > 0) {
+                cmdStream = ShellUtility.createStream(args);
+                errorStream = System.out;
+                isInteractiveMode = false;
+            }
+            ShellUtility.execShell(cmdMap, cmdStream, System.out, errorStream, isInteractiveMode, isInteractiveMode);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             System.exit(-1);

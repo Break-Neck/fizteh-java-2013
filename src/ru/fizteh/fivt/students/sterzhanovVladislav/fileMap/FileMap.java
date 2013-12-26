@@ -16,13 +16,14 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 
-public class FileMap implements Table {
+public class FileMap implements Table, AutoCloseable {
     
     private String name = null;
     private MultiHashMap db = null;
     private List<Class<?>> columnTypes = null;
     private FileMapProvider parentProvider = null;
     private volatile boolean destroyed = false;
+    private volatile boolean isClosed = false;
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private final Lock rLock = rwLock.readLock(); 
@@ -51,7 +52,7 @@ public class FileMap implements Table {
         if (!isValidKey(key)) {
             throw new IllegalArgumentException("Illegal key");
         }
-        if (!isValidValue(value)) {
+        if (!isValidValue(value, columnTypes)) {
             throw new ColumnFormatException("Mismatched Storeable for table + " + getName());
         }
         Storeable result = getDirtyValueSynced(key);
@@ -222,11 +223,26 @@ public class FileMap implements Table {
             wLock.unlock();
         }
     }
-    
-    public boolean isAlive() {
-        return !destroyed;
+
+    @Override
+    public void close() throws Exception {
+        if (!isClosed) {
+            isClosed = true;
+            rollback();
+            if (parentProvider != null) {
+                try {
+                    parentProvider.resetTable(name);
+                } catch (IllegalStateException e) {
+                    // Provider is already closed -> just leave it alone.
+                }
+            }
+        }
     }
-    
+
+    public boolean isAlive() {
+        return !destroyed && !isClosed;
+    }
+
     private Storeable getDirtyValueSynced(String key) {
         Diff changed = diff.get().get(key);
         if (changed == null) {
@@ -246,6 +262,9 @@ public class FileMap implements Table {
     private void ensureTableExists() throws IllegalStateException {
         if (destroyed) {
             throw new IllegalStateException("Table no longer exists");
+        }
+        if (isClosed) {
+            throw new IllegalStateException("Table was closed");
         }
     }
     
@@ -291,11 +310,11 @@ public class FileMap implements Table {
         return diffSize;
     }
 
-    private static boolean isValidKey(String s) {
+    public static boolean isValidKey(String s) {
         return !(s == null || s.isEmpty() || s.contains("\n") || s.matches(".*\\s+.*"));
     }
 
-    private boolean isValidValue(Storeable s) {
+    public static boolean isValidValue(Storeable s, List<Class<?>> columnTypes) {
         return !(s == null || !StoreableUtils.validate(s, columnTypes));
     }
 }

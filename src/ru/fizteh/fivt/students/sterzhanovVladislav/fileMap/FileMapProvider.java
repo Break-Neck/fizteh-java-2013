@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -14,22 +13,23 @@ import java.util.concurrent.locks.ReentrantLock;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.storage.structured.TableProvider;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableRow;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 import ru.fizteh.fivt.students.sterzhanovVladislav.shell.ShellUtility;
 
-public class FileMapProvider implements TableProvider {
+public class FileMapProvider implements AtomicTableProvider {
 
     public static final String SIGNATURE_FILE_NAME = "signature.tsv";
 
     private Path rootDir;
     private HashMap<String, FileMap> tables;
+    private volatile boolean isClosed = false;
     
     private Lock lock = new ReentrantLock();
     
     @Override
     public FileMap getTable(String name) {
+        ensureIsOpen();
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -56,6 +56,7 @@ public class FileMapProvider implements TableProvider {
 
     @Override
     public FileMap createTable(String name, List<Class<?>> columnTypes) throws IOException {
+        ensureIsOpen();
         if (name == null || name.isEmpty() || columnTypes == null || columnTypes.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -80,6 +81,7 @@ public class FileMapProvider implements TableProvider {
 
     @Override
     public void removeTable(String name) {
+        ensureIsOpen();
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -143,34 +145,70 @@ public class FileMapProvider implements TableProvider {
     @Override
     public Storeable deserialize(Table table, String value)
             throws ParseException {
-        return StoreableUtils.deserialize(value, generateSignature(table));
+        ensureIsOpen();
+        return StoreableUtils.deserialize(value, StoreableUtils.generateSignature(table));
     }
 
     @Override
     public String serialize(Table table, Storeable value)
             throws ColumnFormatException {
-        if (!StoreableUtils.validate(value, generateSignature(table))) {
+        ensureIsOpen();
+        if (!StoreableUtils.validate(value, StoreableUtils.generateSignature(table))) {
             throw new ColumnFormatException("wrong type (can't serialize value according to signature)");
         }
-        return StoreableUtils.serialize(value, generateSignature(table));
+        return StoreableUtils.serialize(value, StoreableUtils.generateSignature(table));
     }
 
     @Override
     public Storeable createFor(Table table) {
-        return new StoreableRow(generateSignature(table));
+        ensureIsOpen();
+        return new StoreableRow(StoreableUtils.generateSignature(table));
     }
 
     @Override
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
-        return new StoreableRow(generateSignature(table), values);
+        ensureIsOpen();
+        return new StoreableRow(StoreableUtils.generateSignature(table), values);
     }
-    
-    private static List<Class<?>> generateSignature(Table table) {
-        List<Class<?>> classList = new ArrayList<Class<?>>();
-        for (int classID = 0; classID < table.getColumnsCount(); ++classID) {
-            classList.add(table.getColumnType(classID));
+
+    @Override
+    public void closeTableIfNotModified(String name) throws IllegalStateException, IOException {
+        ensureIsOpen();
+        FileMap table = tables.get(name);
+        if (table == null) {
+            throw new IllegalStateException(name + " not exists");
         }
-        return classList;
+        int currentDiffSize = table.getDiffSize();
+        if (table != null && currentDiffSize > 0) {
+            throw new IllegalStateException(currentDiffSize + " unsaved changes");
+        } else {
+            try {
+                table.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        }
     }
+    @Override
+    public void close() throws Exception {
+        isClosed = true;
+        for (FileMap table : tables.values()) {
+            table.close();
+        }
+        tables.clear();
+    }
+
+    public void resetTable(String tableName) {
+        if (!isClosed) {
+            tables.remove(tableName);
+        }
+    }
+
+    private void ensureIsOpen() {
+        if (isClosed) {
+            throw new IllegalStateException("TableProvider was closed");
+        }
+    }
+   
 }
