@@ -160,7 +160,7 @@ public class Servlet {
             }
             Storeable value = t.get(key, intTid);
             if (value == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "key not exists");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "key not exists");
                 return;
             }
 
@@ -207,7 +207,7 @@ public class Servlet {
                 return;
             }
             if (ret == null) {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "key not exists");
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "key not exists");
                 return;
             }
 
