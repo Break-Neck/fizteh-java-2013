@@ -19,6 +19,8 @@ public class FileMap {
     static TableProvider provider;
     static Servlet server;
     static boolean doesServerRun = false;
+    static Integer port;
+
 
     public static void create(String tableName, String[] types) throws IOException {
         List<Class<?>> classes = new ArrayList<>();
@@ -254,23 +256,23 @@ public class FileMap {
                                 break;
                             }
                             case "starthttp": {
-                                int port;
                                 if (arguments.isEmpty()) {
-                                    port = 8008;
+                                    port = 10001;
                                 } else if (arguments.matches("[0-9]+")) {
                                     port = Integer.parseInt(arguments);
                                 } else {
                                     throw new IOException("wrong type (starthttp: wrong arguments)");
                                 }
                                 if (doesServerRun) {
-                                    throw new IOException("server is running");
+                                    throw new IOException("not started: server is running");
                                 }
                                 try {
                                     server = new Servlet(port);
                                     server.startServer();
                                     doesServerRun = true;
+                                    System.out.println("started at " + port.toString());
                                 } catch (Exception e) {
-                                    throw new IOException(e.getMessage(), e);
+                                    throw new IOException("not started: " + e.getMessage(), e);
                                 }
                                 break;
                             }
@@ -279,11 +281,12 @@ public class FileMap {
                                     throw new IOException("wrong type (stophttp: wrong arguments number)");
                                 }
                                 if (!doesServerRun) {
-                                    throw new IOException("there is nothing to close");
+                                    throw new IOException("not started");
                                 }
                                 try {
                                     server.stopServer();
                                     doesServerRun = false;
+                                    System.out.println("stopped at " + port.toString());
                                 } catch (Exception e) {
                                     throw new IOException(e.getMessage(), e);
                                 }
