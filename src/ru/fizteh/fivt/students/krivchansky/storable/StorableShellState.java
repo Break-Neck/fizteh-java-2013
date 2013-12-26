@@ -71,11 +71,8 @@ public class StorableShellState implements  MultifileMapShellStateInterface<Tabl
 	}
 
 	public Table useTable(String name) {
-		Table temp = tableProvider.getTable(name);
-		if (temp != null) {
-			table = temp;
-		}
-		return temp;
+		table = tableProvider.getTable(name);
+		return table;
 	}
 
 	public Table createTable(String arguments) {
