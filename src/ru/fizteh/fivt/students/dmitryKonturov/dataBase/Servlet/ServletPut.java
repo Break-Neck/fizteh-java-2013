@@ -36,7 +36,7 @@ public class ServletPut extends HttpServlet {
         }
 
         if (!provider.getTransactionPool().transactionExists(transactionId)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid not exists");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not exists");
             return;
         }
 
@@ -60,7 +60,7 @@ public class ServletPut extends HttpServlet {
             Storeable storeable = table.put(key, toPut, transactionId);
             answer = provider.serialize(table, storeable);
         } catch (Exception e) {
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ShellEmulator.getNiceMessage(e));
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, ShellEmulator.getNiceMessage(e));
             return;
         }
 

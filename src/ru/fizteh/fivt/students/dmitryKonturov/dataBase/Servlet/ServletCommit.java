@@ -34,7 +34,7 @@ public class ServletCommit extends HttpServlet {
         }
 
         if (!provider.getTransactionPool().transactionExists(transactionId)) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "tid not exists");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "tid not exists");
             return;
         }
 
