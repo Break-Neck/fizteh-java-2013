@@ -58,7 +58,7 @@ public class Database {
                 continue;
             }
             String key = new String(keyBytes, "UTF-8");
-            
+			
             byte[] valueBytes = new byte[valueLen];
             fis.read(valueBytes);
             if (valueBytes.length == 0) {
@@ -83,25 +83,25 @@ public class Database {
             
             byte[] keyLenBytes;
             String keyLenHex = "";
-            int keyLenHexSize = Long.toHexString(key.length()).getBytes().length;
-            if (keyLenHexSize < 4) {
+            int keyLenHexSize = Long.toHexString(key.getBytes().length).getBytes().length;
+			if (keyLenHexSize < 4) {
                 for (int i = 0; i < (4 - keyLenHexSize); i++) {
                     keyLenHex += Long.toHexString(0);
                 }
             }
-            keyLenHex += Long.toHexString(key.length());
+            keyLenHex += Long.toHexString(key.getBytes().length);
             keyLenBytes = keyLenHex.getBytes();
             fos.write(keyLenBytes);
             
             byte[] valueLenBytes;
             String valueLenHex = "";
-            int valueLenHexSize = Long.toHexString(value.length()).getBytes().length;
+            int valueLenHexSize = Long.toHexString(value.getBytes().length).getBytes().length;
             if (valueLenHexSize < 4) {
                 for (int i = 0; i < (4 - valueLenHexSize); i++) {
                     valueLenHex += Long.toHexString(0);
                 }
             }
-            valueLenHex += Long.toHexString(value.length());
+            valueLenHex += Long.toHexString(value.getBytes().length);
             valueLenBytes = valueLenHex.getBytes();
             fos.write(valueLenBytes);
                         
