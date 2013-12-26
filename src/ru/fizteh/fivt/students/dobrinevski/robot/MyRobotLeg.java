@@ -22,12 +22,7 @@ public class MyRobotLeg extends RobotLeg {
         if (step == 0) {
             return false;
         }
-        try {
-            LOCK.wait();
-        } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        LOCK.lock();
+        LOCK.tryLock();
         try {
             if (getType() == RobotLegType.RIGHT && !turn) {
                 makeStep();
