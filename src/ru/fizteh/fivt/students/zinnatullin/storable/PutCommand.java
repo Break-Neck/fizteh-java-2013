@@ -16,14 +16,14 @@ public class PutCommand implements ShellCommand {
             return false;
         }
 		
-		if (Shell.getInstance().table == null){
+		if (Shell.getInstance().table == null) {
 			Shell.printMessage("empty table");
 			return false;
 		}
 		
 		String value = null;
 		value = Shell.getInstance().table.put(args[1], args[2]);
-		if (value != null){
+		if (value != null) {
 			System.out.println("overwrite");
 			System.out.println(value);
 		} else {
@@ -33,7 +33,7 @@ public class PutCommand implements ShellCommand {
     }
 	
 	@Override
-	public String getName(){
+	public String getName() {
 		return name;
 	}
 }

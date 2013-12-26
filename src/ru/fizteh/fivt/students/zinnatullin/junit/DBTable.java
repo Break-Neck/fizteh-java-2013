@@ -39,7 +39,7 @@ public class DBTable implements Table{
 			if (dirMap != null) {
 				HashMap fileMap = (HashMap)dirMap.get(nFile);
 				if (fileMap != null && fileMap.containsKey(key)) {
-					value = (String)fileMap.get(key);
+					value = (String) fileMap.get(key);
 				}
 			}
 		}
@@ -64,7 +64,7 @@ public class DBTable implements Table{
 				fileMap = new HashMap();
 			}
 			if (fileMap.containsKey(key)) {
-				oldValue = (String)fileMap.get(key);
+				oldValue = (String) fileMap.get(key);
 			}
 			fileMap.put(key, value);
 			dirMap.put(nFile, fileMap);
@@ -87,7 +87,7 @@ public class DBTable implements Table{
 		HashMap dirMap = (HashMap)data.get(nDir);
 		HashMap fileMap = (HashMap)dirMap.get(nFile);
 		if (fileMap.containsKey(key)) {
-			oldValue = (String)fileMap.get(key);
+			oldValue = (String) fileMap.get(key);
 			fileMap.remove(key);
 			dirMap.put(nFile, fileMap);
 			data.put(nDir, dirMap);
@@ -108,7 +108,7 @@ public class DBTable implements Table{
 				String nDir = entry.getKey();
 				HashMap dirMap = entry.getValue();
 				if (!dirMap.isEmpty()) {
-					for(Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
+					for (Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
 						Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>)it1.next();
 						String nFile = entry1.getKey();
 						HashMap value = entry1.getValue();
@@ -128,7 +128,7 @@ public class DBTable implements Table{
 				String nDir = entry.getKey();
 				HashMap dirMap = entry.getValue();
 				if (!dirMap.isEmpty()) {
-					for(Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
+					for (Iterator it1 = dirMap.entrySet().iterator(); it1.hasNext();) {
 						Map.Entry<String, HashMap> entry1 = (Map.Entry<String, HashMap>)it1.next();
 						String nFile = entry1.getKey();
 						saveData(nDir, nFile);
@@ -151,14 +151,14 @@ public class DBTable implements Table{
 	
 	public DBTable readData() {
 		data = new HashMap();
-		for(File dir : path.listFiles()) {
+		for (File dir : path.listFiles()) {
 			if (dir.isDirectory()) {
 				String nDir = dir.getName();
-				for(File inputFile : dir.listFiles()) {
+				for (File inputFile : dir.listFiles()) {
 					if (inputFile.isFile()) {
 						String nFile = inputFile.getName();
 						
-						try{
+						try {
 							FileInputStream fis = new FileInputStream(inputFile);
 
 							HashMap<String, String> data = new HashMap();
@@ -228,7 +228,7 @@ public class DBTable implements Table{
 				return null;
 			}
 		}
-		try{
+		try {
 			FileOutputStream fos = new FileOutputStream(outputFile);
 
 			HashMap dirMap = (HashMap)data.get(nDir);

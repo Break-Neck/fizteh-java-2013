@@ -30,7 +30,7 @@ public class Database {
 		return this;
 	}
 	
-	public Database getData() throws FileNotFoundException, IOException{
+	public Database getData() throws FileNotFoundException, IOException {
 		
 		File inputFile = new File(path, file);
 		FileInputStream fis = new FileInputStream(inputFile);
@@ -71,7 +71,7 @@ public class Database {
 		return this;
 	}
 	
-	public Database saveData() throws FileNotFoundException, IOException{
+	public Database saveData() throws FileNotFoundException, IOException {
 		File outputFile = new File(path, file);
 		FileOutputStream fos = new FileOutputStream(outputFile);
 

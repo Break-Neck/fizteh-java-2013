@@ -34,7 +34,7 @@ public class Shell {
 		return shell;
 	}
 	
-	public static void main(String[] args) throws IOException{
+	public static void main(String[] args) throws IOException {
 		
 		String dbPath = System.getProperty("fizteh.db.dir");
 		if (dbPath.isEmpty()) {

@@ -34,7 +34,7 @@ public class Database {
 		return TableProvider.drop(path, name);
 	}
 		
-	public String get(String key) throws Exception{
+	public String get(String key) throws Exception {
 		if (table == null) {
 			throw new Exception("Table not select");
 		}
@@ -47,12 +47,12 @@ public class Database {
 		HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
 		HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
 		if (fileMap.containsKey(key)) {
-			value = (String)fileMap.get(key);
+			value = (String) fileMap.get(key);
 		}
 		return value;
 	}
 	
-	public String put(String key, String value) throws Exception{
+	public String put(String key, String value) throws Exception {
 		if (table == null) {
 			throw new Exception("Table not select");
 		}
@@ -62,7 +62,7 @@ public class Database {
 			HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
 			HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
 			if (fileMap.containsKey(key)) {
-				oldValue = (String)fileMap.get(key);
+				oldValue = (String) fileMap.get(key);
 			}
 			fileMap.put(key, value);
 			dirMap.put(TableProvider.getNFile(key), fileMap);
@@ -74,7 +74,7 @@ public class Database {
 		return oldValue;
 	}
 	
-	public String remove(String key) throws Exception{
+	public String remove(String key) throws Exception {
 		if (table == null) {
 			throw new Exception("Table not select");
 		}
@@ -84,7 +84,7 @@ public class Database {
 			HashMap dirMap = (HashMap)table.data.get(TableProvider.getNDir(key));
 			HashMap fileMap = (HashMap)dirMap.get(TableProvider.getNFile(key));
 			if (fileMap.containsKey(key)) {
-				oldValue = (String)fileMap.get(key);
+				oldValue = (String) fileMap.get(key);
 				fileMap.remove(key);
 				dirMap.put(TableProvider.getNFile(key), fileMap);
 				table.data.put(TableProvider.getNDir(key), dirMap);
@@ -96,7 +96,7 @@ public class Database {
 		return oldValue;
 	}
 	
-	public void commit() throws Exception{
+	public void commit() throws Exception {
 		if (table == null) {
 			throw new Exception("Table not select");
 		}
@@ -106,7 +106,7 @@ public class Database {
 				String nDir = entry.getKey();
 				HashMap dirMap = entry.getValue();
 				if (!dirMap.isEmpty()) {
-					for(it = dirMap.entrySet().iterator(); it.hasNext();) {
+					for (it = dirMap.entrySet().iterator(); it.hasNext();) {
 						String nFile = entry.getKey();
 						try {
 							table.saveData(nDir, nFile);

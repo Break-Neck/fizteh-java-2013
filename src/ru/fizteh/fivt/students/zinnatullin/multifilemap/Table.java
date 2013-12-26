@@ -23,7 +23,7 @@ public class Table {
 		data = new HashMap();
 	}
 	
-	public Table getData(String nDir, String nFile) throws FileNotFoundException, IOException{
+	public Table getData(String nDir, String nFile) throws FileNotFoundException, IOException {
 		
 		File nPath = new File(path, nDir);
 		if (!nPath.exists()) {
@@ -81,7 +81,7 @@ public class Table {
 		return this;
 	}
 	
-	public Table saveData(String nDir, String nFile) throws FileNotFoundException, IOException{
+	public Table saveData(String nDir, String nFile) throws FileNotFoundException, IOException {
 		File nPath = new File(path, nDir);
 		if (!nPath.exists()) {
 			nPath.mkdir();

@@ -26,7 +26,7 @@ public class Shell {
 		return shell;
 	}
 	
-	public static void main(String[] args) throws IOException{
+	public static void main(String[] args) throws IOException {
 				
 		Shell.getInstance().setDB();
 		

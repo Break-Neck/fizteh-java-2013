@@ -10,7 +10,7 @@ public class RmCommand implements ShellCommand {
         }
 
 	 	File file = FileSystem.resolvePath(args[1]);
-        if (file.exists()){
+        if (file.exists()) {
 			return FileSystem.recursiveRemove(file, args[0]);
 		}
 		System.out.println(args[0] + ": cannot remove \'" + args[1] + "\': No such file or directory");
