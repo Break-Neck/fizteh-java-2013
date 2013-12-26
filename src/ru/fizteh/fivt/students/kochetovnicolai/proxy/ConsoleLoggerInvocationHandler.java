@@ -10,17 +10,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.IdentityHashMap;
 
-class ConsoleLoggerInvocationHandler implements InvocationHandler {
+public class ConsoleLoggerInvocationHandler implements InvocationHandler {
     private Writer writer;
     private Object implementation;
-    private IOException ioException = null;
 
     ConsoleLoggerInvocationHandler(Writer writer, Object implementation) {
         this.writer = writer;
         this.implementation = implementation;
     }
 
-    private void addObjectInArray(JSONArray jsonArray, Object anArray, IdentityHashMap<Object, Object> addedElements) {
+    private static void addObjectInArray(JSONArray jsonArray, Object anArray,
+                                         IdentityHashMap<Object, Object> addedElements) {
         if (anArray != null && Iterable.class.isAssignableFrom(anArray.getClass())) {
             if (addedElements.containsKey(anArray)) {
                 jsonArray.put("cyclic");
@@ -42,7 +42,7 @@ class ConsoleLoggerInvocationHandler implements InvocationHandler {
         }
     }
 
-    private JSONArray createJSONArray(Object[] array, IdentityHashMap<Object, Object> addedElements) {
+    private static JSONArray createJSONArray(Object[] array, IdentityHashMap<Object, Object> addedElements) {
         addedElements.put(array, null);
         JSONArray jsonArray = new JSONArray();
         for (Object anArray : array) {
@@ -52,7 +52,7 @@ class ConsoleLoggerInvocationHandler implements InvocationHandler {
         return jsonArray;
     }
 
-    private JSONArray resolveIterable(Iterable array, IdentityHashMap<Object, Object> addedElements) {
+    private static JSONArray resolveIterable(Iterable array, IdentityHashMap<Object, Object> addedElements) {
         addedElements.put(array, null);
         JSONArray jsonArray = new JSONArray();
         for (Object anArray : array) {
@@ -62,19 +62,70 @@ class ConsoleLoggerInvocationHandler implements InvocationHandler {
         return jsonArray;
     }
 
-    private void writeJSONObject(JSONObject object, Object returned) {
-        if (returned == null) {
-            Object jsonNull = JSONObject.NULL;
-            object.put("returnValue", jsonNull);
-        } else {
-            if (!returned.equals(Void.class)) {
-                object.put("returnValue", returned);
-            }
-        }
+    private static void writeJSONObject(JSONObject object, Writer writer) {
+
         try {
             writer.write(object.toString() + System.lineSeparator());
         } catch (IOException e) {
-            ioException = ioException == null ? e : ioException;
+            return;
+        }
+    }
+
+    public static void writeLog(String className, String methodName, Writer writer,
+                                Object[] args, Object returnValue, Throwable throwable, boolean returned) {
+        boolean failed = false;
+        JSONObject log = null;
+        try {
+            log = new JSONObject();
+            log.put("timestamp", System.currentTimeMillis());
+            log.put("class", className);
+            log.put("method", methodName);
+            if (args == null || args.length == 0) {
+                log.put("arguments", new Object[0]);
+            } else {
+                log.put("arguments", createJSONArray(args, new IdentityHashMap<>()));
+            }
+        } catch (Throwable e) {
+            failed = true;
+        }
+        if (throwable != null) {
+            if (!failed) {
+                try {
+                    log.put("thrown", throwable.toString());
+                    writeJSONObject(log, writer);
+                } catch (Throwable t) {
+                    failed = true;
+                }
+            }
+            return;
+        }
+        if (!failed) {
+            try {
+                if (!returned) {
+                    writeJSONObject(log, writer);
+                    return;
+                }
+                Object writingValue = null;
+                if (returnValue != null) {
+                    if (returnValue.getClass().isArray()) {
+                        try {
+                            writingValue = createJSONArray((Object[]) returnValue, new IdentityHashMap<>());
+                        } catch (ClassCastException e) {
+                            writingValue = returnValue.toString();
+                        }
+                    } else if (Iterable.class.isAssignableFrom(returnValue.getClass())) {
+                        writingValue = resolveIterable((Iterable) returnValue, new IdentityHashMap<>());
+                    } else {
+                        writingValue = returnValue;
+                    }
+                    log.put("returnValue", writingValue);
+                } else {
+                    log.put("returnValue", JSONObject.NULL);
+                }
+                writeJSONObject(log, writer);
+            } catch (Throwable e) {
+                failed = true;
+            }
         }
     }
 
@@ -87,58 +138,19 @@ class ConsoleLoggerInvocationHandler implements InvocationHandler {
                 throw e.getTargetException();
             }
         }
-        boolean failed = false;
-        JSONObject log = null;
-        try {
-            log = new JSONObject();
-            log.put("timestamp", System.currentTimeMillis());
-            log.put("class", implementation.getClass().getName());
-            log.put("method", method.getName());
-            if (args == null || args.length == 0) {
-                log.put("arguments", new Object[0]);
-            } else {
-                log.put("arguments", createJSONArray(args, new IdentityHashMap<>()));
-            }
-        } catch (Throwable e) {
-            failed = true;
-        }
-        Object returnValue;
-        Object writingValue = null;
+        Object returnValue = null;
+        Throwable throwable = null;
         try {
             returnValue = method.invoke(implementation, args);
         } catch (InvocationTargetException e) {
-            Throwable exception = e.getTargetException();
-            if (!failed) {
-                try {
-                    log.put("thrown", exception.toString());
-                    writeJSONObject(log, Void.class);
-                } catch (Throwable t) {
-                    failed = true;
-                }
-            }
-            throw e.getTargetException();
+            throwable = e.getTargetException();
         }
-        if (!failed) {
-            try {
-                if (returnValue != null) {
-                    if (returnValue.getClass().isArray()) {
-                        writingValue = createJSONArray((Object[]) returnValue, new IdentityHashMap<>());
-                    } else if (Iterable.class.isAssignableFrom(returnValue.getClass())) {
-                        writingValue = resolveIterable((Iterable) returnValue, new IdentityHashMap<>());
-                    } else {
-                        writingValue = returnValue;
-                    }
-                } else {
-                    Class type = method.getReturnType();
-                    if (type.getName().equals("void")) {
-                        writingValue = Void.class;
-                    }
-                }
-                writeJSONObject(log, writingValue);
-            } catch (Throwable e) {
-                failed = true;
-            }
+        boolean returned = !method.getReturnType().getName().equals("void");
+        writeLog(implementation.getClass().getName(), method.getName(), writer, args, returnValue, throwable, returned);
+        if (throwable == null) {
+            return returnValue;
+        } else {
+            throw throwable;
         }
-        return returnValue;
     }
 }
