@@ -181,6 +181,8 @@ public class MyBinder<T> implements Binder<T> {
                 idHashMap.put(objBuf, black);
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException("failed in serialise :" + e.getMessage());
+            } catch (JSONException e) {
+                throw new IllegalArgumentException("json fail: " + e.getMessage());
             }
         }
         jsonWriter.endObject();

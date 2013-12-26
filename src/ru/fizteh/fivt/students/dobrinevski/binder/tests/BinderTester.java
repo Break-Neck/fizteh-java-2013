@@ -90,6 +90,11 @@ public class BinderTester {
 
         }
     }
+    public static class EqualName {
+        int a;
+        @Name("a")
+        int b;
+    }
 
 
     @Before
@@ -110,6 +115,12 @@ public class BinderTester {
     public void streamNullSerialisation() throws IOException {
         bind = bf.create(IntAndDouble.class);
         bind.serialize(new IntAndDouble(), null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void classWithEqualName() throws IOException {
+        bind = bf.create(EqualName.class);
+        bind.serialize(new EqualName(), new ByteArrayOutputStream());
     }
 
     @Test
