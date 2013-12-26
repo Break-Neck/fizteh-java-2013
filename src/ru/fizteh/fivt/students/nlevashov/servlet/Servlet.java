@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.nlevashov.servlet;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,20 +16,17 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.students.nlevashov.factory.MyTable;
 import ru.fizteh.fivt.students.nlevashov.factory.MyTableProvider;
-import ru.fizteh.fivt.students.nlevashov.factory.MyTableProviderFactory;
-import ru.fizteh.fivt.students.nlevashov.shell.Shell;
 
 
 public class Servlet {
     static Server server;
-    //public static Transactions transactions;
     static HashMap<Integer, MyTable> transactions;
     static MyTableProvider provider;
     static Integer counter;
 
-    private static final ReentrantLock locker = new ReentrantLock(true);
+    static final ReentrantLock LOCKER = new ReentrantLock(true);
 
-    public Servlet(int port) throws IOException {
+    public Servlet(int port, MyTableProvider p) throws IOException {
         server = new Server(port);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
@@ -44,16 +40,7 @@ public class Servlet {
         context.addServlet(new ServletHolder(new Size()), "/size");
 
         server.setHandler(context);
-
-        String addr = System.getProperty("fizteh.db.dir");
-        if (addr == null) {
-            System.err.println("Property \"fizteh.db.dir\" wasn't set");
-            System.exit(1);
-        }
-        Path addrPath = Shell.makePath(addr).toPath();
-        MyTableProviderFactory factory = new MyTableProviderFactory();
-        provider = factory.create(addrPath.toString());
-
+        provider = p;
         transactions = new HashMap<>();
         counter = 1;
     }
@@ -75,12 +62,12 @@ public class Servlet {
             }
             Integer key;
 
-            locker.lock();
+            LOCKER.lock();
             try {
                 key = counter;
                 counter++;
             } finally {
-                locker.unlock();
+                LOCKER.unlock();
             }
 
             transactions.put(key, t);

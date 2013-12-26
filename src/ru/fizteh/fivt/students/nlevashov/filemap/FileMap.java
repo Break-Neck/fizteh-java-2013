@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class FileMap {
 
     static Table currentTable = null;
-    static TableProvider provider;
+    static MyTableProvider provider;
     static Servlet server;
     static boolean doesServerRun = false;
     static Integer port;
@@ -165,7 +165,7 @@ public class FileMap {
                 System.exit(1);
             }
             Path addrPath = Shell.makePath(addr).toPath();
-            TableProviderFactory factory = new MyTableProviderFactory();
+            MyTableProviderFactory factory = new MyTableProviderFactory();
             provider = factory.create(addrPath.toString());
 
             Mode.start(args, new Mode.Executor() {
@@ -267,7 +267,7 @@ public class FileMap {
                                     throw new IOException("not started: server is running");
                                 }
                                 try {
-                                    server = new Servlet(port);
+                                    server = new Servlet(port, provider);
                                     server.startServer();
                                     doesServerRun = true;
                                     System.out.println("started at " + port.toString());
