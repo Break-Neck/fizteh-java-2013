@@ -11,6 +11,7 @@ import java.util.IdentityHashMap;
 import java.lang.reflect.Field;
 import javax.xml.stream.*;
 import javax.xml.parsers.*;
+
 import org.xml.sax.SAXException;
 
 public class MyBinder<T> implements Binder<T> {
@@ -52,8 +53,9 @@ public class MyBinder<T> implements Binder<T> {
             throw new IOException("Parsing failed");
         }
 
-        return (T)handler.getObject();
+        return (T) handler.getObject();
     }
+
     private void checkCyclic(Object object) {
         IdentityHashMap<Object, Object> objects = new IdentityHashMap<Object, Object>();
         checkSubObjects(objects, object);

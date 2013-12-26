@@ -4,6 +4,7 @@ import ru.fizteh.fivt.binder.*;
 import ru.fizteh.fivt.students.vishnevskiy.binder.*;
 import org.junit.Before;
 import org.junit.Test;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,12 +30,12 @@ public class MyBinderTest {
         binder.serialize(null, output);
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void outputIsNull() throws IOException {
         binder.serialize(new Valid(), null);
     }
 
-    @Test (expected = IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void circularReference() throws IOException {
         binder.serialize(new Circular(), output);
     }

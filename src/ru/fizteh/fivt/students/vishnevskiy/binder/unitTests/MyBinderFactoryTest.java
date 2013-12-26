@@ -42,6 +42,7 @@ public class MyBinderFactoryTest {
 
 class NoDefaultConstructor {
     private int key;
+
     NoDefaultConstructor(int key) {
         this.key = key;
     }
@@ -79,5 +80,7 @@ class Valid {
 
 class SubValid {
     private int a;
-    public SubValid() {}
+
+    public SubValid() {
+    }
 }

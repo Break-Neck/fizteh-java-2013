@@ -48,5 +48,7 @@ class Valid {
 
 class SubValid {
     private int a;
-    public SubValid() {}
+
+    public SubValid() {
+    }
 }
