@@ -3,6 +3,7 @@ package ru.fizteh.fivt.students.dmitryKonturov.dataBase.Servlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import ru.fizteh.fivt.students.dmitryKonturov.dataBase.databaseImplementation.TableImplementation;
 import ru.fizteh.fivt.students.dmitryKonturov.dataBase.databaseImplementation.TableProviderImplementation;
 import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellCommand;
 import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellEmulator;
@@ -20,7 +21,6 @@ public class ServletShellCommands {
     }
 
     static class ExitCommand implements ShellCommand {
-
         @Override
         public String getName() {
             return "exit";
@@ -28,6 +28,20 @@ public class ServletShellCommands {
 
         @Override
         public void execute(String[] args, ShellInfo info) throws ShellException {
+            if (args.length != 0) {
+                throw new ShellException(getName(), "Bad arguments");
+            }
+            TableImplementation table = (TableImplementation) info.getProperty("CurrentTable");
+            if (table != null) {
+                try {
+                    int unsavedChanges = table.getUnsavedChangesCount(table.getLocalTransactionId());
+                    if (unsavedChanges > 0) {
+                        table.commit();
+                    }
+                } catch (Exception e) {
+                    throw new ShellException(getName(), e);
+                }
+            }
             System.exit(0);
         }
     }

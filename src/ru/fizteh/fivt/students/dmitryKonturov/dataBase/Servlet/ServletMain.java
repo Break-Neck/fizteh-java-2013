@@ -1,5 +1,8 @@
 package ru.fizteh.fivt.students.dmitryKonturov.dataBase.Servlet;
 
+import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellEmulator;
+import ru.fizteh.fivt.students.dmitryKonturov.shell.ShellException;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,8 +36,17 @@ public class ServletMain {
         }
 
         if (args.length > 0) {
-            System.err.println("Package mode ignored, interactive launched");
-            shell.interactiveMode();
+            StringBuilder builder = new StringBuilder();
+            for (String arg : args) {
+                builder.append(arg);
+                builder.append(" ");
+            }
+            try {
+                shell.packageMode(builder.toString());
+            } catch (ShellException e) {
+                System.err.println(ShellEmulator.getNiceMessage(e));
+                System.exit(1);
+            }
         } else {
             shell.interactiveMode();
         }
