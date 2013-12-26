@@ -2,6 +2,6 @@ package ru.fizteh.fivt.students.zinnatullin.multifilemap;
 
 interface ShellCommand {
 
-    public abstract boolean execute(String[] args);
-    public abstract String getName();
+    abstract boolean execute(String[] args);
+    abstract String getName();
 }
