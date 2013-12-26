@@ -54,27 +54,34 @@ public class MyBinder<T> implements Binder<T> {
 
         return (T)handler.getObject();
     }
-
-    private IdentityHashMap<Object, Object> subObjects(Object object) throws IllegalAccessException {
+    private void checkCyclic(Object object) {
         IdentityHashMap<Object, Object> objects = new IdentityHashMap<Object, Object>();
+        checkSubObjects(objects, object);
+    }
+
+    private void checkSubObjects(IdentityHashMap<Object, Object> objects, Object object) {
         if (object == null) {
-            return objects;
+            return;
         }
         if (object.getClass().isPrimitive() || isWrapperType(object.getClass())
                 || object.getClass().equals(String.class) || object.getClass().isEnum()) {
-            return objects;
+            return;
         }
-            Class<?> clazz = object.getClass();
+        if (objects.containsKey(object)) {
+            throw new IllegalStateException("The object has a circular reference");
+        }
+        objects.put(object, null);
+        Class<?> clazz = object.getClass();
         for (Field field : clazz.getDeclaredFields()) {
             field.setAccessible(true);
             if (field.getAnnotation(DoNotBind.class) == null) {
-                if (subObjects(field.get(object)).containsKey(field.get(object))) {
-                    throw new IllegalStateException("The object has a circular reference");
+                try {
+                    checkSubObjects(objects, field.get(object));
+                } catch (IllegalAccessException e) {
+                    throw new IllegalArgumentException("Invalid object");
                 }
-                objects.put(field.get(object), null);
             }
         }
-        return objects;
     }
 
     private void writeXML(Object object, XMLStreamWriter writer) throws XMLStreamException, IllegalAccessException {
@@ -121,9 +128,7 @@ public class MyBinder<T> implements Binder<T> {
         }
 
         try {
-            if (subObjects(value).containsKey(value)) {
-                throw new IllegalStateException("The object has a circular reference");
-            }
+            checkCyclic(value);
             XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(output);
             writeXML(value, writer);
         } catch (XMLStreamException e) {

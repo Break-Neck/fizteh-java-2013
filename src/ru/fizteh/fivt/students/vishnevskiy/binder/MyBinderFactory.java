@@ -5,12 +5,22 @@ import ru.fizteh.fivt.binder.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
 
 public class MyBinderFactory implements BinderFactory {
     private Map<Class<?>, MyBinder> binders;
 
     public MyBinderFactory() {
         binders = new HashMap<Class<?>, MyBinder>();
+    }
+
+    private void checkDefaultConstructor(Class<?> clazz) {
+        for (Constructor constructor : clazz.getDeclaredConstructors()) {
+            if (constructor.getParameterTypes().length == 0) {
+                return;
+            }
+        }
+        throw new IllegalArgumentException("The class can't be serialized");
     }
 
     private void checkSerializable(Class<?> clazz) {
@@ -20,14 +30,7 @@ public class MyBinderFactory implements BinderFactory {
         if (clazz.isArray() || MyBinder.isWrapperType(clazz)) {
             throw new IllegalArgumentException("The class can't be serialized");
         }
-        try {
-            clazz.newInstance();
-        } catch (InstantiationException e) {
-            throw new IllegalArgumentException("The class can't be serialized");
-        } catch (IllegalAccessException e) {
-            throw new IllegalArgumentException("The class can't be serialized");
-        }
-
+        checkDefaultConstructor(clazz);
         for (Field field : clazz.getDeclaredFields()) {
             if (field.getAnnotation(DoNotBind.class) != null) {
                 continue;
