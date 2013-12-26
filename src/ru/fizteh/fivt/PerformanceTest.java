@@ -1,4 +1,5 @@
-package src.ru.fizteh.fivt;
+package ru.fizteh.fivt;
+
 /**
  * @author Dmitriy Komanov (dkomanov@ya.ru)
  */
