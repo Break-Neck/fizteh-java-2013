@@ -223,8 +223,11 @@ public class DataBase implements Table, AutoCloseable {
         
         	
             if ((files.containsKey(nFileInMap))) {
-               	
-            	result = files.get(nFileInMap).mapFromFile.get(keyString);
+               	try{
+               		result = files.get(nFileInMap).mapFromFile.get(keyString);
+               	} catch (NullPointerException e) {
+               		result = null;
+               	}
             } else {
                 try {
                     files.put(nFileInMap, new DataBaseFile(getFullName(nDir, nFile), nDir, nFile, provider, this));
