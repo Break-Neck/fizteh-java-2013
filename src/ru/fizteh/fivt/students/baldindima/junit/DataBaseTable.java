@@ -20,7 +20,7 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.storage.structured.TableProvider;
 
-public class DataBaseTable implements TableProvider {
+public class DataBaseTable implements TableProvider, AutoCloseable {
 
     private String tableDirectory;
     private Map<String, DataBase> tables;
@@ -33,6 +33,8 @@ public class DataBaseTable implements TableProvider {
         tableDirectory = nTableDirectory;
         tables = new HashMap();
     }
+    
+    private volatile boolean isClosed = false;
 
 
     private void checkName(String name) {
@@ -49,7 +51,8 @@ public class DataBaseTable implements TableProvider {
     }
 
     public Table createTable(String name, List<Class<?>> types) throws IOException {
-        if (types == null || types.size() == 0) {
+        checkClosed();
+            if (types == null || types.size() == 0) {
             throw new IllegalArgumentException("wrong list of types");
         }
         checkName(name);
@@ -79,7 +82,8 @@ public class DataBaseTable implements TableProvider {
     }
 
     public Table getTable(String name) {
-        checkName(name);
+        checkClosed();
+            checkName(name);
         String path = tableDirectory + File.separator + name;
 
         File file = new File(path);
@@ -91,7 +95,7 @@ public class DataBaseTable implements TableProvider {
         
         writeLock.lock();
         try {
-        	if (tables.containsKey(name)) {
+                if (tables.containsKey(name)) {
                 return tables.get(name);
             }
             DataBase table = new DataBase(path, this);
@@ -107,7 +111,8 @@ public class DataBaseTable implements TableProvider {
     }
 
     public void removeTable(String name) throws IOException {
-        checkName(name);
+        checkClosed();
+            checkName(name);
         String path = tableDirectory + File.separator + name;
 
         File file = new File(path);
@@ -139,7 +144,8 @@ public class DataBaseTable implements TableProvider {
 
 
     public Storeable deserialize(Table table, String value) throws ParseException {
-        Storeable storeable;
+        checkClosed();
+            Storeable storeable;
         try {
             JSONArray jsonValue = new JSONArray(value);
             List<Object> values = new ArrayList<>();
@@ -162,21 +168,39 @@ public class DataBaseTable implements TableProvider {
 
     public String serialize(Table table, Storeable value)
             throws ColumnFormatException {
-        return JSONClass.serialize(table, value);
+        checkClosed();
+            return JSONClass.serialize(table, value);
     }
 
 
     public Storeable createFor(Table table) {
-        return new BaseStoreable(table);
+        checkClosed();
+            return new BaseStoreable(table);
     }
 
 
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
-        BaseStoreable storeable = new BaseStoreable(table);
+        checkClosed();
+            BaseStoreable storeable = new BaseStoreable(table);
         storeable.setValues(values);
         return storeable;
     }
+
+    private void checkClosed() {
+        if (isClosed) {
+            throw new IllegalStateException("object is closed");
+        }
+    }
+        public void close() {
+                
+                if (!isClosed) {
+            for (DataBase table: tables.values()) {
+                table.close();
+            }
+            isClosed = true;
+        }
+        }
 
 
 }
