@@ -1,11 +1,17 @@
 package ru.fizteh.fivt.students.dobrinevski.binder;
 
-import org.json.*;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.json.JSONWriter;
 import ru.fizteh.fivt.binder.Binder;
 import ru.fizteh.fivt.binder.DoNotBind;
 import ru.fizteh.fivt.binder.Name;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.IdentityHashMap;
@@ -28,7 +34,7 @@ public class MyBinder<T> implements Binder<T> {
 
         try {
             T answer = tClass.getDeclaredConstructor().newInstance();
-            recDec(answer, jsonObject);
+            recDec(answer, jsonObject, tClass);
             return answer;
         }   catch (NoSuchMethodException e) {
             throw new IllegalArgumentException("There is no declared constructor in " + tClass.getName());
@@ -43,10 +49,7 @@ public class MyBinder<T> implements Binder<T> {
         }
     }
 
-    private void recDec(Object obj, JSONObject jsonObject) {
-        if (obj == null) {
-            throw new IllegalArgumentException("bad constructor");
-        }
+    private void recDec(Object obj, JSONObject jsonObject, Class<?> clazz) {
         try {
             for (Object i : jsonObject.keySet()) {
                 if (i == null) {
@@ -59,7 +62,7 @@ public class MyBinder<T> implements Binder<T> {
                     continue;
                 }
                 Field field = null;
-                Field[] fields = obj.getClass().getDeclaredFields();
+                Field[] fields = clazz.getDeclaredFields();
                 for (Field f : fields) {
                     if (!f.isAnnotationPresent(DoNotBind.class)) {
                         if (f.getName().equals(i.toString())) {
@@ -118,7 +121,7 @@ public class MyBinder<T> implements Binder<T> {
                     continue;
                 }
 
-                recDec(field.get(obj), (JSONObject) jsonObject.get(i.toString()));
+                recDec(field.get(obj), (JSONObject) jsonObject.get(i.toString()), field.getType());
             }
         } catch (IllegalAccessException e) {
             throw new IllegalArgumentException("illegal access " + e.getMessage());
