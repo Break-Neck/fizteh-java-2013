@@ -112,7 +112,7 @@ public class BinderTester {
     @Test
     public void mainTestSerDeser() throws IOException {
         bind = bf.create(D.class);
-        String buff = "{\"f\":\"96\",\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":\"0.69\"}}";
+        String buff = "{\"f\":96,\"g\":\"Z\",\"ololo\":\"How to buy pig?\",\"add\":{\"g\":\"A\",\"h\":0.69}}";
         inStream = new ByteArrayInputStream(buff.getBytes(StandardCharsets.UTF_8));
         D test = (D) bind.deserialize(inStream);
         bind.serialize(test, outStream);
