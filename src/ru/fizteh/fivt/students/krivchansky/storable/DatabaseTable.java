@@ -44,11 +44,13 @@ public class DatabaseTable extends SomeStorage<String, Storeable> implements Tab
             if (LocalUtils.checkStringCorrect(key)) {
                 throw new IllegalArgumentException("key cannot be empty");
             }
+        } else if (key == null) {
+        	throw new IllegalArgumentException("key can't be null");
         }
         
-       // if (value == null) {
-         //   throw new IllegalArgumentException("value cannot be null");
-        //}
+        if (value == null) {
+            throw new IllegalArgumentException("value cannot be null");
+        }
 
         if (!checkAlienStoreable(value)) {
             throw new ColumnFormatException("alien storeable");
