@@ -31,7 +31,9 @@ public class Transactions {
 
     Integer getTid(String tableName) {
         Table t = provider.getTable(tableName);
-        if (t == null) return null;
+        if (t == null) {
+            return null;
+        }
         counter++;
         tids.put(counter, t);
         return counter;
