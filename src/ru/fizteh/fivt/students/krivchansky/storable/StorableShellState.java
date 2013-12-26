@@ -66,7 +66,7 @@ public class StorableShellState implements  MultifileMapShellStateInterface<Tabl
 		try {
             return tableProvider.deserialize(table, value);
         } catch (ParseException e) {
-            return null;
+             return null;
         }
 	}
 

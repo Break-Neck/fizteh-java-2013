@@ -38,7 +38,12 @@ public class XmlDeserializer {
 		Object val = null;
 		try {
 			int type = reader.next();
-			if(type != XMLStreamConstants.START_ELEMENT || !reader.getName().getLocalPart().equals("col")) {
+			String k = reader.getName().getLocalPart();
+			if(type != XMLStreamConstants.START_ELEMENT || !k.equals("col")) {
+				if (type == XMLStreamConstants.START_ELEMENT && k.equals("null")) {
+					reader.next();
+					return val;
+				}
 				throw new ParseException ("incorrect xml", 0);
 			}
 			type = reader.next();
