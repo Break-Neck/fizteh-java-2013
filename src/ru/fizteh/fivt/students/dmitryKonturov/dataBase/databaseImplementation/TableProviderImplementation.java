@@ -62,10 +62,16 @@ public class TableProviderImplementation implements TableProvider {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
             for (Path entry : stream) {
                 String tableName = entry.toFile().getName();
+                int transactionId;
+                if (isLocal < 0) {
+                    transactionId = -1;
+                } else {
+                    transactionId = transactionPool.createTransaction(tableName);
+                }
                 TableImplementation currentTable = new TableImplementation(
                         tableName,
                         this,
-                        isLocal * transactionPool.createTransaction(tableName)
+                        transactionId
                         );
                 existingTables.put(tableName, currentTable);
             }

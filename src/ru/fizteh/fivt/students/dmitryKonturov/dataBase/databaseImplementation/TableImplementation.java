@@ -22,13 +22,6 @@ public class TableImplementation implements Table {
     private final List<Class<?>> columnTypes;
     private final int columnsCount;
 
-    /*private ThreadLocal<Map<String, Storeable>> currentChangesMap = new ThreadLocal<Map<String, Storeable>>() {
-        @Override
-        protected Map<String, Storeable> initialValue() {
-            return new HashMap<>();
-        }
-    };*/
-
     private HashMap<String, Storeable> savedMap;
     private final Path tablePath;
 
