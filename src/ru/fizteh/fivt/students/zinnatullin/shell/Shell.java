@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.HashMap;
 
 public class Shell {
-    private HashMap<String,ShellCommand> commands;
+    private HashMap<String, ShellCommand> commands;
     
     public Shell() {
         commands = new HashMap();

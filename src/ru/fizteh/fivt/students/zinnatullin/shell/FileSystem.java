@@ -131,7 +131,7 @@ public class FileSystem {
         } else if (!destination.getParentFile().exists()) {
             System.out.println(command + ": destination path doesn't exists");
         } else if (destination.getParent().equals(source.getParent())
-				&& destination.getName().equals(source.getName())) {
+                && destination.getName().equals(source.getName())) {
             System.out.println(command + ": source path is part of destination path");
         } else {
             return recursiveCopy(source, destination, command);

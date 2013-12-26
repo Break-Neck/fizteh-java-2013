@@ -23,11 +23,7 @@ public class Database {
     
     public boolean useTable(String name) {
         table = TableProvider.get(path, name);
-        if (table !=null) {
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
     
     public boolean dropTable(String name) {
