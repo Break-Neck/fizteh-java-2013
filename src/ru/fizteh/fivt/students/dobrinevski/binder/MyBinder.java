@@ -113,7 +113,8 @@ public class MyBinder<T> implements Binder<T> {
                 }
 
                 if (field.isEnumConstant()) {
-                    field.set(obj, Enum.valueOf(((Class<Enum>) field.getType()), jsonObject.get(i.toString()).toString()).name());
+                    field.set(obj, Enum.valueOf(((Class<Enum>) field.getType()),
+                            jsonObject.get(i.toString()).toString()).name());
                     continue;
                 }
 
@@ -150,7 +151,7 @@ public class MyBinder<T> implements Binder<T> {
                 } else {
                     name = one.getName();
                 }
-                if (name == null || name.equals("")) {
+                if (name == null || name.equals("") || name.contains("\n")) {
                     throw new IllegalArgumentException("Field name is incorrect");
                 }
                 jsonWriter.key(name);
