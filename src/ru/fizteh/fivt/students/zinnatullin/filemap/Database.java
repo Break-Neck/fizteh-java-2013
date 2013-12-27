@@ -18,7 +18,7 @@ public class Database {
     
     public Database(String path, String file) throws IOException {
         File dbFile = new File(path, file);
-        if(!dbFile.exists()){
+        if (!dbFile.exists()) {
             dbFile.createNewFile();
         }
         this.path = path;
