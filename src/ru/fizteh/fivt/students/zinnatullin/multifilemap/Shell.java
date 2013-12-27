@@ -32,6 +32,10 @@ public class Shell {
     
     public static void main(String[] args) throws IOException {
         String dbPath = System.getProperty("fizteh.db.dir");
+		if (dbPath == null) {
+            printMessage("Incorrect db path");
+            System.exit(1);
+        }
         Shell.getInstance().setDB(dbPath);
         
         if (args.length > 0) {
@@ -69,13 +73,8 @@ public class Shell {
     
     public void setDB(String dir) {
         File path =  new File(dir);
-        if (dir == null) {
-            printMessage("Incorrect db path");
-            System.exit(1);
-        }
-        File file =  new File(dir);
-        if (!file.exists()) {
-            file.mkdir();
+        if (!path.exists()) {
+            path.mkdir();
         }
         if (!path.isDirectory()) {
             printMessage("Incorrect db path");
