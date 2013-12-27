@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -32,90 +34,55 @@ public class Database {
         return this;
     }
     
-    public Database getData() throws FileNotFoundException, IOException {
+    public Database getData() throws IOException {
         
         File inputFile = new File(path, file);
-        FileInputStream fis = new FileInputStream(inputFile);
+        RandomAccessFile foutput = new RandomAccessFile(inputFile, "r");
+        if (foutput.length() > 444444444) throw new IOException("file is too big");
 
-        while (fis.available() > 0) {
-            byte[] keyLenBytes = new byte[4];
-            fis.read(keyLenBytes);
-            if (keyLenBytes.length == 0) {
-                continue;
+        while (foutput.getFilePointer() != foutput.length()) {
+            int klength = foutput.readInt();
+            if (klength < 1 || klength > foutput.length() - foutput.getFilePointer() + 4) {
+                foutput.close();
+                throw new IllegalArgumentException("Illegal key length");
             }
-            int keyLen = Integer.parseInt(new String(keyLenBytes, "UTF-8"), 16);
-            
-            byte[] valueLenBytes = new byte[4];
-            fis.read(valueLenBytes);
-            if (valueLenBytes.length == 0) {
-                continue;
+            int vlength = foutput.readInt();
+            if (vlength < 1 || vlength > foutput.length() - foutput.getFilePointer() + 4) {
+                foutput.close();
+                throw new IllegalArgumentException("Illegal value length");
             }
-            int valueLen = Integer.parseInt(new String(valueLenBytes, "UTF-8"), 16);
-            
-            byte[] keyBytes = new byte[keyLen];
-            fis.read(keyBytes);
-            if (keyBytes.length == 0) {
-                continue;
-            }
-            String key = new String(keyBytes, "UTF-8");
-            
-            byte[] valueBytes = new byte[valueLen];
-            fis.read(valueBytes);
-            if (valueBytes.length == 0) {
-                continue;
-            }
-            String value = new String(valueBytes, "UTF-8");
-            
+            byte[] bytekey = new byte[klength];
+            byte[] bytevalue = new byte[vlength];
+            foutput.read(bytekey);
+            foutput.read(bytevalue);
+            String key = new String(bytekey, StandardCharsets.UTF_8);
+            String value = new String(bytevalue, StandardCharsets.UTF_8);
             data.put(key, value);
         }
         
-        fis.close();
+        foutput.close();
         return this;
     }
     
-    public Database saveData() throws FileNotFoundException, IOException {
+    public Database saveData() throws IOException {
         File outputFile = new File(path, file);
-        FileOutputStream fos = new FileOutputStream(outputFile);
 
+        RandomAccessFile finput = new RandomAccessFile(outputFile, "rw");
+        if (finput.length() > 444444444) {
+            throw new IOException("file is too big");
+        }
+        
         for (Map.Entry<String, String> entry : data.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
             
-            byte[] keyLenBytes;
-            String keyLenHex = "";
-            int keyLenHexSize = Long.toHexString(key.getBytes().length).getBytes().length;
-            if (keyLenHexSize < 4) {
-                for (int i = 0; i < (4 - keyLenHexSize); i++) {
-                    keyLenHex += Long.toHexString(0);
-                }
-            }
-            keyLenHex += Long.toHexString(key.getBytes().length);
-            keyLenBytes = keyLenHex.getBytes();
-            fos.write(keyLenBytes);
-            
-            byte[] valueLenBytes;
-            String valueLenHex = "";
-            int valueLenHexSize = Long.toHexString(value.getBytes().length).getBytes().length;
-            if (valueLenHexSize < 4) {
-                for (int i = 0; i < (4 - valueLenHexSize); i++) {
-                    valueLenHex += Long.toHexString(0);
-                }
-            }
-            valueLenHex += Long.toHexString(value.getBytes().length);
-            valueLenBytes = valueLenHex.getBytes();
-            fos.write(valueLenBytes);
-                        
-            byte[] keyBytes;
-            keyBytes = key.getBytes();
-            fos.write(keyBytes);
-                    
-            byte[] valueBytes;
-            valueBytes = value.getBytes();
-            fos.write(valueBytes);
+            finput.writeInt(key.getBytes(StandardCharsets.UTF_8).length);
+            finput.writeInt(value.getBytes(StandardCharsets.UTF_8).length);
+            finput.write(key.getBytes(StandardCharsets.UTF_8));
+            finput.write(value.getBytes(StandardCharsets.UTF_8));
         }
         
-        fos.flush();
-        fos.close();
+        finput.close();
         return this;
     }
         
