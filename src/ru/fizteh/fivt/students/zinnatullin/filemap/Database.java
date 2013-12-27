@@ -17,10 +17,10 @@ public class Database {
     private HashMap<String, String> data;
     
     public Database(String path, String file) throws IOException {
-		File dbFile = new File(path, file);
-		if(!dbFile.exists()){
-			dbFile.createNewFile();
-		}
+        File dbFile = new File(path, file);
+        if(!dbFile.exists()){
+            dbFile.createNewFile();
+        }
         this.path = path;
         this.file = file;
         data = new HashMap();
@@ -58,7 +58,7 @@ public class Database {
                 continue;
             }
             String key = new String(keyBytes, "UTF-8");
-			
+            
             byte[] valueBytes = new byte[valueLen];
             fis.read(valueBytes);
             if (valueBytes.length == 0) {
@@ -84,7 +84,7 @@ public class Database {
             byte[] keyLenBytes;
             String keyLenHex = "";
             int keyLenHexSize = Long.toHexString(key.getBytes().length).getBytes().length;
-			if (keyLenHexSize < 4) {
+            if (keyLenHexSize < 4) {
                 for (int i = 0; i < (4 - keyLenHexSize); i++) {
                     keyLenHex += Long.toHexString(0);
                 }

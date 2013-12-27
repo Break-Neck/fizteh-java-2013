@@ -61,10 +61,10 @@ public class Shell {
             System.exit(1);
         }
         File file =  new File(dir);
-		if(!file.exists()){
-			file.mkdir();
-		}
-		if (!file.isDirectory()) {
+        if(!file.exists()){
+            file.mkdir();
+        }
+        if (!file.isDirectory()) {
             printMessage("Incorrect db path");
             System.exit(1);
         }

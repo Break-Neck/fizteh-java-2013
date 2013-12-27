@@ -69,14 +69,14 @@ public class Shell {
     
     public void setDB(String dir) {
         File path =  new File(dir);
-		if (dir == null) {
+        if (dir == null) {
             printMessage("Incorrect db path");
             System.exit(1);
         }
         File file =  new File(dir);
-		if(!file.exists()){
-			file.mkdir();
-		}
+        if(!file.exists()){
+            file.mkdir();
+        }
         if (!path.isDirectory()) {
             printMessage("Incorrect db path");
             System.exit(1);
