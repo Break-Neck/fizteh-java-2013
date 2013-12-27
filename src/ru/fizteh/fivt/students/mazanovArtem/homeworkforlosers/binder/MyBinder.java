@@ -399,6 +399,12 @@ public class MyBinder<T> implements Binder<T> {
     }
 
     public Object getValueFromString(Class clazz, String text) {
+        if (text == null) {
+            return null;
+        }
+        if (clazz == null) {
+            throw new IllegalArgumentException("Wrong class");
+        }
         if (clazz.equals(boolean.class)  ||  clazz.equals(Boolean.class)) {
             return Boolean.parseBoolean(text);
         }
