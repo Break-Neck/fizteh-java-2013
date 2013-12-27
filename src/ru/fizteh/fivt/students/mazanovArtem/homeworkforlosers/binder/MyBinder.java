@@ -399,7 +399,7 @@ public class MyBinder<T> implements Binder<T> {
     }
 
     public Object getValueFromString(Class clazz, String text) {
-        if (text == null) {
+        if (text.equals(null)) {
             return null;
         }
         if (clazz == null) {
@@ -436,6 +436,9 @@ public class MyBinder<T> implements Binder<T> {
             return text;
         }
         if (clazz.isEnum()) {
+            if (text.equals("null")) {
+                return null;
+            }
             return Enum.valueOf(clazz, text);
         }
         return null;

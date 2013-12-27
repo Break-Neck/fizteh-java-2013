@@ -43,8 +43,8 @@ public class BinderTests {
 
     @Test
     public void goodTest() throws IOException {
-        binder = binderFactory.create(A.class);
-        binder.serialize(new A(), output);
+        binder = binderFactory.create(C.class);
+        binder.serialize(new C(), output);
         input = new ByteArrayInputStream(output.toByteArray());
         Object c = binder.deserialize(input);
         binder.serialize(c, output1);
@@ -74,6 +74,14 @@ public class BinderTests {
     }
 
     public static class C {
-        public C jlj;
+        public Role asd;
+        public C() {
+            asd = null;
+        }
+    }
+
+    public enum Role {
+        ADMIN,
+        USER
     }
 }
