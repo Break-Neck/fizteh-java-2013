@@ -32,7 +32,7 @@ public class Shell {
     
     public static void main(String[] args) throws IOException {
         String dbPath = System.getProperty("fizteh.db.dir");
-		if (dbPath == null) {
+        if (dbPath == null) {
             printMessage("Incorrect db path");
             System.exit(1);
         }
