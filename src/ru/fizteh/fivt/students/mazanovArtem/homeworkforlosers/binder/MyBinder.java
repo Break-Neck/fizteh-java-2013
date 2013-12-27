@@ -399,42 +399,38 @@ public class MyBinder<T> implements Binder<T> {
     }
 
     public Object getValueFromString(Class clazz, String text) {
-        try {
-            if (clazz.equals(boolean.class)  ||  clazz.equals(Boolean.class)) {
-                return Boolean.parseBoolean(text);
+        if (clazz.equals(boolean.class)  ||  clazz.equals(Boolean.class)) {
+            return Boolean.parseBoolean(text);
+        }
+        if (clazz.equals(int.class)  ||  clazz.equals(Integer.class)) {
+            return Integer.parseInt(text);
+        }
+        if (clazz.equals(long.class)  ||  clazz.equals(Long.class)) {
+            return Long.parseLong(text);
+        }
+        if (clazz.equals(double.class)  ||  clazz.equals(Double.class)) {
+            return Double.parseDouble(text);
+        }
+        if (clazz.equals(float.class)  ||  clazz.equals(Float.class)) {
+            return Float.parseFloat(text);
+        }
+        if (clazz.equals(byte.class)  ||  clazz.equals(Byte.class)) {
+            return Byte.parseByte(text);
+        }
+        if (clazz.equals(short.class)  ||  clazz.equals(Short.class)) {
+            return Short.parseShort(text);
+        }
+        if (clazz.equals(char.class)  ||  clazz.equals(Character.class)) {
+            if (text.length() != 1) {
+                throw new IllegalArgumentException("Incorrect type");
             }
-            if (clazz.equals(int.class)  ||  clazz.equals(Integer.class)) {
-                return Integer.parseInt(text);
-            }
-            if (clazz.equals(long.class)  ||  clazz.equals(Long.class)) {
-                return Long.parseLong(text);
-            }
-            if (clazz.equals(double.class)  ||  clazz.equals(Double.class)) {
-                return Double.parseDouble(text);
-            }
-            if (clazz.equals(float.class)  ||  clazz.equals(Float.class)) {
-                return Float.parseFloat(text);
-            }
-            if (clazz.equals(byte.class)  ||  clazz.equals(Byte.class)) {
-                return Byte.parseByte(text);
-            }
-            if (clazz.equals(short.class)  ||  clazz.equals(Short.class)) {
-                return Short.parseShort(text);
-            }
-            if (clazz.equals(char.class)  ||  clazz.equals(Character.class)) {
-                if (text.length() != 1) {
-                    throw new IllegalArgumentException("Incorrect type");
-                }
-                return text.charAt(0);
-            }
-            if (clazz.equals(String.class)) {
-                return text;
-            }
-            if (clazz.isEnum()) {
-                return Enum.valueOf(clazz, text);
-            }
-        } catch (Exception e) {
-            throw new IllegalArgumentException("wrong input data");
+            return text.charAt(0);
+        }
+        if (clazz.equals(String.class)) {
+            return text;
+        }
+        if (clazz.isEnum()) {
+            return Enum.valueOf(clazz, text);
         }
         return null;
     }
