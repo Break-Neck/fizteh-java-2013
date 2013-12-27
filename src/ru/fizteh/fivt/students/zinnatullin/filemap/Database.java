@@ -72,6 +72,7 @@ public class Database {
             throw new IOException("file is too big");
         }
         
+		finput.setLength(0);
         for (Map.Entry<String, String> entry : data.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
@@ -115,13 +116,10 @@ public class Database {
     }
     
     public String remove(String key) {
-        String oldValue = "";
+        String oldValue = null;
         try {
             this.getData();
-            if (data.containsKey(key)) {
-                oldValue = data.get(key);
-                data.remove(key);
-            }
+            oldValue = data.remove(key);
             this.saveData();
         } catch (Exception ex) {
             Logger.getLogger(Database.class.getName()).log(Level.SEVERE, null, ex);

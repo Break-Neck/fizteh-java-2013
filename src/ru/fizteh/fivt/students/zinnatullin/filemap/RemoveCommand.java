@@ -16,9 +16,9 @@ public class RemoveCommand implements ShellCommand {
             return false;
         }
         
-        String value = "";
+        String value;
         value = Shell.getInstance().getDB().remove(args[1]);
-        if (!value.equals("")) {
+        if (value != null) {
             System.out.println("removed");
             System.out.println(value);
         } else {
