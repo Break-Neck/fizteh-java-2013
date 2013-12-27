@@ -1,9 +1,6 @@
 package ru.fizteh.fivt.students.zinnatullin.filemap;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
@@ -38,7 +35,9 @@ public class Database {
         
         File inputFile = new File(path, file);
         RandomAccessFile foutput = new RandomAccessFile(inputFile, "r");
-        if (foutput.length() > 444444444) throw new IOException("file is too big");
+        if (foutput.length() > 444444444) {
+            throw new IOException("file is too big");
+}
 
         while (foutput.getFilePointer() != foutput.length()) {
             int klength = foutput.readInt();
@@ -72,7 +71,7 @@ public class Database {
             throw new IOException("file is too big");
         }
         
-		finput.setLength(0);
+finput.setLength(0);
         for (Map.Entry<String, String> entry : data.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
