@@ -61,7 +61,7 @@ public class Shell {
             System.exit(1);
         }
         File file =  new File(dir);
-        if(!file.exists()){
+        if (!file.exists()) {
             file.mkdir();
         }
         if (!file.isDirectory()) {
