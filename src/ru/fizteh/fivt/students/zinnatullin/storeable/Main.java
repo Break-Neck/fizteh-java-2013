@@ -45,7 +45,7 @@ public class Main {
 			provider.readFilesMaps();
 			usedShell.startShell(arguments);
 			provider.writeFilesMaps();
-		} catch (IOException catchedException) {
+		} catch (Exception catchedException) {
 			System.err.println(catchedException.getMessage());
 			System.exit(1);
 		}
