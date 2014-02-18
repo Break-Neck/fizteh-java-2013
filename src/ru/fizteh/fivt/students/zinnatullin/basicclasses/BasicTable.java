@@ -98,22 +98,26 @@ abstract public class BasicTable<ElementType> {
 	    
 		readWriteLock.readLock().lock();
 		
-		int previousSize = filesMap.getSize();
-		for (String key: putDiff.get().keySet()) {
-			if (filesMap.getFileMapForKey(key).getCurrentTable().get(key) == null) {
-				++previousSize;
+		int previousSize = 0;
+		
+		try {
+			previousSize = filesMap.getSize();
+			for (String key: putDiff.get().keySet()) {
+				if (filesMap.getFileMapForKey(key).getCurrentTable().get(key) == null) {
+					++previousSize;
+				}
+			}	
+			Iterator<String> removeDiffIterator = removeDiff.get().iterator();
+			while(removeDiffIterator.hasNext()){
+				String key = removeDiffIterator.next();
+				if (filesMap.getFileMapForKey(key).getCurrentTable().get(key) != null) {
+					--previousSize;
+				}
 			}
-		}	
-		Iterator<String> removeDiffIterator = removeDiff.get().iterator();
-	    while(removeDiffIterator.hasNext()){
-	        String key = removeDiffIterator.next();
-	        if (filesMap.getFileMapForKey(key).getCurrentTable().get(key) != null) {
-	        	--previousSize;
-	        }
-	    }
-	    
-	    readWriteLock.readLock().unlock();
-	    
+		} finally {
+			readWriteLock.readLock().unlock();
+		}
+
 	    return previousSize;
 	}
 
@@ -121,12 +125,17 @@ abstract public class BasicTable<ElementType> {
 	    tableCloseCheck();
 	    
 		readWriteLock.writeLock().lock();	 
-		int changesNumber = getChangesNumber();
-		if (changesNumber != 0) {
-			autoCommit();
-		}	
-		filesMap.writeData();  
-		readWriteLock.writeLock().unlock();
+		int changesNumber = 0;
+		try {
+			changesNumber = getChangesNumber();
+			if (changesNumber != 0) {
+				autoCommit();
+			}	
+			filesMap.writeData();  
+		} finally {
+			readWriteLock.writeLock().unlock();
+		}
+		
 		
 		putDiff.get().clear();
 		removeDiff.get().clear();
