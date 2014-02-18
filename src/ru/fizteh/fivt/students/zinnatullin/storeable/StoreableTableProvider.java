@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.ParseException;
 import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -18,7 +16,6 @@ import ru.fizteh.fivt.students.zinnatullin.basicclasses.BasicTableProvider;
 
 public class StoreableTableProvider extends BasicTableProvider<StoreableTable> implements TableProvider, AutoCloseable {
     private StoreableTableProviderFactory factory;
-	private ReadWriteLock providerLock = new ReentrantReadWriteLock(true);
     
 	public StoreableTableProvider(StoreableTableProviderFactory factory, String root) throws IOException {
 	    super(root);
