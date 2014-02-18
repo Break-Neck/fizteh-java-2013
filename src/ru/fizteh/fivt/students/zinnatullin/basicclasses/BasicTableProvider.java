@@ -32,11 +32,11 @@ abstract public class BasicTableProvider<TableType extends BasicTable> {
 			throw new IllegalArgumentException("wrong table name: " + name);
 		}
 		
-		providerLock.readLock().lock();				
+		providerLock.writeLock().lock();				
 		try {
 			return tables.get(name);
 		} finally {		
-			providerLock.readLock().unlock();
+			providerLock.writeLock().unlock();
 		}
 	}
 	
