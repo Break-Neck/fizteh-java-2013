@@ -80,7 +80,7 @@ public class StoreableTableProvider extends BasicTableProvider<StoreableTable> i
             throw new IllegalArgumentException("wrong table name: " + name);
         }
         
-        providerLock.readLock().lock();     
+        providerLock.writeLock().lock();     
         
         try {
             if ((tables.get(name) == null) && (new File(root, name).isDirectory())) {
@@ -93,10 +93,10 @@ public class StoreableTableProvider extends BasicTableProvider<StoreableTable> i
             }
             return tables.get(name);
         } finally {     
-            providerLock.readLock().unlock();
+            providerLock.writeLock().unlock();
         }
     }
-	
+		
 	public StoreableImplementation deserialize(Table table, String value) throws ParseException {
 	    providerCloseCheck();
 	    
